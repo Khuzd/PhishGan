@@ -12,41 +12,34 @@ def generator(input,countHiddenLayer, weights, biases):
     hidden_layer=[]
 
     # input layer
-    hidden_layer.append(tf.matmul(input, weights['gen_hidden0']))
-    hidden_layer[0] = tf.add(hidden_layer[0], biases['gen_hidden0'])
-    hidden_layer[0] = tf.nn.relu(hidden_layer[0])
+
+    hidden_layer.append(tf.nn.relu(tf.add(tf.matmul(input, weights['gen_hidden0']),biases['gen_hidden0'])))
 
     # hidden layers
     for i in range(1,countHiddenLayer):
-        hidden_layer.append(tf.matmul(hidden_layer[i-1], weights['gen_hidden'+str(i)]))
-        hidden_layer[i] = tf.add(hidden_layer[i], biases['gen_hidden'+str(i)])
-        hidden_layer[i] = tf.nn.relu(hidden_layer[i])
+        hidden_layer.append(tf.nn.relu(tf.add(tf.matmul(hidden_layer[i-1], weights['gen_hidden'+str(i)]), biases['gen_hidden'+str(i)])))
 
     # output layer
-    out_layer = tf.matmul(hidden_layer[-1], weights['gen_out'])
-    out_layer = tf.add(out_layer, biases['gen_out'])
-    out_layer = tf.nn.sigmoid(out_layer)
+    out_layer = tf.nn.sigmoid(tf.add(tf.matmul(hidden_layer[-1], weights['gen_out']), biases['gen_out']))
+
     return out_layer
 
 def discriminator(input,countHiddenLayer, weights, biases):
     hidden_layer = []
 
     # input layer
-    hidden_layer.append(tf.matmul(input, weights['disc_hidden0']))
-    hidden_layer[0] = tf.add(hidden_layer[0], biases['disc_hidden0'])
-    hidden_layer[0] = tf.nn.relu(hidden_layer[0])
+
+    hidden_layer.append(tf.nn.relu(tf.add(tf.matmul(input, weights['disc_hidden0']), biases['disc_hidden0'])))
 
     # hidden layers
-    for i in range(1,countHiddenLayer):
-        hidden_layer.append(tf.matmul(hidden_layer[i - 1], weights['disc_hidden' + str(i)]))
-        hidden_layer[i] = tf.add(hidden_layer[i], biases['disc_hidden' + str(i)])
-        hidden_layer[i] = tf.nn.relu(hidden_layer[i])
+    for i in range(1, countHiddenLayer):
+        hidden_layer.append(tf.nn.relu(tf.add(tf.matmul(hidden_layer[i - 1], weights['disc_hidden' + str(i)]), biases['disc_hidden' + str(i)])))
 
     # output layer
-    out_layer = tf.matmul(hidden_layer[-1], weights['disc_out'])
-    out_layer = tf.add(out_layer, biases['disc_out'])
-    out_layer = tf.nn.sigmoid(out_layer)
+    out_layer = tf.nn.sigmoid(tf.add(tf.matmul(hidden_layer[-1], weights['disc_out']), biases['disc_out']))
+
     return out_layer
+
 
 def glorot_init(shape):
     """
@@ -158,9 +151,6 @@ def main():
                                         feed_dict=feed_dict)
                 if i % 1000 == 0 or i == 1:
                     print('Step %i: Generator Loss: %f, Discriminator Loss: %f' % (i, gl, dl))
-
-
-
 
 
 
