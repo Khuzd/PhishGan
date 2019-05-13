@@ -11,15 +11,18 @@ SELECT_DATASET = 'uc'
 def generator(input,countHiddenLayer, weights, biases):
     hidden_layer=[]
 
+    # input layer
     hidden_layer.append(tf.matmul(input, weights['gen_hidden0']))
     hidden_layer[0] = tf.add(hidden_layer[0], biases['gen_hidden0'])
     hidden_layer[0] = tf.nn.relu(hidden_layer[0])
 
+    # hidden layers
     for i in range(1,countHiddenLayer):
         hidden_layer.append(tf.matmul(hidden_layer[i-1], weights['gen_hidden'+str(i)]))
         hidden_layer[i] = tf.add(hidden_layer[i], biases['gen_hidden'+str(i)])
         hidden_layer[i] = tf.nn.relu(hidden_layer[i])
 
+    # output layer
     out_layer = tf.matmul(hidden_layer[-1], weights['gen_out'])
     out_layer = tf.add(out_layer, biases['gen_out'])
     out_layer = tf.nn.sigmoid(out_layer)
@@ -28,15 +31,18 @@ def generator(input,countHiddenLayer, weights, biases):
 def discriminator(input,countHiddenLayer, weights, biases):
     hidden_layer = []
 
+    # input layer
     hidden_layer.append(tf.matmul(input, weights['disc_hidden0']))
     hidden_layer[0] = tf.add(hidden_layer[0], biases['disc_hidden0'])
     hidden_layer[0] = tf.nn.relu(hidden_layer[0])
 
+    # hidden layers
     for i in range(1,countHiddenLayer):
         hidden_layer.append(tf.matmul(hidden_layer[i - 1], weights['disc_hidden' + str(i)]))
         hidden_layer[i] = tf.add(hidden_layer[i], biases['disc_hidden' + str(i)])
         hidden_layer[i] = tf.nn.relu(hidden_layer[i])
 
+    # output layer
     out_layer = tf.matmul(hidden_layer[-1], weights['disc_out'])
     out_layer = tf.add(out_layer, biases['disc_out'])
     out_layer = tf.nn.sigmoid(out_layer)
@@ -60,15 +66,16 @@ def main():
         # Training Params
         num_steps = 2211
         batch_size = 5
-        learning_rate = 0.0002
+        learning_rate = 0.000001
+
 
         # Network Params
         data_dim = 30  # 30 features
-        gen_hidden_dim = 35
-        disc_hidden_dim = 35
+        gen_hidden_dim = 512
+        disc_hidden_dim = 512
         noise_dim = 30  # Noise data points
-        gen_hidden_count = 1 # number of hidden layers in generator
-        disc_hidden_count = 1 # number of hidden layers in discriminator
+        gen_hidden_count = 8 # number of hidden layers in generator
+        disc_hidden_count = 8 # number of hidden layers in discriminator
 
         # initialization of weights and biases
         weights = {
@@ -83,12 +90,22 @@ def main():
 
 
         for i in range (gen_hidden_count):
-            weights['gen_hidden'+str(i)] = tf.Variable(glorot_init([noise_dim, gen_hidden_dim]))
-            biases['gen_hidden'+str(i)] = tf.Variable(tf.zeros([gen_hidden_dim]))
+            if i == 0:
+                weights['gen_hidden'+str(i)] = tf.Variable(glorot_init([noise_dim, gen_hidden_dim]))
+                biases['gen_hidden'+str(i)] = tf.Variable(tf.zeros([gen_hidden_dim]))
+            else :
+                weights['gen_hidden' + str(i)] = tf.Variable(glorot_init([gen_hidden_dim, gen_hidden_dim]))
+                biases['gen_hidden' + str(i)] = tf.Variable(tf.zeros([gen_hidden_dim]))
+
 
         for i in range (gen_hidden_count):
-            weights['disc_hidden'+str(i)] = tf.Variable(glorot_init([noise_dim, disc_hidden_dim]))
-            biases['disc_hidden'+str(i)] = tf.Variable(tf.zeros([disc_hidden_dim]))
+            if i == 0 :
+                weights['disc_hidden'+str(i)] = tf.Variable(glorot_init([noise_dim, disc_hidden_dim]))
+                biases['disc_hidden'+str(i)] = tf.Variable(tf.zeros([disc_hidden_dim]))
+
+            else :
+                weights['disc_hidden' + str(i)] = tf.Variable(glorot_init([disc_hidden_dim, disc_hidden_dim]))
+                biases['disc_hidden' + str(i)] = tf.Variable(tf.zeros([disc_hidden_dim]))
 
         # Network Inputs
         gen_input = tf.placeholder(tf.float32, shape=[None, noise_dim], name='input_noise')
