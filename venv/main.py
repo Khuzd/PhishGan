@@ -10,13 +10,16 @@ SELECT_DATASET = 'uc'
 
 def generator(input,countHiddenLayer, weights, biases):
     hidden_layer=[]
+
     hidden_layer.append(tf.matmul(input, weights['gen_hidden0']))
     hidden_layer[0] = tf.add(hidden_layer[0], biases['gen_hidden0'])
     hidden_layer[0] = tf.nn.relu(hidden_layer[0])
+
     for i in range(1,countHiddenLayer):
         hidden_layer.append(tf.matmul(hidden_layer[i-1], weights['gen_hidden'+str(i)]))
         hidden_layer[i] = tf.add(hidden_layer[i], biases['gen_hidden'+str(i)])
         hidden_layer[i] = tf.nn.relu(hidden_layer[i])
+
     out_layer = tf.matmul(hidden_layer[-1], weights['gen_out'])
     out_layer = tf.add(out_layer, biases['gen_out'])
     out_layer = tf.nn.sigmoid(out_layer)
@@ -24,13 +27,16 @@ def generator(input,countHiddenLayer, weights, biases):
 
 def discriminator(input,countHiddenLayer, weights, biases):
     hidden_layer = []
+
     hidden_layer.append(tf.matmul(input, weights['disc_hidden0']))
     hidden_layer[0] = tf.add(hidden_layer[0], biases['disc_hidden0'])
     hidden_layer[0] = tf.nn.relu(hidden_layer[0])
+
     for i in range(1,countHiddenLayer):
         hidden_layer.append(tf.matmul(hidden_layer[i - 1], weights['disc_hidden' + str(i)]))
         hidden_layer[i] = tf.add(hidden_layer[i], biases['disc_hidden' + str(i)])
         hidden_layer[i] = tf.nn.relu(hidden_layer[i])
+
     out_layer = tf.matmul(hidden_layer[-1], weights['disc_out'])
     out_layer = tf.add(out_layer, biases['disc_out'])
     out_layer = tf.nn.sigmoid(out_layer)
@@ -45,22 +51,26 @@ def glorot_init(shape):
     return tf.random_normal(shape=shape, stddev=1. / tf.sqrt(shape[0] / 2.))
 
 def main():
-    if SELECT_DATASET == 'uc':
+
+
+    if SELECT_DATASET == 'uc': # using UCI dataset
+
         featuresName,features,results = uc.csvToList(UCI_PATH)
 
         # Training Params
-        num_steps = 5000
-        batch_size = 11055
+        num_steps = 2211
+        batch_size = 5
         learning_rate = 0.0002
 
         # Network Params
-        data_dim = 30  # 28*28 pixels
-        gen_hidden_dim = 256
-        disc_hidden_dim = 256
+        data_dim = 30  # 30 features
+        gen_hidden_dim = 35
+        disc_hidden_dim = 35
         noise_dim = 30  # Noise data points
         gen_hidden_count = 1 # number of hidden layers in generator
-        disc_hidden_count = 1  # number of hidden layers in discriminator
+        disc_hidden_count = 1 # number of hidden layers in discriminator
 
+        # initialization of weights and biases
         weights = {
             'gen_out': tf.Variable(glorot_init([gen_hidden_dim, data_dim])),
             'disc_out': tf.Variable(glorot_init([disc_hidden_dim, 1])),
@@ -70,6 +80,7 @@ def main():
             'gen_out': tf.Variable(tf.zeros([data_dim])),
             'disc_out': tf.Variable(tf.zeros([1])),
         }
+
 
         for i in range (gen_hidden_count):
             weights['gen_hidden'+str(i)] = tf.Variable(glorot_init([noise_dim, gen_hidden_dim]))
@@ -120,7 +131,7 @@ def main():
 
             for i in range(1, num_steps + 1):
                 # Prepare Data
-                batch_x = features
+                batch_x = features[(i-1)*batch_size:i*batch_size]
                 # Generate noise to feed to the generator
                 z = np.random.uniform(-1., 1., size=[batch_size, noise_dim])
 
@@ -136,7 +147,7 @@ def main():
 
 
 
-    elif SELECT_DATASET == 'ph':
+    elif SELECT_DATASET == 'ph': # using phishTank dataset
         features = ph.listFeatures(PHISHTANK_PATH)
 
 
