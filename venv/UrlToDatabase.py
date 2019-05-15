@@ -121,8 +121,7 @@ def expirationDomainTesting(domain):
     now = datetime.datetime.now()
     today = datetime.date(now.year,now.month,now.day)
 
-    w=whois.whois(domain).expiration_date
-    expiration = datetime.date(w[0],w[1],w[2])
+    expiration = whois.whois(domain).expiration_date
 
     delta = expiration-today
 
@@ -334,7 +333,9 @@ def barCustomTesting(html):
     return -1
 
 def rightClickTesting(html):
-    return 0
+    if (re.match(r"\"contextmenu\".*?preventdefaut")!= None):
+        return 1
+    return -1
 
 def popUpTesting(html):
     return 0
@@ -342,8 +343,24 @@ def popUpTesting(html):
 def IFrameTesting(html):
     return 0
 
-def domainAgeTesting(doamin):
-    return 0
+def domainAgeTesting(domain):
+    """
+    testing if domain age is greater than 6 months
+    :param doamin: string
+    :return: bool
+    """
+
+    now = datetime.datetime.now()
+    today = datetime.date(now.year, now.month, now.day)
+
+    creation = whois.whois(domain).creation_date
+
+    delta = today-creation
+
+    if delta.days > 365/2:
+        return -1
+    else:
+        return 1
 
 def DNSRecordTesting(domain):
     return 0
