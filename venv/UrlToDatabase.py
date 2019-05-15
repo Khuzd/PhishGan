@@ -278,19 +278,60 @@ def tagsLinksTesting(html, domain):
     return -1
 
 def SFHTesting(html,domain):
-    return 0
+    """
+    test if the Server Form Handler of all forms is not suspicious
+    :param html: string (html source code)
+    :param domain: string
+    :return: -1,0 or 1
+    """
+    soup = BeautifulSoup(html)
+
+    for form in soup.find_all("form"):
+        if (str(form.get("action")) == ""):
+            return 1
+
+        elif (str(form.get("action")) == "about:blank"):
+            return 1
+
+        elif (domain not in str(form.get("action"))):
+            return 0
+    return -1
 
 def emailTesting(html):
-    return 0
+    """
+    test if no user's informations are send by email
+    :param html: string (html source code)
+    :return: bool
+    """
+    soup = BeautifulSoup(html)
+
+    for form in soup.find_all("form"):
+        if (re.match(r"mail\(.*?\)",str(form))):
+            return 1
+        elif(re.match(r"mailto:",str(form))):
+            return 1
+    return -1
 
 def abnormalURLTesting(url):
     return 0
 
-def frowardingTesting(url):
+def forwardingTesting(url):
     return 0
 
 def barCustomTesting(html):
-    return 0
+    """
+    Check if the status bar is not abnormally modify
+    :param html: string (html source code)
+    :return: bool
+    """
+
+    soup = BeautifulSoup(html)
+
+    for tag in soup.find_all(onmouseover = True):
+        if "window.status" in str(tag):
+            return 1
+
+    return -1
 
 def rightClickTesting(html):
     return 0
@@ -392,8 +433,46 @@ def UrlToDatabase (url):
     features.append(requestedURL(html,domain))
 
     # testing anchors
+    features.append(anchorsTesting(html,domain))
 
+    # testing tags links
+    features.append(tagsLinksTesting(html,domain))
 
+    # testing SFH
+    features.append(SFHTesting(html,domain))
+
+    # testing email
+    features.append(emailTesting(html))
+
+    # testing abnormal url
+    features.append(abnormalURLTesting(url))
+
+    # testing forwarding
+    features.append(forwardingTesting(url))
+
+    # testing abnormal status bar
+    features.append(barCustomTesting(html))
+
+    # testing right click disabling
+    features.append(rightClickTesting(html))
+
+    # testing popup
+    features.append(popUpTesting(html))
+
+    # testing IFrame
+    features.append(IFrameTesting(html))
+
+    # testing domain age
+    features.append(domainAgeTesting(domain))
+
+    # testing DNS record
+    features.append(DNSRecordTesting(domain))
+
+    # testing traffic
+    features.append(trafficTesting(domain))
+
+    # testing page rank
+    features.append(pageRankTesting(domain))
 
 
 
