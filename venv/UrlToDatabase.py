@@ -12,8 +12,8 @@ import datetime
 import requests
 from bs4 import BeautifulSoup
 import socket
-import subprocess
-import sys
+import dns.resolver
+
 # from m2ext import SSL
 # from M2Crypto import X509
 
@@ -341,7 +341,18 @@ def popUpTesting(html):
     return 0
 
 def IFrameTesting(html):
-    return 0
+    """
+    testing if the site use Iframe
+    :param html: string (html source code)
+    :return: bool
+    """
+
+    soup = BeautifulSoup(html)
+    if "iframe" in str(soup):
+        return 1
+
+    else:
+        return -1
 
 def domainAgeTesting(domain):
     """
@@ -363,13 +374,31 @@ def domainAgeTesting(domain):
         return 1
 
 def DNSRecordTesting(domain):
-    return 0
+    try:
+        empty=True
+        for server in dns.resolver.query(domain,'NS'):
+            if server.target != "":
+                empty = False
+    except:
+        return 1
+
+    if empty == False:
+        return -1
+
+    return 1
 
 def trafficTesting(domain):
     return 0
 
 def pageRankTesting(domain):
-    return 0
+    soup = BeautifulSoup(requests.get("https://www.alexa.com/siteinfo/" + domain).content)
+    rank = -1
+    for tag in soup.find_all("p", {"class": "big data"}):
+        if tag.find_all("", {"class": "hash"}) != []:
+            rank = re.findall('\d+', str(tag))[0]
+
+
+
 
 def googleIndexTesting(domain):
     return 0
