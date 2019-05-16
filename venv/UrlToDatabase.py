@@ -13,6 +13,7 @@ import requests
 from bs4 import BeautifulSoup
 import socket
 import dns.resolver
+import googleIndexChecker
 
 # from m2ext import SSL
 # from M2Crypto import X509
@@ -333,6 +334,11 @@ def barCustomTesting(html):
     return -1
 
 def rightClickTesting(html):
+    """
+    test if the right click is not disabled
+    :param html: string (html source code)
+    :return: bool
+    """
     if (re.match(r"\"contextmenu\".*?preventdefaut")!= None):
         return 1
     return -1
@@ -374,6 +380,11 @@ def domainAgeTesting(domain):
         return 1
 
 def DNSRecordTesting(domain):
+    """
+    test if the domain is recorded in a DNS
+    :param domain: string
+    :return: bool
+    """
     try:
         empty=True
         for server in dns.resolver.query(domain,'NS'):
@@ -388,28 +399,57 @@ def DNSRecordTesting(domain):
     return 1
 
 def trafficTesting(domain):
-    return 0
+    """
+    collect the website rank on AWIS database and test if it is not abnormal
+    :param domain: string
+    :return: -1,0 or 1
+    """
+    soup = BeautifulSoup(requests.get("https://www.alexa.com/siteinfo/" + domain + "?ver=classic").content)
+    tag = soup.find(id="traffic-rank-content").find("",{'class':'globleRank'}).find("div").find("strong")
+    try:
+        rank = int("".join(re.findall('\d+', str(tag))))
+    except AttributeError:
+        return 1
+
+    if rank > 100000:
+        return 0
+
+    return -1
 
 def pageRankTesting(domain):
-    soup = BeautifulSoup(requests.get("https://www.alexa.com/siteinfo/" + domain).content)
-    rank = -1
-    for tag in soup.find_all("p", {"class": "big data"}):
-        if tag.find_all("", {"class": "hash"}) != []:
-            rank = re.findall('\d+', str(tag))[0]
-
-
-
-
-def googleIndexTesting(domain):
     return 0
+
+def googleIndexTesting(url):
+    """
+    test if url is indexed by google
+    :param url: string
+    :return: bool
+    """
+    index = googleIndexChecker.google_search("site:"+url)
+    if index:
+        return -1
+    return 1
 
 def linksPointingToTesting(url):
-    return 0
+    """
+    collect the count of all sites which linked to the url on AWIS database and test if it is not abnormal
+    :param domain: string
+    :return: -1,0 or 1
+    """
+    soup = BeautifulSoup(requests.get("https://www.alexa.com/siteinfo/" + url + "?ver=classic").content)
+    try:
+        countLinks = int(soup.find(id="linksin-panel-content").find("div", {"class" : "row-fluid"}).find("div").find("span").get_text())
+    except AttributeError:
+        return 1
+    if countLinks == 0:
+        return 1
+    elif countLinks <= 2 :
+        return 0
+
+    return -1
 
 def statisticReportTEsting(domain):
     return 0
-
-
 
 
 def UrlToDatabase (url):
@@ -521,19 +561,4 @@ def UrlToDatabase (url):
     features.append(pageRankTesting(domain))
 
 
-
     return features
-
-
-
-
-
-
-
-
-
-
-
-
-
-
