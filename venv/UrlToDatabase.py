@@ -14,6 +14,8 @@ from bs4 import BeautifulSoup
 import socket
 import dns.resolver
 import googleIndexChecker
+import json
+import struct
 
 # from m2ext import SSL
 # from M2Crypto import X509
@@ -31,7 +33,7 @@ def IPtesting(domain):
     """
 
 
-    if (re.match(r"(.)+\.(.)+\.(.)+",domain)) != None:
+    if (re.match(r"(.)+\.(.)+\.(.)+",str(domain))) != None:
         return 1
     else :
         return -1
@@ -43,9 +45,9 @@ def leghtTesting(url):
     :return: -1,0 or 1
     """
 
-    if (len(url<54)):
+    if ((len(url))<54):
         return -1
-    elif (len(url>54) and len(url<75)):
+    elif (len(url)>54 and len(url)<75):
         return 0
     else:
         return 1
@@ -100,7 +102,7 @@ def subDomainTesting(domain):
     """
 
     for tld in CCTLD:
-        if (re.match(("(.)*"+tld+"$"),domain)):
+        if (re.match(("(.)*"+tld+"$"),str(domain))):
             domain = domain[:len(domain)-len(tld)]
             if domain.count('.') <= 1 :
                 return -1
@@ -110,7 +112,7 @@ def subDomainTesting(domain):
                 return 1
 
 def ageCertificateTesting(domain):
-    return 0
+    return 2
 
 def expirationDomainTesting(domain):
     """
@@ -122,9 +124,9 @@ def expirationDomainTesting(domain):
     now = datetime.datetime.now()
     today = datetime.date(now.year,now.month,now.day)
 
-    expiration = whois.whois(domain).expiration_date
+    expiration = whois.whois(str(domain)).expiration_date
 
-    delta = expiration-today
+    delta = expiration-now
 
     if delta.days > 365:
         return -1
@@ -139,7 +141,7 @@ def faviconTesting(html, domain):
     :return: bool
     """
 
-    soup = BeautifulSoup(html)
+    soup = BeautifulSoup(html, features="lxml")
     head = soup.find("head")
     favicon=head.find("link", {"rel" : "icon"})
 
@@ -166,13 +168,14 @@ def portTesting(domain):
             result = sock.connect_ex((remoteServerIP, port[0]))
             sock.close()
 
-            if result == 0 and port[2] == False:
+            if result == 0 and port[1] == False:
                 return 1
-            elif result != 0 and port[2] == True:
+            elif result != 0 and port[1] == True:
                 return 1
         return -1
 
-    except:
+    except Exception as e:
+        print(e)
         return -2
 
 def httpTesting(url):
@@ -199,20 +202,22 @@ def requestedURL(html, domain):
 
     m=[]
 
-    soup = BeautifulSoup(html)
+    soup = BeautifulSoup(html, features="lxml")
+
+
 
     for p in soup.find_all("img"):
-        if "http" in p.get("src"):
+        if p.has_attr("src") and "http" in p.get("src"):
             m.append(p.get('src'))
 
     for p in soup.find_all("video"):
         for q in p.find_all("source"):
-            if "http" in q.get("src"):
+            if q.has_attr("src") and "http" in q.get("src"):
                 m.append(q.get('src'))
 
     for p in soup.find_all("audio"):
         for q in p.find_all("source"):
-            if "http" in q.get("src"):
+            if q.has_attr("src") and "http" in q.get("src"):
                 m.append(q.get('src'))
 
     for link in m:
@@ -230,7 +235,7 @@ def requestedURL(html, domain):
     return -1
 
 def anchorsTesting(html,domain):
-    return 0
+    return 2
 
 def tagsLinksTesting(html, domain):
     """
@@ -244,7 +249,7 @@ def tagsLinksTesting(html, domain):
 
     m = []
 
-    soup = BeautifulSoup(html)
+    soup = BeautifulSoup(html,features="lxml")
 
     meta = soup.find_all("meta")
     links = soup.find_all("link")
@@ -255,11 +260,11 @@ def tagsLinksTesting(html, domain):
             m.append(link)
 
     for tag in links:
-        if "http" in tag.get("href"):
+        if tag.has_attr("href") and "http" in tag.get("href"):
             m.append(tag.get("href"))
 
     for tag in scripts:
-        if "http" in tag.get("href"):
+        if tag.has_attr("href") and "http" in tag.get("href"):
             m.append(tag.get("href"))
 
 
@@ -284,7 +289,7 @@ def SFHTesting(html,domain):
     :param domain: string
     :return: -1,0 or 1
     """
-    soup = BeautifulSoup(html)
+    soup = BeautifulSoup(html,features="lxml")
 
     for form in soup.find_all("form"):
         if (str(form.get("action")) == ""):
@@ -303,7 +308,7 @@ def emailTesting(html):
     :param html: string (html source code)
     :return: bool
     """
-    soup = BeautifulSoup(html)
+    soup = BeautifulSoup(html, features="lxml")
 
     for form in soup.find_all("form"):
         if (re.match(r"mail\(.*?\)",str(form))):
@@ -313,10 +318,23 @@ def emailTesting(html):
     return -1
 
 def abnormalURLTesting(url):
-    return 0
+    return 2
 
-def forwardingTesting(url):
-    return 0
+def forwardingTesting(url, http):
+    """
+    test the number of forwarding
+    :param url: string
+    :return: -1,0 or 1
+    """
+    countForward = len (requests.get(http + "://" + url).history)
+
+    if countForward <= 1 :
+        return -1
+
+    if countForward < 4 :
+        return 0
+
+    return 1
 
 def barCustomTesting(html):
     """
@@ -325,7 +343,7 @@ def barCustomTesting(html):
     :return: bool
     """
 
-    soup = BeautifulSoup(html)
+    soup = BeautifulSoup(html, features="lxml")
 
     for tag in soup.find_all(onmouseover = True):
         if "window.status" in str(tag):
@@ -339,12 +357,12 @@ def rightClickTesting(html):
     :param html: string (html source code)
     :return: bool
     """
-    if (re.match(r"\"contextmenu\".*?preventdefaut")!= None):
+    if (re.match(r"\"contextmenu\".*?preventdefaut", str(html))!= None):
         return 1
     return -1
 
 def popUpTesting(html):
-    return 0
+    return 2
 
 def IFrameTesting(html):
     """
@@ -353,7 +371,7 @@ def IFrameTesting(html):
     :return: bool
     """
 
-    soup = BeautifulSoup(html)
+    soup = BeautifulSoup(html, features="lxml")
     if "iframe" in str(soup):
         return 1
 
@@ -372,7 +390,7 @@ def domainAgeTesting(domain):
 
     creation = whois.whois(domain).creation_date
 
-    delta = today-creation
+    delta = now-creation
 
     if delta.days > 365/2:
         return -1
@@ -404,9 +422,9 @@ def trafficTesting(domain):
     :param domain: string
     :return: -1,0 or 1
     """
-    soup = BeautifulSoup(requests.get("https://www.alexa.com/siteinfo/" + domain + "?ver=classic").content)
-    tag = soup.find(id="traffic-rank-content").find("",{'class':'globleRank'}).find("div").find("strong")
     try:
+        soup = BeautifulSoup(requests.get("https://www.alexa.com/siteinfo/" + domain).content,features="lxml")
+        tag = soup.find(id="card_rank").find("",{"class":"rank-global"}).find("",{"class":"big data"})
         rank = int("".join(re.findall('\d+', str(tag))))
     except AttributeError:
         return 1
@@ -417,7 +435,7 @@ def trafficTesting(domain):
     return -1
 
 def pageRankTesting(domain):
-    return 0
+    return 2
 
 def googleIndexTesting(url):
     """
@@ -436,9 +454,9 @@ def linksPointingToTesting(url):
     :param domain: string
     :return: -1,0 or 1
     """
-    soup = BeautifulSoup(requests.get("https://www.alexa.com/siteinfo/" + url + "?ver=classic").content)
+    soup = BeautifulSoup(requests.get("https://www.alexa.com/siteinfo/" + url).content, features="lxml")
     try:
-        countLinks = int(soup.find(id="linksin-panel-content").find("div", {"class" : "row-fluid"}).find("div").find("span").get_text())
+        countLinks = int(soup.find("",{"class":"linksin"}).find("",{"class":"big data"}).get_text())
     except AttributeError:
         return 1
     if countLinks == 0:
@@ -449,8 +467,25 @@ def linksPointingToTesting(url):
     return -1
 
 def statisticReportTEsting(domain):
-    return 0
+    """
+    test if the ip address of the domain is in top 50 of www.stopbadware.org
+    :param domain:
+    :return: bool
+    """
+    IPdomain = socket.gethostbyname(domain)
 
+    jsonDictIP = json.loads(requests.post("https://www.stopbadware.org/sites/all/themes/sbw/clearinghouse.php", data={'q':'tops'}).text)
+
+    IPList = []
+
+    for site in jsonDictIP['top_ip']:
+        IPList.append(socket.inet_ntoa(struct.pack('!L', int(site['ip_addr']))))
+
+    for ip in IPList:
+        if ip == domain:
+            return 1
+
+    return -1
 
 def UrlToDatabase (url):
     """
@@ -463,18 +498,20 @@ def UrlToDatabase (url):
 
     html = requests.get(url).content
 
-    if url[:6] == "http://":
-        url = url[7:]
-        http = "http"
+    http = ""
 
-    elif url[:7] == "https://":
-        url = url[8:]
-        http = "https"
+    if len(url.split("http://"))==2:
+        http="http"
+        url = url.split("http://")[1]
 
-    else :
-        http = ""
+    elif len(url.split("https://"))==2:
+        http="https"
+        url = url.split("https://")[1]
 
-    domain = url.split("/")
+    domain = url.split("/")[0]
+    print(http)
+    print(url)
+    print(domain)
 
     # testing ip adress
     features.append(IPtesting(domain))
@@ -510,6 +547,7 @@ def UrlToDatabase (url):
     features.append(portTesting(domain))
 
     if features[-1] == -2 :
+        print("port testing error")
         return -1
 
     # testing http token
@@ -534,7 +572,7 @@ def UrlToDatabase (url):
     features.append(abnormalURLTesting(url))
 
     # testing forwarding
-    features.append(forwardingTesting(url))
+    features.append(forwardingTesting(url,http))
 
     # testing abnormal status bar
     features.append(barCustomTesting(html))
@@ -562,3 +600,7 @@ def UrlToDatabase (url):
 
 
     return features
+
+if __name__ == "__main__":
+    # execute only if run as a script
+    print(UrlToDatabase("http://www.robic-butez.fr/"))
