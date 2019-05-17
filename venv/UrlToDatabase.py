@@ -16,24 +16,26 @@ import dns.resolver
 import googleIndexChecker
 import json
 import struct
+import ssl
 
-# from m2ext import SSL
-# from M2Crypto import X509
 
 URL_SHORTENER = ["shrinkee.com","goo.gl","7.ly","adf.ly","admy.link","al.ly","bc.vc","bit.do","doiop.com","ity.im","url.ie","is.gd","linkmoji.co","sh.dz24.info","lynk.my","mcaf.ee","yep.it","ow.ly","x61.ch","qr.net","shrinkee.com","u.to","ho.io","thinfi.com","tiny.cc","tinyurl.com","tny.im","flic.krp","v.gd","y2u.be","cutt.us","zzb.bz","adfoc.us","bit.ly","cur.lv","git.io","hec.su","viid.me","tldrify.com","tr.im"]
 CCTLD =[".ac",".ad",".ae",".af",".ag",".ai",".al",".am",".an",".ao",".aq",".ar",".as",".at",".au",".aw",".ax",".az",".ba",".bb",".bd",".be",".bf",".bg",".bh",".bi",".bj",".bl",".bm",".bn",".bo",".bq",".br",".brussels",".bs",".bt",".bu",".bv",".bw",".by",".bz",".bzh",".ca",".cat",".cc",".cd",".cf",".cg",".ch",".ci",".ck",".cl",".cm",".cn",".co",".corsica",".cr",".cs ",".cu",".cv",".cw",".cx",".cy",".cz",".dd",".de",".dj",".dk",".dm",".do",".dz",".ec",".ee",".eg",".eh",".er",".es",".et",".eu",".fi",".fj",".fk",".fm",".fo",".fr",".ga",".gb",".gd",".ge",".gf",".gg",".gh",".gi",".gl",".gm",".gn",".gp",".gq",".gr",".gs",".gt",".gu",".gw",".gy",".hk",".hm",".hn",".hr",".ht",".hu",".id",".ie",".il",".im",".in",".io",".iq",".ir",".is",".it",".je",".jm",".jo",".jp",".ke",".kg",".kh",".ki",".km",".kn",".kp",".kr",".krd",".kw",".ky",".kz",".la",".lb",".lc",".li",".lk",".lr",".ls",".lt",".lu",".lv",".ly",".ma",".mc",".md",".me",".mf",".mg",".mh",".mk",".ml",".mm",".mn",".mo",".mp",".mq",".mr",".ms",".mt",".mu",".mv",".mw",".mx",".my",".mz",".na",".nc",".ne",".nf",".ng",".ni",".nl",".no",".np",".nr",".nu",".nz",".om",".pa",".pe",".pf",".pg",".ph",".pk",".pl",".pm",".pn",".pr",".ps",".pt",".pw",".py",".qa",".quebec",".re",".ro",".rs",".ru",".rw",".sa",".sb",".sc",".sd",".se",".sg",".sh",".si",".sj",".sk",".sl",".sm",".sn",".so",".sr",".ss",".st",".su",".sv",".sx",".sy",".sz",".tc",".td",".tf",".tg",".th",".tj",".tk",".tl",".tm",".tn",".to",".tp",".tr",".tt",".tv",".tw",".tz",".ua",".ug",".uk",".um",".us",".uy",".uz",".va",".vc",".ve",".vg",".vi",".vn",".vu",".wf",".ws",".ye",".yt",".yu",".za",".zm",".zr",".zw"]
 PORTS_TO_SCAN=[(21,False),(22,False),(23,False),(80,True),(443,True),(445,False),(1433,False),(1521,False),(3306,False),(3389,False)]
+TRUSTED_ISSUERS = ["geotrust","godaddy","network solutions","thawte","comodo","doster","verisign","symantec","rapidssl","digicert"]
 
 
 def IPtesting(domain):
     """
     test if the domain is a IP adress
     :param domain: string
-    :return: bool
+    :return: -1 or 1
     """
 
 
-    if (re.match(r"(.)+\.(.)+\.(.)+",str(domain))) != None:
+    if (re.match(r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}",str(domain))) != None:
+        return 1
+    elif (re.match(r"0x..\.0x..\.0x..\.0x..",str(domain))) != None:
         return 1
     else :
         return -1
@@ -56,7 +58,7 @@ def shortenerTEsting(url):
     """
     test if the url is a short url
     :param url: string
-    :return: bool
+    :return: -1 or 1
     """
     for short in URL_SHORTENER:
         if short.lower() in url:
@@ -68,7 +70,7 @@ def atSymbolTetsting(url):
     """
     test if the at symbol is in url
     :param url: string
-    :return: bool
+    :return: -1 or 1
     """
     if ("@" in url):
         return 1
@@ -78,7 +80,7 @@ def doubleSlashTesting(url):
     """
     test if there is double slash in url
     :param url: string
-    :return: bool
+    :return: -1 or 1
     """
     if ("//" in url):
         return 1
@@ -88,7 +90,7 @@ def dashTesting(url):
     """
         test if there is dash in url
         :param url: string
-        :return: bool
+        :return: -1 or 1
         """
     if ("-" in url):
         return 1
@@ -100,6 +102,8 @@ def subDomainTesting(domain):
     :param domain:string
     :return: -1,0 or 1
     """
+    if len(domain.split("www.")) == 2:
+        domain = domain.split("www.")[1]
 
     for tld in CCTLD:
         if (re.match(("(.)*"+tld+"$"),str(domain))):
@@ -110,22 +114,63 @@ def subDomainTesting(domain):
                 return 0
             else :
                 return 1
+    if domain.count('.') <= 1:
+        return -1
+    elif domain.count('.') == 2:
+        return 0
+    else:
+        return 1
 
 def ageCertificateTesting(domain):
-    return 2
+    """
+    test if the certificate is not too young and delivered by a trusted issuer
+    :param domain: string
+    :return: -1,0 or 1
+    """
 
-def expirationDomainTesting(domain):
+    ctx = ssl.create_default_context()
+    s = ctx.wrap_socket(socket.socket(), server_hostname=domain)
+    try:
+        s.connect((domain, 443))
+        cert = s.getpeercert()
+    except :
+
+        ctx = ssl.create_default_context()
+        s = ctx.wrap_socket(socket.socket(), server_hostname=domain)
+        try:
+            s.connect((domain, 443))
+            cert = s.getpeercert()
+        except:
+            return 1
+
+    issuer = dict(x[0] for x in cert['issuer'])["organizationName"].lower()
+    beginDate = datetime.datetime.strptime(cert["notBefore"].split(' GMT')[0],'%b  %d %H:%M:%S %Y')
+    endDate = datetime.datetime.strptime(cert["notAfter"].split(' GMT')[0],'%b  %d %H:%M:%S %Y')
+
+    delta = endDate - beginDate
+
+    # print (issuer)
+    # print (TRUSTED_ISSUERS)
+
+    for trusted in TRUSTED_ISSUERS :
+        if trusted in issuer:
+            if delta.days >= 365:
+                return -1
+
+    return 0
+
+def expirationDomainTesting(whois):
     """
     test if the valid duration of the domain is enough long
-    :param domain:string
-    :return: bool
+    :param whois:string
+    :return: -1 or 1
     """
 
     now = datetime.datetime.now()
-    today = datetime.date(now.year,now.month,now.day)
 
-    expiration = whois.whois(str(domain)).expiration_date
-
+    expiration = whois.expiration_date
+    if type(expiration) == list:
+        expiration = expiration[0]
     delta = expiration-now
 
     if delta.days > 365:
@@ -138,12 +183,14 @@ def faviconTesting(html, domain):
     test if the favicon url is from the same domain as the site
     :param html: string (html source code)
     :param domain: string
-    :return: bool
+    :return: -1 or 1
     """
 
     soup = BeautifulSoup(html, features="lxml")
     head = soup.find("head")
-    favicon=head.find("link", {"rel" : "icon"})
+    favicon = None
+    if head != None:
+        favicon=head.find("link", {"rel" : "icon"})
 
     if favicon != None:
         linkFavicon=favicon.get("href")
@@ -156,7 +203,7 @@ def portTesting(domain):
     """
     test all important ports to check if they are opened or closed
     :param domain: string
-    :return: bool or error
+    :return: -1 or 1 or error
     """
 
     try:
@@ -164,7 +211,7 @@ def portTesting(domain):
 
         for port in PORTS_TO_SCAN:
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            sock.settimeout(3)
+            sock.settimeout(0.5)
             result = sock.connect_ex((remoteServerIP, port[0]))
             sock.close()
 
@@ -182,7 +229,7 @@ def httpTesting(url):
     """
     test if there is the http token into the URL
     :param url: string
-    :return: bool
+    :return: -1 or 1
     """
     if "http" in url :
         return 1
@@ -235,7 +282,33 @@ def requestedURL(html, domain):
     return -1
 
 def anchorsTesting(html,domain):
-    return 2
+    """
+    test the percentage of external links anchors
+    :param html: string (html source code)
+    :param domain: string
+    :return: -1,0 or 1
+    """
+    soup= BeautifulSoup(html, features="lxml")
+
+    tags = soup.findAll("a", href=True)
+    anchors=[]
+    for tag in tags:
+        anchors.append(tag.get("href"))
+
+    totalLink = len(anchors)
+    externalLinks = 0
+
+    for anchor in anchors:
+        if 'http' in anchor and domain not in anchor:
+            externalLinks +=1
+
+    if externalLinks == 0 or externalLinks/totalLink < 0.31:
+        return -1
+
+    elif externalLinks/totalLink <= 0.67:
+        return 0
+
+    return 1
 
 def tagsLinksTesting(html, domain):
     """
@@ -306,7 +379,7 @@ def emailTesting(html):
     """
     test if no user's informations are send by email
     :param html: string (html source code)
-    :return: bool
+    :return: -1 or 1
     """
     soup = BeautifulSoup(html, features="lxml")
 
@@ -318,7 +391,19 @@ def emailTesting(html):
     return -1
 
 def abnormalURLTesting(url):
-    return 2
+    """
+    test if the domain name from WHOIS is in the RUL
+    :param url: string
+    :return: -1 or 1
+    """
+
+    whoisURL = whois.whois(url)["domain_name"]
+    if type(whoisURL) == list:
+        whoisURL = whoisURL[0]
+
+    if (whoisURL.lower() not in url):
+        return 1
+    return -1
 
 def forwardingTesting(url, http):
     """
@@ -340,7 +425,7 @@ def barCustomTesting(html):
     """
     Check if the status bar is not abnormally modify
     :param html: string (html source code)
-    :return: bool
+    :return: -1 or 1
     """
 
     soup = BeautifulSoup(html, features="lxml")
@@ -355,20 +440,27 @@ def rightClickTesting(html):
     """
     test if the right click is not disabled
     :param html: string (html source code)
-    :return: bool
+    :return: -1 or 1
     """
     if (re.match(r"\"contextmenu\".*?preventdefaut", str(html))!= None):
         return 1
     return -1
 
 def popUpTesting(html):
-    return 2
+    """
+    testing if popup with text fields
+    :param html: string (html source code)
+    :return: -1 or 1
+    """
+    if re.match(r"prompt\(.+?\);",str(html)):
+        return 1
+    return -1
 
 def IFrameTesting(html):
     """
     testing if the site use Iframe
     :param html: string (html source code)
-    :return: bool
+    :return: -1 or 1
     """
 
     soup = BeautifulSoup(html, features="lxml")
@@ -378,17 +470,20 @@ def IFrameTesting(html):
     else:
         return -1
 
-def domainAgeTesting(domain):
+def domainAgeTesting(whois):
     """
     testing if domain age is greater than 6 months
     :param doamin: string
-    :return: bool
+    :return: -1 or 1
     """
 
     now = datetime.datetime.now()
     today = datetime.date(now.year, now.month, now.day)
 
-    creation = whois.whois(domain).creation_date
+    creation = whois.creation_date
+
+    if type(creation) == list:
+        creation = creation[0]
 
     delta = now-creation
 
@@ -401,13 +496,21 @@ def DNSRecordTesting(domain):
     """
     test if the domain is recorded in a DNS
     :param domain: string
-    :return: bool
+    :return: -1 or 1
     """
+
+    if len(domain.split("www.")) == 2:
+        domain = domain.split("www.")[1]
+
     try:
         empty=True
-        for server in dns.resolver.query(domain,'NS'):
-            if server.target != "":
+        resolver = dns.resolver.Resolver()
+        answer = resolver.query(domain, "NS")
+        i = 0
+        while empty and i < len(answer):
+            if answer[i].target != "":
                 empty = False
+            i+=1
     except:
         return 1
 
@@ -441,7 +544,7 @@ def googleIndexTesting(url):
     """
     test if url is indexed by google
     :param url: string
-    :return: bool
+    :return: -1 or 1
     """
     index = googleIndexChecker.google_search("site:"+url)
     if index:
@@ -470,7 +573,7 @@ def statisticReportTEsting(domain):
     """
     test if the ip address of the domain is in top 50 of www.stopbadware.org
     :param domain:
-    :return: bool
+    :return: -1 or 1
     """
     IPdomain = socket.gethostbyname(domain)
 
@@ -496,22 +599,52 @@ def UrlToDatabase (url):
 
     features=[]
 
-    html = requests.get(url).content
 
-    http = ""
-
-    if len(url.split("http://"))==2:
-        http="http"
+    if len(url.split("http://")) == 2:
+        http = "http"
         url = url.split("http://")[1]
 
-    elif len(url.split("https://"))==2:
-        http="https"
+    elif len(url.split("https://")) == 2:
+        http = "https"
         url = url.split("https://")[1]
 
     domain = url.split("/")[0]
-    print(http)
-    print(url)
-    print(domain)
+
+    retry = True
+    while (retry): # to retry if whois database kick us
+        try:
+            whoisDomain = whois.whois(str(domain))
+            retry = False
+        except whois.parser.PywhoisError:
+            print("URL : " + domain + " not in whois database")
+            #time.sleep(1.5)
+            return -1
+        except ConnectionResetError:
+            pass
+
+
+    try:
+        html = requests.get("https://"+url, ).content
+        http = "https"
+
+    except:
+        try :
+            html = requests.get("http://" + url).content
+            http = "http"
+        except:
+            try :
+                html = requests.get(url).content
+                http = ""
+            except:
+                print("Can not get HTML content from : " + url)
+                #time.sleep(1.5)
+                return -1
+
+    # print(http)
+    # print(url)
+    # print(domain)
+
+    print("Testing : " +url)
 
     # testing ip adress
     features.append(IPtesting(domain))
@@ -535,10 +668,13 @@ def UrlToDatabase (url):
     features.append(subDomainTesting(domain))
 
     # testing age of the domain certificate
-    features.append(ageCertificateTesting(domain))
+    if http == "https":
+        features.append(ageCertificateTesting(domain))
+    else :
+        features.append(1)
 
     # testing expiration date of domain
-    features.append(expirationDomainTesting(domain))
+    features.append(expirationDomainTesting(whoisDomain))
 
     # testing favicon href
     features.append(faviconTesting(html,domain))
@@ -587,7 +723,7 @@ def UrlToDatabase (url):
     features.append(IFrameTesting(html))
 
     # testing domain age
-    features.append(domainAgeTesting(domain))
+    features.append(domainAgeTesting(whoisDomain))
 
     # testing DNS record
     features.append(DNSRecordTesting(domain))
@@ -603,4 +739,14 @@ def UrlToDatabase (url):
 
 if __name__ == "__main__":
     # execute only if run as a script
-    print(UrlToDatabase("http://www.robic-butez.fr/"))
+
+    url = "www.paypal.com"
+    results = UrlToDatabase(url)
+
+    columns = ["having_IP_Address","URL_Length","Shortining_Service","having_At_Symbol","double_slash_redirecting","Prefix_Suffix","having_Sub_Domain","SSLfinal_State","Domain_registeration_length","Favicon","port","HTTPS_token","Request_URL","URL_of_Anchor","Links_in_tags","SFH","Submitting_to_email","Abnormal_URL","Redirect","on_mouseover","RightClick","popUpWidnow","Iframe","age_of_domain","DNSRecord","web_traffic","Page_Rank","Google_Index","Links_pointing_to_page","Statistical_report"]
+
+    if results != -1:
+        for i in range(len(results)):
+            print(columns[i] + " : "+str(results[i]))
+    else :
+        print("Bad URL, no results")
