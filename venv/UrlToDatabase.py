@@ -17,6 +17,8 @@ import googleIndexChecker
 import json
 import struct
 import ssl
+import time
+from multiprocessing import Process, Queue
 
 URL_SHORTENER = ["shrinkee.com", "goo.gl", "7.ly", "adf.ly", "admy.link", "al.ly", "bc.vc", "bit.do", "doiop.com",
                  "ity.im", "url.ie", "is.gd", "linkmoji.co", "sh.dz24.info", "lynk.my", "mcaf.ee", "yep.it", "ow.ly",
@@ -47,6 +49,7 @@ PORTS_TO_SCAN = [(21, False), (22, False), (23, False), (80, True), (443, True),
 
 TRUSTED_ISSUERS = ["geotrust", "godaddy", "network solutions", "thawte", "comodo", "doster", "verisign", "symantec",
                    "rapidssl", "digicert"]
+
 
 
 def IPtesting(domain):
@@ -641,7 +644,7 @@ def statisticReportTEsting(domain):
     return -1
 
 
-def UrlToDatabase(url):
+def UrlToDatabase(url, queue):
     """
     analyse the url to create a list of 30 features which can be used for GAN implementation. Refer to documentation for all criteria
     :param url: string
@@ -665,10 +668,11 @@ def UrlToDatabase(url):
         try:
             whoisDomain = whois.whois(str(domain))
             retry = False
-        except whois.parser.PywhoisError:
+        except (whois.parser.PywhoisError,socket.gaierror):
             print("URL : " + domain + " not in whois database")
             # time.sleep(1.5)
-            return -1
+            queue.put(-1)
+            return
         except ConnectionResetError:
             pass
 
@@ -687,7 +691,8 @@ def UrlToDatabase(url):
             except:
                 print("Can not get HTML content from : " + url)
                 # time.sleep(1.5)
-                return -1
+                queue.put(-1)
+                return
 
     # print(http)
     # print(url)
@@ -733,7 +738,8 @@ def UrlToDatabase(url):
 
     if features[-1] == -2:
         print("port testing error")
-        return -1
+        queue.put(-1)
+        return
 
     # testing http token
     features.append(httpTesting(url))
@@ -783,23 +789,50 @@ def UrlToDatabase(url):
     # testing page rank
     features.append(pageRankTesting(domain))
 
-    return features
+    queue.put(features)
+    return
 
 
 if __name__ == "__main__":
     # execute only if run as a script
 
-    url = "www.paypal.com"
-    results = UrlToDatabase(url)
-
+    t0 = time.time()
     columns = ["having_IP_Address", "URL_Length", "Shortining_Service", "having_At_Symbol", "double_slash_redirecting",
                "Prefix_Suffix", "having_Sub_Domain", "SSLfinal_State", "Domain_registeration_length", "Favicon", "port",
                "HTTPS_token", "Request_URL", "URL_of_Anchor", "Links_in_tags", "SFH", "Submitting_to_email",
                "Abnormal_URL", "Redirect", "on_mouseover", "RightClick", "popUpWidnow", "Iframe", "age_of_domain",
                "DNSRecord", "web_traffic", "Page_Rank", "Google_Index", "Links_pointing_to_page", "Statistical_report"]
 
-    if results != -1:
-        for i in range(len(results)):
-            print(columns[i] + " : " + str(results[i]))
-    else:
-        print("Bad URL, no results")
+    urls = ["netflix.com","api-global.netflix.com","prod.netflix.com","push.prod.netflix.com","google.com","www.google.com","microsoft.com","ichnaea.netflix.com","safebrowsing.googleapis.com","doubleclick.net","facebook.com","g.doubleclick.net","data.microsoft.com","live.com","clients4.google.com","googleads.g.doubleclick.net","secure.netflix.com","apple.com","settings-win.data.microsoft.com","google-analytics.com","nrdp51-appboot.netflix.com","clientservices.googleapis.com","www.googleapis.com","youtube.com","www.google-analytics.com","update.googleapis.com","googleusercontent.com","fonts.googleapis.com","officeapps.live.com","amazonaws.com","www.facebook.com","icloud.com","graph.facebook.com","bing.com","akamaiedge.net","ftl.netflix.com","www.youtube.com","ytimg.com","uiboot.netflix.com","skype.com","mtalk.google.com","accounts.google.com","googlesyndication.com","prod.ftl.netflix.com","events.data.microsoft.com","customerevents.netflix.com","clients1.google.com","nexusrules.officeapps.live.com","nflxso.net","mp.microsoft.com","www.apple.com","i.ytimg.com","office365.com","fbcdn.net","adservice.google.com","googleadservices.com","nccp.netflix.com","1.nflxso.net","edge.skype.com","yahoo.com","push.apple.com","nrdp.nccp.netflix.com","www.googleadservices.com","nflximg.com","config.edge.skype.com","outlook.office365.com","cdn-0.nflximg.com","play.googleapis.com","play.google.com","pagead2.googlesyndication.com","itunes.apple.com","stats.g.doubleclick.net","nrdp.prod.ftl.netflix.com","login.live.com","googletagmanager.com","clients2.google.com","www.googletagmanager.com","akadns.net","xx.fbcdn.net","securepubads.g.doubleclick.net","ls.apple.com","lh3.googleusercontent.com","com.akadns.net","www.icloud.com","hola.org","msn.com","dns-test1.hola.org","v10.events.data.microsoft.com","dsp.mp.microsoft.com","windows.net","dsce9.akamaiedge.net","weather.microsoft.com","ggpht.com","time-ios.apple.com","www.bing.com","digicert.com","facebook.net","connect.facebook.net","msedge.net","windows.com"]
+    failledURLS=[]
+
+
+
+    for url in urls:
+        queue = Queue()
+        proc = Process(target=UrlToDatabase,
+                       args=(url, queue,))  # creation of a process calling longfunction with the specified arguments
+        proc.start()
+
+        try:
+            results = queue.get(timeout=10)
+            proc.join()
+            # if results != -1:
+            #     for i in range(len(results)):
+            #         print(columns[i] + " : " + str(results[i]))
+            # else:
+            #     print("Bad URL, no results")
+        except:
+            print("fail")
+            failledURLS.append(url)
+        proc.terminate()
+
+    print("failed : ")
+    print(failledURLS)
+
+
+
+
+
+
+    print("Time for 100 URL : " + str(time.time()-t0))
