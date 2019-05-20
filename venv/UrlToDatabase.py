@@ -805,6 +805,7 @@ if __name__ == "__main__":
 
     urls = ["netflix.com","api-global.netflix.com","prod.netflix.com","push.prod.netflix.com","google.com","www.google.com","microsoft.com","ichnaea.netflix.com","safebrowsing.googleapis.com","doubleclick.net","facebook.com","g.doubleclick.net","data.microsoft.com","live.com","clients4.google.com","googleads.g.doubleclick.net","secure.netflix.com","apple.com","settings-win.data.microsoft.com","google-analytics.com","nrdp51-appboot.netflix.com","clientservices.googleapis.com","www.googleapis.com","youtube.com","www.google-analytics.com","update.googleapis.com","googleusercontent.com","fonts.googleapis.com","officeapps.live.com","amazonaws.com","www.facebook.com","icloud.com","graph.facebook.com","bing.com","akamaiedge.net","ftl.netflix.com","www.youtube.com","ytimg.com","uiboot.netflix.com","skype.com","mtalk.google.com","accounts.google.com","googlesyndication.com","prod.ftl.netflix.com","events.data.microsoft.com","customerevents.netflix.com","clients1.google.com","nexusrules.officeapps.live.com","nflxso.net","mp.microsoft.com","www.apple.com","i.ytimg.com","office365.com","fbcdn.net","adservice.google.com","googleadservices.com","nccp.netflix.com","1.nflxso.net","edge.skype.com","yahoo.com","push.apple.com","nrdp.nccp.netflix.com","www.googleadservices.com","nflximg.com","config.edge.skype.com","outlook.office365.com","cdn-0.nflximg.com","play.googleapis.com","play.google.com","pagead2.googlesyndication.com","itunes.apple.com","stats.g.doubleclick.net","nrdp.prod.ftl.netflix.com","login.live.com","googletagmanager.com","clients2.google.com","www.googletagmanager.com","akadns.net","xx.fbcdn.net","securepubads.g.doubleclick.net","ls.apple.com","lh3.googleusercontent.com","com.akadns.net","www.icloud.com","hola.org","msn.com","dns-test1.hola.org","v10.events.data.microsoft.com","dsp.mp.microsoft.com","windows.net","dsce9.akamaiedge.net","weather.microsoft.com","ggpht.com","time-ios.apple.com","www.bing.com","digicert.com","facebook.net","connect.facebook.net","msedge.net","windows.com"]
     failledURLS=[]
+    notReacheable = []
 
 
 
@@ -817,6 +818,30 @@ if __name__ == "__main__":
         try:
             results = queue.get(timeout=10)
             proc.join()
+            if results == -1:
+                notReacheable.append(results)
+            # if results != -1:
+            #     for i in range(len(results)):
+            #         print(columns[i] + " : " + str(results[i]))
+            # else:
+            #     print("Bad URL, no results")
+        except:
+            failledURLS.append(url)
+        proc.terminate()
+
+    realfailledURLS = []
+
+    for url in failledURLS:
+        queue = Queue()
+        proc = Process(target=UrlToDatabase,
+                       args=(url, queue,))  # creation of a process calling longfunction with the specified arguments
+        proc.start()
+
+        try:
+            results = queue.get(timeout=60)
+            proc.join()
+            if results == -1:
+                notReacheable.append(results)
             # if results != -1:
             #     for i in range(len(results)):
             #         print(columns[i] + " : " + str(results[i]))
@@ -824,11 +849,12 @@ if __name__ == "__main__":
             #     print("Bad URL, no results")
         except:
             print("fail")
-            failledURLS.append(url)
+            realfailledURLS.append(url)
         proc.terminate()
 
+
     print("failed : ")
-    print(failledURLS)
+    print(realfailledURLS)
 
 
 
