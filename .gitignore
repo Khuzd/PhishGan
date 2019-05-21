@@ -6,3 +6,9 @@ venv/Scripts/
 venv/data/phishTank\.json
 
 venv/graphs/
+
+venv/__pycache__/
+
+\.idea/
+
+geckodriver\.log
