@@ -19,6 +19,7 @@ import struct
 import ssl
 import time
 from multiprocessing import Process, Queue
+import csv
 
 URL_SHORTENER = ["shrinkee.com", "goo.gl", "7.ly", "adf.ly", "admy.link", "al.ly", "bc.vc", "bit.do", "doiop.com",
                  "ity.im", "url.ie", "is.gd", "linkmoji.co", "sh.dz24.info", "lynk.my", "mcaf.ee", "yep.it", "ow.ly",
@@ -205,7 +206,11 @@ def expirationDomainTesting(whois):
     expiration = whois.expiration_date
     if type(expiration) == list:
         expiration = expiration[0]
-    delta = expiration - now
+
+    try:
+        delta = expiration - now
+    except:
+        return -2
 
     if delta.days > 365:
         return -1
@@ -247,7 +252,7 @@ def portTesting(domain):
 
         for port in PORTS_TO_SCAN:
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            sock.settimeout(0.5)
+            sock.settimeout(0.3)
             result = sock.connect_ex((remoteServerIP, port[0]))
             sock.close()
 
@@ -530,8 +535,10 @@ def domainAgeTesting(whois):
 
     if type(creation) == list:
         creation = creation[0]
-
-    delta = now - creation
+    try:
+        delta = now - creation
+    except:
+        return -2
 
     if delta.days > 365 / 2:
         return -1
@@ -587,7 +594,7 @@ def trafficTesting(domain):
 
 
 def pageRankTesting(domain):
-    return 2
+    return -1
 
 
 def googleIndexTesting(url):
@@ -596,10 +603,28 @@ def googleIndexTesting(url):
     :param url: string
     :return: -1 or 1
     """
-    index = googleIndexChecker.google_search("site:" + url)
-    if index:
-        return -1
+    # index = googleIndexChecker.google_search("site:" + url)
+    # if index:
+    #     return -1
+    # return 1
+    html = requests.get('https://www.google.com/search?q=site:'+url).content
+    soup=BeautifulSoup(html, features="lxml")
+    try:
+        if soup.find(id="resultStats").contents != []:
+            #print(soup.findAll(id="resultStats").text)
+            return -1
+    except AttributeError:
+        time.sleep(20)
+        try :
+            if soup.find(id="resultStats").contents != []:
+                # print(soup.findAll(id="resultStats").text)
+                return -1
+        except:
+            return -2
+
     return 1
+
+
 
 
 def linksPointingToTesting(url):
@@ -610,7 +635,7 @@ def linksPointingToTesting(url):
     """
     soup = BeautifulSoup(requests.get("https://www.alexa.com/siteinfo/" + url).content, features="lxml")
     try:
-        countLinks = int(soup.find("", {"class": "linksin"}).find("", {"class": "big data"}).get_text())
+        countLinks = int("".join(soup.find("", {"class": "linksin"}).find("", {"class": "big data"}).get_text().split(",")))
     except AttributeError:
         return 1
     if countLinks == 0:
@@ -729,7 +754,8 @@ def UrlToDatabase(url, queue):
 
     # testing expiration date of domain
     features.append(expirationDomainTesting(whoisDomain))
-
+    if features[-1]== -2:
+        return -1
     # testing favicon href
     features.append(faviconTesting(html, domain))
 
@@ -779,6 +805,8 @@ def UrlToDatabase(url, queue):
 
     # testing domain age
     features.append(domainAgeTesting(whoisDomain))
+    if features[-1]== -2:
+        return -1
 
     # testing DNS record
     features.append(DNSRecordTesting(domain))
@@ -788,6 +816,14 @@ def UrlToDatabase(url, queue):
 
     # testing page rank
     features.append(pageRankTesting(domain))
+
+    features.append(googleIndexTesting(url))
+    if features[-1]== -2:
+        return -2
+
+    features.append(linksPointingToTesting(url))
+
+    features.append(statisticReportTEsting(domain))
 
     queue.put(features)
     return
@@ -809,46 +845,60 @@ if __name__ == "__main__":
 
 
 
-    for url in urls:
-        queue = Queue()
-        proc = Process(target=UrlToDatabase,
-                       args=(url, queue,))  # creation of a process calling longfunction with the specified arguments
-        proc.start()
+    count = 1
+    begin = 51
+    with open("data/top25000.csv", newline='') as csvinfile:
 
-        try:
-            results = queue.get(timeout=10)
-            proc.join()
-            if results == -1:
-                notReacheable.append(results)
-            # if results != -1:
-            #     for i in range(len(results)):
-            #         print(columns[i] + " : " + str(results[i]))
-            # else:
-            #     print("Bad URL, no results")
-        except:
-            failledURLS.append(url)
-        proc.terminate()
+            for row in csv.reader(csvinfile, delimiter=',', quotechar='|'):
+                print ("first : " + str(count))
+
+                if count >= begin:
+                    queue = Queue()
+                    proc = Process(target=UrlToDatabase,
+                                   args=(row[0], queue,))  # creation of a process calling longfunction with the specified arguments
+                    proc.start()
+
+                    try:
+                        results = queue.get(timeout=50)
+                        print(results)
+                        proc.join()
+                        if results == -1:
+                            notReacheable.append(results)
+                        elif results == -2:
+                            failledURLS.append(row[0])
+                            print("google fail")
+                        else:
+                            with open('data/top25000out.csv', 'a') as outcsvfile:
+                                writer = csv.writer(outcsvfile, delimiter=',', quotechar='"')
+                                writer.writerow(row + results)
+
+                    except Exception as e:
+                        failledURLS.append(row[0])
+                        print(e)
+                    proc.terminate()
+                count += 1
 
     realfailledURLS = []
 
+    count=1
     for url in failledURLS:
+        print("second" + str(count))
+        count +=1
         queue = Queue()
         proc = Process(target=UrlToDatabase,
                        args=(url, queue,))  # creation of a process calling longfunction with the specified arguments
         proc.start()
 
         try:
-            results = queue.get(timeout=60)
+            results = queue.get(timeout=90)
             proc.join()
             if results == -1:
                 notReacheable.append(results)
-            # if results != -1:
-            #     for i in range(len(results)):
-            #         print(columns[i] + " : " + str(results[i]))
-            # else:
-            #     print("Bad URL, no results")
+            else:
+                with  open('data/top25000out.csv', 'a') as outcsvfile:
+                    writer = csv.writer(outcsvfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+                    writer.writerow([url] + results)
         except:
-            print("fail")
             realfailledURLS.append(url)
         proc.terminate()
 

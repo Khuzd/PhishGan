@@ -12,7 +12,7 @@ import UCI as uc
 import numpy as np
 
 PHISHTANK_PATH = 'data/phishTank.json'
-UCI_PATH = 'data/UCI_dataset.csv'
+UCI_PATH = 'venv/data/UCI_dataset.csv'
 SELECT_DATASET = 'uc'
 
 
@@ -57,7 +57,7 @@ def glorot_init(shape):
     """
     return tf.random_normal(shape=shape, stddev=1. / tf.sqrt(shape[0] / 2.))
 
-def main():
+def gan(lr,sample):
 
 
     if SELECT_DATASET == 'uc': # using UCI dataset
@@ -65,15 +65,18 @@ def main():
         featuresName,features,results = uc.csvToList(UCI_PATH)
 
         # Training Params
-        num_steps = 2211
-        batch_size = 5
-        learning_rate = 0.000001
+
+
+        datasetSize = 11055
+        batch_size = sample
+        num_steps = datasetSize//batch_size
+        learning_rate = lr
 
 
         # Network Params
         data_dim = 30  # 30 features
-        gen_hidden_dim = 512
-        disc_hidden_dim = 512
+        gen_hidden_dim = 90
+        disc_hidden_dim = 90
         noise_dim = 30  # Noise data points
         gen_hidden_count = 8 # number of hidden layers in generator
         disc_hidden_count = 8 # number of hidden layers in discriminator
@@ -119,6 +122,7 @@ def main():
 
         gen_loss = -tf.reduce_mean(tf.log(disc_fake))
         disc_loss = -tf.reduce_mean(tf.log(disc_real) + tf.log(1. - disc_fake))
+        accuracy = tf.reduce_mean(tf.cast(tf.log(disc_real), tf.float32), name='accuracy')
 
         optimizer_gen = tf.train.AdamOptimizer(learning_rate=learning_rate)
         optimizer_disc = tf.train.AdamOptimizer(learning_rate=learning_rate)
@@ -146,6 +150,9 @@ def main():
 
             # Run the initializer
             sess.run(init)
+            X = []
+            lossValidation= []
+            accuracyValidation=[]
 
             for i in range(1, num_steps + 1):
                 # Prepare Data
@@ -155,19 +162,19 @@ def main():
 
                 # Train
                 feed_dict = {disc_input: batch_x, gen_input: z}
-                _, _, gl, dl = sess.run([train_gen, train_disc, gen_loss, disc_loss],
+                tr, td, gl, dl,ac = sess.run([train_gen, train_disc, gen_loss, disc_loss,accuracy],
                                         feed_dict=feed_dict)
                 if i % 1000 == 0 or i == 1:
                     print('Step %i: Generator Loss: %f, Discriminator Loss: %f' % (i, gl, dl))
+                if i%100==0 or i ==1:
+                    X.append(i)
+                    lossValidation.append(dl)
+                    accuracyValidation.append(ac)
 
+        return(X,lossValidation,accuracyValidation)
 
 
     elif SELECT_DATASET == 'ph': # using phishTank dataset
         features = ph.listFeatures(PHISHTANK_PATH)
 
 
-
-
-if __name__ == "__main__":
-    # execute only if run as a script
-    main()
