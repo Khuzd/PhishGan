@@ -84,6 +84,8 @@ class GAN():
         model.add(LeakyReLU(alpha=0.2))
         model.add(Dense(50))
         model.add(LeakyReLU(alpha=0.2))
+        model.add(Dense(50))
+        model.add(LeakyReLU(alpha=0.2))
         model.add(Dense(1, activation='sigmoid'))
         #plot_model(model, to_file="discriminator.png", show_shapes=True, show_layer_names=True)
         model.summary()
@@ -142,7 +144,7 @@ class GAN():
             g_loss = self.combined.train_on_batch(noise, valid)
 
             # Plot the progress
-            if epoch % 50 == 0:
+            if epoch % 20 == 0:
                 print ("%d [D loss: %f, acc.: %.2f%%] [G loss: %f]" % (epoch, d_loss[0], 100*d_loss[1], g_loss))
                 accuracy.append(d_loss[1])
                 X.append(epoch)
@@ -155,14 +157,14 @@ class GAN():
 
 if __name__ == '__main__':
 
-    for sample in range(45, 105,10):
+    for sample in range(65, 135,10):
         try:
             os.mkdir("graphs/" + str(sample))
         except FileExistsError:
             pass
-        for lr in np.arange(0.0001, 0.01, 0.001):
+        for lr in np.arange(0.0051, 0.011, 0.0005):
             print("sample : %f ; lr : %f" %(sample,lr))
             gan = GAN(lr=lr)
-            X, accuracy, Dloss, Gloss = gan.train(epochs=2000, batch_size=sample)
+            X, accuracy, Dloss, Gloss = gan.train(epochs=4000, batch_size=sample)
             GanGraphGeneration.graphCreation(X, Dloss,  lr, sample, "loss",Gloss)
             GanGraphGeneration.graphCreation(X, accuracy, lr, sample, "accuracy")
