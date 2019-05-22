@@ -603,26 +603,27 @@ def googleIndexTesting(url):
     :param url: string
     :return: -1 or 1
     """
-    # index = googleIndexChecker.google_search("site:" + url)
-    # if index:
-    #     return -1
-    # return 1
-    html = requests.get('https://www.google.com/search?q=site:'+url).content
-    soup=BeautifulSoup(html, features="lxml")
-    try:
-        if soup.find(id="resultStats").contents != []:
-            #print(soup.findAll(id="resultStats").text)
-            return -1
-    except AttributeError:
-        time.sleep(20)
-        try :
-            if soup.find(id="resultStats").contents != []:
-                # print(soup.findAll(id="resultStats").text)
-                return -1
-        except:
-            return -2
-
+    index = googleIndexChecker.google_search("site:" + url)
+    if index:
+        return -1
     return 1
+    # html = requests.get('https://www.google.com/search?q=site:'+url).content
+    # soup=BeautifulSoup(html, features="lxml")
+    # try:
+    #     if soup.find(id="resultStats").contents != []:
+    #         #print(soup.findAll(id="resultStats").text)
+    #         return -1
+    # except AttributeError:
+    #     print("google fail")
+    #     time.sleep(20)
+    #     try :
+    #         if soup.find(id="resultStats").contents != []:
+    #             # print(soup.findAll(id="resultStats").text)
+    #             return -1
+    #     except:
+    #         return -2
+    #
+    # return 1
 
 
 
@@ -846,7 +847,7 @@ if __name__ == "__main__":
 
 
     count = 1
-    begin = 51
+    begin = 151
     with open("data/top25000.csv", newline='') as csvinfile:
 
             for row in csv.reader(csvinfile, delimiter=',', quotechar='|'):
@@ -866,7 +867,6 @@ if __name__ == "__main__":
                             notReacheable.append(results)
                         elif results == -2:
                             failledURLS.append(row[0])
-                            print("google fail")
                         else:
                             with open('data/top25000out.csv', 'a') as outcsvfile:
                                 writer = csv.writer(outcsvfile, delimiter=',', quotechar='"')
