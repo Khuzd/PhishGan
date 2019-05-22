@@ -699,7 +699,7 @@ def UrlToDatabase(url, queue):
             # time.sleep(1.5)
             queue.put(-1)
             return
-        except ConnectionResetError:
+        except (ConnectionResetError,socket.timeout):
             pass
 
     try:
