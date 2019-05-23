@@ -446,7 +446,7 @@ def abnormalURLTesting(url):
     if type(whoisURL) == list:
         whoisURL = whoisURL[0]
 
-    if (whoisURL.lower() not in url):
+    if (whoisURL!= None and whoisURL.lower() not in url):
         return 1
     return -1
 
@@ -603,11 +603,11 @@ def googleIndexTesting(url):
     :param url: string
     :return: -1 or 1
     """
-    index = googleIndexChecker.google_search("site:" + url)
-    if index:
-        return -1
-    return 1
-    # html = requests.get('https://www.google.com/search?q=site:'+url).content
+    # index = googleIndexChecker.google_search("site:" + url)
+    # if index:
+    #     return -1
+    # return 1
+    # html = requests.get('https://www.google.com/search?q=site:'+url, headers=headers, proxies=proxies).content
     # soup=BeautifulSoup(html, features="lxml")
     # try:
     #     if soup.find(id="resultStats").contents != []:
@@ -624,6 +624,15 @@ def googleIndexTesting(url):
     #         return -2
     #
     # return 1
+    try:
+        soup = BeautifulSoup(requests.get("https://www.ecosia.org/search?q=site%3A"+url, stream=False).content,features="lxml")
+        results = re.findall('\d+',soup.find("",{"class":"card-title card-title-result-count"}).text)
+        if len(results) == 1 and results[0]=='0':
+            return 1
+        return -1
+    except Exception as e:
+        print(e)
+        pass
 
 
 
@@ -832,7 +841,6 @@ def UrlToDatabase(url, queue):
 
 if __name__ == "__main__":
     # execute only if run as a script
-
     t0 = time.time()
     columns = ["having_IP_Address", "URL_Length", "Shortining_Service", "having_At_Symbol", "double_slash_redirecting",
                "Prefix_Suffix", "having_Sub_Domain", "SSLfinal_State", "Domain_registeration_length", "Favicon", "port",
@@ -840,15 +848,14 @@ if __name__ == "__main__":
                "Abnormal_URL", "Redirect", "on_mouseover", "RightClick", "popUpWidnow", "Iframe", "age_of_domain",
                "DNSRecord", "web_traffic", "Page_Rank", "Google_Index", "Links_pointing_to_page", "Statistical_report"]
 
-    urls = ["netflix.com","api-global.netflix.com","prod.netflix.com","push.prod.netflix.com","google.com","www.google.com","microsoft.com","ichnaea.netflix.com","safebrowsing.googleapis.com","doubleclick.net","facebook.com","g.doubleclick.net","data.microsoft.com","live.com","clients4.google.com","googleads.g.doubleclick.net","secure.netflix.com","apple.com","settings-win.data.microsoft.com","google-analytics.com","nrdp51-appboot.netflix.com","clientservices.googleapis.com","www.googleapis.com","youtube.com","www.google-analytics.com","update.googleapis.com","googleusercontent.com","fonts.googleapis.com","officeapps.live.com","amazonaws.com","www.facebook.com","icloud.com","graph.facebook.com","bing.com","akamaiedge.net","ftl.netflix.com","www.youtube.com","ytimg.com","uiboot.netflix.com","skype.com","mtalk.google.com","accounts.google.com","googlesyndication.com","prod.ftl.netflix.com","events.data.microsoft.com","customerevents.netflix.com","clients1.google.com","nexusrules.officeapps.live.com","nflxso.net","mp.microsoft.com","www.apple.com","i.ytimg.com","office365.com","fbcdn.net","adservice.google.com","googleadservices.com","nccp.netflix.com","1.nflxso.net","edge.skype.com","yahoo.com","push.apple.com","nrdp.nccp.netflix.com","www.googleadservices.com","nflximg.com","config.edge.skype.com","outlook.office365.com","cdn-0.nflximg.com","play.googleapis.com","play.google.com","pagead2.googlesyndication.com","itunes.apple.com","stats.g.doubleclick.net","nrdp.prod.ftl.netflix.com","login.live.com","googletagmanager.com","clients2.google.com","www.googletagmanager.com","akadns.net","xx.fbcdn.net","securepubads.g.doubleclick.net","ls.apple.com","lh3.googleusercontent.com","com.akadns.net","www.icloud.com","hola.org","msn.com","dns-test1.hola.org","v10.events.data.microsoft.com","dsp.mp.microsoft.com","windows.net","dsce9.akamaiedge.net","weather.microsoft.com","ggpht.com","time-ios.apple.com","www.bing.com","digicert.com","facebook.net","connect.facebook.net","msedge.net","windows.com"]
     failledURLS=[]
     notReacheable = []
 
 
 
     count = 1
-    begin = 151
-    with open("data/top25000.csv", newline='') as csvinfile:
+    begin = 1
+    with open("data/verified_online.csv", newline='') as csvinfile:
 
             for row in csv.reader(csvinfile, delimiter=',', quotechar='|'):
                 print ("first : " + str(count))
@@ -856,7 +863,7 @@ if __name__ == "__main__":
                 if count >= begin:
                     queue = Queue()
                     proc = Process(target=UrlToDatabase,
-                                   args=(row[0], queue,))  # creation of a process calling longfunction with the specified arguments
+                                   args=(row[1], queue,))  # creation of a process calling longfunction with the specified arguments
                     proc.start()
 
                     try:
@@ -866,14 +873,14 @@ if __name__ == "__main__":
                         if results == -1:
                             notReacheable.append(results)
                         elif results == -2:
-                            failledURLS.append(row[0])
+                            failledURLS.append(row[1])
                         else:
-                            with open('data/top25000out.csv', 'a') as outcsvfile:
+                            with open('data/verified_onlineout.csv', 'a') as outcsvfile:
                                 writer = csv.writer(outcsvfile, delimiter=',', quotechar='"')
-                                writer.writerow(row + results)
+                                writer.writerow([row[1]] + results)
 
                     except Exception as e:
-                        failledURLS.append(row[0])
+                        failledURLS.append(row[1])
                         print(e)
                     proc.terminate()
                 count += 1
@@ -895,7 +902,7 @@ if __name__ == "__main__":
             if results == -1:
                 notReacheable.append(results)
             else:
-                with  open('data/top25000out.csv', 'a') as outcsvfile:
+                with  open('data/verified_onlineout.csv', 'a') as outcsvfile:
                     writer = csv.writer(outcsvfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
                     writer.writerow([url] + results)
         except:
