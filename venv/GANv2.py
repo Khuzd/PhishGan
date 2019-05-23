@@ -7,8 +7,10 @@ from keras.layers.convolutional import UpSampling2D, Conv2D
 from keras.models import Sequential, Model
 from keras.optimizers import Adam
 from keras.utils import plot_model
+import keras
 
 import GanGraphGeneration
+import tensorflow as tf
 
 import matplotlib.pyplot as plt
 
@@ -156,6 +158,10 @@ class GAN():
 
 
 if __name__ == '__main__':
+
+    session = tf.Session(config=tf.ConfigProto(device_count={'GPU':1,'CPU':4}))
+    keras.backend.set_session(session)
+
 
     for sample in range(65, 135,10):
         try:
