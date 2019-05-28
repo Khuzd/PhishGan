@@ -123,31 +123,50 @@ class GAN():
             # ---------------------
 
             # Select a random batch of images
-            idx = np.random.randint(0, len(X_train), batch_size)
-            imgs = np.array(X_train)[idx]
+            idxtrain = np.random.randint(0, int(len(X_train)*0.9), batch_size)
+            imgstrain = np.array(X_train)[idxtrain]
 
-            noise = np.random.normal(0, 1, (batch_size, self.countData))
+            idxtest = np.random.randint(int(len(X_train) * 0.9), len(X_train), batch_size)
+            imgstest = np.array(X_train)[idxtest]
+
+            noisetrain = np.random.normal(0, 1, (batch_size, self.countData))
+            noisetest = np.random.normal(0, 1, (batch_size, self.countData))
 
             # Generate a batch of new images
-            gen_imgs = self.generator.predict(noise)
+            gen_imgstrain = self.generator.predict(noisetrain)
+            gen_imgstest = self.generator.predict(noisetest)
 
             # Train the discriminator
-            d_loss_real = self.discriminator.train_on_batch(imgs.reshape(batch_size,self.countData,1), valid)
-            d_loss_fake = self.discriminator.train_on_batch(gen_imgs, fake)
+            d_loss_real = self.discriminator.train_on_batch(imgstrain.reshape(batch_size,self.countData,1), valid)
+            d_loss_fake = self.discriminator.train_on_batch(gen_imgstrain, fake)
             d_loss = 0.5 * np.add(d_loss_real, d_loss_fake)
+
+
+
 
             # ---------------------
             #  Train Generator
             # ---------------------
 
-            noise = np.random.normal(0, 1, (batch_size, self.countData))
+            noisetrain = np.random.normal(0, 1, (batch_size, self.countData))
+            noisetest = np.random.normal(0, 1, (batch_size, self.countData))
 
             # Train the generator (to have the discriminator label samples as valid)
-            g_loss = self.combined.train_on_batch(noise, valid)
+            g_loss = self.combined.train_on_batch(noisetrain, valid)
+
+            # # Test discriminator
+            # vd_loss_real = self.discriminator.test_on_batch(imgstest.reshape(batch_size, self.countData, 1), valid)
+            # vd_loss_fake = self.discriminator.test_on_batch(gen_imgstest, fake)
+            # vd_loss = 0.5 * np.add(vd_loss_real, vd_loss_fake)
+            #
+            # # Test generator
+            # vg_loss = self.combined.train_on_batch(noisetest, valid)
+
 
             # Plot the progress
-            if epoch % 20 == 0:
+            if epoch % 10 == 0:
                 print ("%d [D loss: %f, acc.: %.2f%%] [G loss: %f]" % (epoch, d_loss[0], 100*d_loss[1], g_loss))
+                # print("%d [vD loss: %f, vacc.: %.2f%%] [vG loss: %f]" % (epoch, vd_loss[0], 100 * vd_loss[1], vg_loss))
                 accuracy.append(d_loss[1])
                 X.append(epoch)
                 Dloss.append(d_loss[0])
@@ -163,14 +182,16 @@ if __name__ == '__main__':
     keras.backend.set_session(session)
 
 
-    for sample in range(65, 135,10):
+    for sample in range(105, 106,10):
         try:
             os.mkdir("graphs/" + str(sample))
         except FileExistsError:
             pass
-        for lr in np.arange(0.0051, 0.011, 0.0005):
+        for lr in np.arange(0.008, 0.0081, 0.0005):
             print("sample : %f ; lr : %f" %(sample,lr))
             gan = GAN(lr=lr)
             X, accuracy, Dloss, Gloss = gan.train(epochs=4000, batch_size=sample)
+            X, accuracy, Dloss, Gloss =X[349:], accuracy[349:], Dloss[349:], Gloss[349 :]
+
             GanGraphGeneration.graphCreation(X, Dloss,  lr, sample, "loss",Gloss)
             GanGraphGeneration.graphCreation(X, accuracy, lr, sample, "accuracy")
