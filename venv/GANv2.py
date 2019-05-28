@@ -22,6 +22,9 @@ import numpy as np
 import UCI
 import UrlToDatabase
 
+np.random.seed(7)
+tf.set_random_seed(5)
+
 UCI_PATH = 'data/UCI_dataset.csv'
 CLEAN_PATH = 'data/top25000out - Copy.csv'
 
@@ -201,12 +204,12 @@ if __name__ == '__main__':
     # Phishing = np.array([-1,-1,-1,-1,-1,1,0,-1,-1,1,-1,-1,1,1,1,0,-1,-1,-1,-1,-1,-1,1,-1,-1,-1,-1,1,1,-1])[:].reshape(1,30,1)
 
 
-    for sample in range(115, 135,10):
+    for sample in range(115, 145,5):
         try:
             os.mkdir("graphs/" + str(sample))
         except FileExistsError:
             pass
-        for lr in np.arange(0.0001, 0.011, 0.001):
+        for lr in np.arange(0.004, 0.015, 0.0005):
             print("sample : %f ; lr : %f" %(sample,lr))
             gan = GAN(lr=lr)
             X, accuracy, Dloss, Gloss,vacc,vDloss,vGloss = gan.train(epochs=3500, batch_size=sample)
