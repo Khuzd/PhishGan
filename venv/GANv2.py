@@ -138,12 +138,10 @@ class GAN():
 
             noise = np.random.normal(0, 1, (batch_size, self.countData))
 
-            noisetrain = np.random.normal(0, 1, (batch_size, self.countData))
-            noisetest = np.random.normal(0, 1, (batch_size, self.countData))
+
 
             # Generate a batch of new images
-            gen_imgstrain = self.generator.predict(noisetrain)
-            gen_imgstest = self.generator.predict(noisetest)
+            gen_imgs = self.generator.predict(noise)
 
             # Train the discriminator
             d_loss_real = self.discriminator.train_on_batch(imgst.reshape(batch_size,self.countData,1), valid)
@@ -157,19 +155,19 @@ class GAN():
             #  Train Generator
             # ---------------------
 
-            noisetrain = np.random.normal(0, 1, (batch_size, self.countData))
-            noisetest = np.random.normal(0, 1, (batch_size, self.countData))
-
-            gen_imgs = self.generator.predict(noise)
+            noise = np.random.normal(0, 1, (batch_size, self.countData))
 
             # Train the generator (to have the discriminator label samples as valid)
-            g_loss = self.combined.train_on_batch(noisetrain, valid)
+            g_loss = self.combined.train_on_batch(noise, valid)
+
+            noise = np.random.normal(0, 1, (batch_size, self.countData))
+            gen_imgs = self.generator.predict(noise)
 
             vd_loss_real = self.discriminator.test_on_batch(imgsv.reshape(batch_size, self.countData, 1), valid)
             vd_loss_fake = self.discriminator.test_on_batch(gen_imgs, fake)
             vd_loss = 0.5 * np.add(vd_loss_real, vd_loss_fake)
 
-            vnoise = np.random.normal(0, 1, (batch_size, self.countData))
+            noise = np.random.normal(0, 1, (batch_size, self.countData))
             vg_loss = self.combined.test_on_batch(noise, valid)
 
 
