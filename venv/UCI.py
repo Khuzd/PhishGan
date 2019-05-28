@@ -17,14 +17,13 @@ def csvToList(path):
     listFeatures =[]
     with open(path, newline='') as csvfile:
         for row in csv.reader(csvfile, delimiter=',', quotechar='|'):
-            listFeatures.append(row)
+            listFeatures.append(row[1:])
 
     nameFeatures = listFeatures[0]
-    listFeatures = listFeatures[1:]
     results=[]
-    for i in range(len(listFeatures)):
-        results.append(listFeatures[i][-1])
-        listFeatures[i]=listFeatures[i][:len(listFeatures[i])-1]
+    # for i in range(len(listFeatures)):
+    #     # results.append(listFeatures[i][-1])
+    #     listFeatures[i]=listFeatures[i][:len(listFeatures[i])-1]
 
     return nameFeatures,listFeatures,results
 

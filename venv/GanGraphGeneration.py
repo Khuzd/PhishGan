@@ -13,12 +13,15 @@ import numpy as np
 from scipy.interpolate import splrep, splev
 import decimal
 
-def graphCreation(X,YD,lr,sample,label,YG = None):
+def graphCreation(X,YD,VYD,lr,sample,label,YG = None, VYG = None):
     # bspl = splrep(X, Y, s=1)
     # bspl_y = splev(X, bspl)
-    plt.plot(X, YD, label="Discriminator")
+    plt.plot(X, YD, label="Training Discriminator")
+    plt.plot(X, VYD, label="Validation Discriminator")
     if YG :
-        plt.plot(X, YG, label="Generator")
+        plt.plot(X, YG, label="Trainig Generator")
+        plt.plot(X, VYG, label="Validation Generator")
+
     plt.title(label + " with a sample size of " + str(sample) + " and learning rate of " + str(lr))
     plt.xlabel("epochs")
     plt.ylabel(label)

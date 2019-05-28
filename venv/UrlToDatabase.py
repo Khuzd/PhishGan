@@ -827,7 +827,8 @@ def UrlToDatabase(url, queue):
     # testing page rank
     features.append(pageRankTesting(domain))
 
-    features.append(googleIndexTesting(url))
+    #features.append(googleIndexTesting(url))
+    features.append(-1)
     if features[-1]== -2:
         return -2
 
@@ -855,7 +856,7 @@ if __name__ == "__main__":
 
     count = 1
     begin = 1
-    with open("data/verified_online.csv", newline='') as csvinfile:
+    with open("data/top25000.csv", newline='') as csvinfile:
 
             for row in csv.reader(csvinfile, delimiter=',', quotechar='|'):
                 print ("first : " + str(count))
@@ -863,7 +864,7 @@ if __name__ == "__main__":
                 if count >= begin:
                     queue = Queue()
                     proc = Process(target=UrlToDatabase,
-                                   args=(row[1], queue,))  # creation of a process calling longfunction with the specified arguments
+                                   args=(row[0], queue,))  # creation of a process calling longfunction with the specified arguments
                     proc.start()
 
                     try:
@@ -875,12 +876,12 @@ if __name__ == "__main__":
                         elif results == -2:
                             failledURLS.append(row[1])
                         else:
-                            with open('data/verified_onlineout.csv', 'a') as outcsvfile:
+                            with open('data/top25000out.csv', 'a') as outcsvfile:
                                 writer = csv.writer(outcsvfile, delimiter=',', quotechar='"')
-                                writer.writerow([row[1]] + results)
+                                writer.writerow([row[0]] + results)
 
                     except Exception as e:
-                        failledURLS.append(row[1])
+                        failledURLS.append(row[0])
                         print(e)
                     proc.terminate()
                 count += 1
@@ -902,7 +903,7 @@ if __name__ == "__main__":
             if results == -1:
                 notReacheable.append(results)
             else:
-                with  open('data/verified_onlineout.csv', 'a') as outcsvfile:
+                with  open('data/top25000out.csv', 'a') as outcsvfile:
                     writer = csv.writer(outcsvfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
                     writer.writerow([url] + results)
         except:
