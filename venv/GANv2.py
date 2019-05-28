@@ -179,6 +179,10 @@ class GAN():
                 X.append(epoch)
                 Dloss.append(d_loss[0])
                 Gloss.append(g_loss)
+                vaccuracy.append(vd_loss[1])
+                vDloss.append(vd_loss[0])
+                vGloss.append(vg_loss)
+
 
         return (X,accuracy,Dloss,Gloss,vaccuracy,vDloss,vGloss)
 
