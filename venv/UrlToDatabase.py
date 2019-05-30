@@ -441,14 +441,16 @@ def abnormalURLTesting(url):
     :param url: string
     :return: -1 or 1
     """
+    try :
+        whoisURL = whois.whois(url)["domain_name"]
+        if type(whoisURL) == list:
+            whoisURL = whoisURL[0]
 
-    whoisURL = whois.whois(url)["domain_name"]
-    if type(whoisURL) == list:
-        whoisURL = whoisURL[0]
-
-    if (whoisURL!= None and whoisURL.lower() not in url):
+        if (whoisURL!= None and whoisURL.lower() not in url):
+            return 1
+        return -1
+    except socket.gaierror:
         return 1
-    return -1
 
 
 def forwardingTesting(url, http):
