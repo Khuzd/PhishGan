@@ -675,7 +675,7 @@ def statisticReportTEsting(domain):
         IPList.append(socket.inet_ntoa(struct.pack('!L', int(site['ip_addr']))))
 
     for ip in IPList:
-        if ip == domain:
+        if ip == IPdomain:
             return 1
 
     return -1
