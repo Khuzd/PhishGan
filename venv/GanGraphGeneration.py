@@ -6,11 +6,24 @@ University of Gloucestershire
 Author : Pierrick ROBIC--BUTEZ
 """
 
-import matplotlib.pyplot as plt
-import os,sys
-import Gan
+seed_value= 42
+
+import os
+os.environ["PATH"] += os.pathsep + 'C:/Program Files (x86)/Graphviz2.38/bin'
+os.environ['PYTHONHASHSEED']='0'
+
+import random
+random.seed(seed_value)
+
 import numpy as np
-from scipy.interpolate import splrep, splev
+np.random.seed(seed_value)
+
+import tensorflow as tf
+tf.set_random_seed(seed_value)
+
+import matplotlib.pyplot as plt
+#import Gan
+#from scipy.interpolate import splrep, splev
 import decimal
 
 def graphCreation(X,YD,VYD,lr,sample,label,YG = None, VYG = None):
