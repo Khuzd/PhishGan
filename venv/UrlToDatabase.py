@@ -4,6 +4,7 @@
 Generative Adversarial Networks (GAN) research applied to the phishing detection.
 University of Gloucestershire
 Author : Pierrick ROBIC--BUTEZ
+2019
 """
 
 import re

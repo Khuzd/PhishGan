@@ -4,34 +4,60 @@
 Generative Adversarial Networks (GAN) research applied to the phishing detection.
 University of Gloucestershire
 Author : Pierrick ROBIC--BUTEZ
+2019
 """
 
-seed_value= 42
+seed_value = 42
 
+# 1. Set the `PYTHONHASHSEED` environment variable at a fixed value
 import os
-os.environ["PATH"] += os.pathsep + 'C:/Program Files (x86)/Graphviz2.38/bin'
-os.environ['PYTHONHASHSEED']='0'
 
+os.environ['PYTHONHASHSEED'] = '0'
+os.environ['CUDA_VISIBLE_DEVICES'] = ''
+
+# 2. Set the `python` built-in pseudo-random generator at a fixed value
 import random
+
 random.seed(seed_value)
 
+# 3. Set the `numpy` pseudo-random generator at a fixed value
 import numpy as np
+
 np.random.seed(seed_value)
 
+# 4. Set the `tensorflow` pseudo-random generator at a fixed value
 import tensorflow as tf
+
 tf.set_random_seed(seed_value)
 
-import matplotlib.pyplot as plt
-#import Gan
-#from scipy.interpolate import splrep, splev
-import decimal
+# 5. Configure a new global `tensorflow` session
+from keras import backend as K
 
-def graphCreation(X,YD,VYD,lr,sample,label,YG = None, VYG = None):
-    # bspl = splrep(X, Y, s=1)
-    # bspl_y = splev(X, bspl)
+session_conf = tf.ConfigProto(intra_op_parallelism_threads=1, inter_op_parallelism_threads=1, device_count={"CPU": 1})
+sess = tf.Session(graph=tf.get_default_graph(), config=session_conf)
+K.set_session(sess)
+
+import matplotlib.pyplot as plt
+import decimal
+from GANv2 import GAN
+
+
+def graphCreation(X, YD, VYD, lr, sample, label, YG=None, VYG=None):
+    """
+    create graph and save it in /graphs directory
+    :param X: list (X axis)
+    :param YD: list (Y discriminator training)
+    :param VYD:  list (y discriminator validation)
+    :param lr: float (learning rate)
+    :param sample: int
+    :param label: string
+    :param YG: list (Y generator training)
+    :param VYG: list (Y generator validation)
+    """
+
     plt.plot(X, YD, label="Training Discriminator")
     plt.plot(X, VYD, label="Validation Discriminator")
-    if YG :
+    if YG:
         plt.plot(X, YG, label="Trainig Generator")
         plt.plot(X, VYG, label="Validation Generator")
 
@@ -39,17 +65,42 @@ def graphCreation(X,YD,VYD,lr,sample,label,YG = None, VYG = None):
     plt.xlabel("epochs")
     plt.ylabel(label)
     plt.legend()
-    # plt.plot(X, bspl_y)
-    #plt.show()
-    plt.savefig("graphs/" +str(sample)+"/"+ str(label)+str(decimal.Decimal(lr).quantize(decimal.Decimal('.0001'), rounding=decimal.ROUND_DOWN))+".png")
+    plt.savefig("graphs/" + str(sample) + "/" + str(label) + str(
+        decimal.Decimal(lr).quantize(decimal.Decimal('.0001'), rounding=decimal.ROUND_DOWN)) + ".png")
     plt.clf()
 
 
+def multiGraph(begin_lr, end_lr, step_lr, epochs, begin_sampleSize, end_SampleSize, step_sampleSize, plotFrequency):
+    """
+    Create multiple graph for the GAN to analyse parameters efficiency
+    :param begin_lr: float (first learning rate)
+    :param end_lr: float (last learning rate)
+    :param step_lr: float (step of the learning rate increase)
+    :param epochs: int
+    :param begin_sampleSize: int (first sample size)
+    :param end_SampleSize: int (last sample size)
+    :param step_sampleSize: int (step of the sample size increase)
+    :param plotFrequency: int (number of epochs between two following points)
+    :return:
+    """
 
-def multiGraph():
-    for sample in range (1,10):
-        os.mkdir("venv/graphs/"+str(sample))
-        for lr in np.arange(0.0001,0.01,0.0001):
-            X,loss,accuracy = Gan.gan(lr,sample)
-            graphCreation(X,loss,lr,sample,"loss")
-            graphCreation(X,accuracy,lr,sample,"accuracy")
+    for sample in range(begin_sampleSize, end_SampleSize, step_sampleSize):
+        try:
+            os.mkdir("graphs/" + str(sample))
+        except FileExistsError:
+            pass
+        for lr in np.arange(begin_lr, end_lr, step_lr):
+            random.seed(seed_value)
+            np.random.seed(seed_value)
+            tf.set_random_seed(seed_value)
+            session_conf = tf.ConfigProto(intra_op_parallelism_threads=1, inter_op_parallelism_threads=1,
+                                          device_count={"CPU": 1})
+            sess = tf.Session(graph=tf.get_default_graph(), config=session_conf)
+            K.set_session(sess)
+
+            print("sample : %f ; lr : %f" % (sample, lr))
+            gan = GAN(lr=lr)
+            X, accuracy, Dloss, Gloss, vacc, vDloss, vGloss = gan.train(epochs=epochs, batch_size=sample,
+                                                                        plotFrequency=plotFrequency)
+            graphCreation(X, Dloss, vDloss, lr, sample, "loss", Gloss, vGloss)
+            graphCreation(X, accuracy, vacc, lr, sample, "accuracy")
