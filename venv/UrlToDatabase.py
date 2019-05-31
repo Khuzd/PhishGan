@@ -858,7 +858,7 @@ if __name__ == "__main__":
 
     count = 1
     begin = 1
-    with open("data/top25000.csv", newline='') as csvinfile:
+    with open("data/verified_online.csv", newline='', encoding = 'utf-8') as csvinfile:
 
             for row in csv.reader(csvinfile, delimiter=',', quotechar='|'):
                 print ("first : " + str(count))
