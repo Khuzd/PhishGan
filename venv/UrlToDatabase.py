@@ -18,9 +18,14 @@ import googleIndexChecker
 import json
 import struct
 import ssl
-import time
 from multiprocessing import Process, Queue
 import csv
+
+columns = ["having_IP_Address", "URL_Length", "Shortining_Service", "having_At_Symbol", "double_slash_redirecting",
+               "Prefix_Suffix", "having_Sub_Domain", "SSLfinal_State", "Domain_registeration_length", "Favicon", "port",
+               "HTTPS_token", "Request_URL", "URL_of_Anchor", "Links_in_tags", "SFH", "Submitting_to_email",
+               "Abnormal_URL", "Redirect", "on_mouseover", "RightClick", "popUpWidnow", "Iframe", "age_of_domain",
+               "DNSRecord", "web_traffic", "Page_Rank", "Google_Index", "Links_pointing_to_page", "Statistical_report"]
 
 URL_SHORTENER = ["shrinkee.com", "goo.gl", "7.ly", "adf.ly", "admy.link", "al.ly", "bc.vc", "bit.do", "doiop.com",
                  "ity.im", "url.ie", "is.gd", "linkmoji.co", "sh.dz24.info", "lynk.my", "mcaf.ee", "yep.it", "ow.ly",
@@ -845,21 +850,17 @@ def UrlToDatabase(url, queue):
 
 if __name__ == "__main__":
     # execute only if run as a script
-    t0 = time.time()
-    columns = ["having_IP_Address", "URL_Length", "Shortining_Service", "having_At_Symbol", "double_slash_redirecting",
-               "Prefix_Suffix", "having_Sub_Domain", "SSLfinal_State", "Domain_registeration_length", "Favicon", "port",
-               "HTTPS_token", "Request_URL", "URL_of_Anchor", "Links_in_tags", "SFH", "Submitting_to_email",
-               "Abnormal_URL", "Redirect", "on_mouseover", "RightClick", "popUpWidnow", "Iframe", "age_of_domain",
-               "DNSRecord", "web_traffic", "Page_Rank", "Google_Index", "Links_pointing_to_page", "Statistical_report"]
+    pass
 
+def extraction(input, output, begin=1):
     failledURLS=[]
     notReacheable = []
 
 
 
     count = 1
-    begin = 1
-    with open("data/verified_online.csv", newline='', encoding = 'utf-8') as csvinfile:
+    begin = begin
+    with open(input, newline='', encoding = 'utf-8') as csvinfile:
 
             for row in csv.reader(csvinfile, delimiter=',', quotechar='|'):
                 print ("first : " + str(count))
@@ -877,11 +878,14 @@ if __name__ == "__main__":
                         if results == -1:
                             notReacheable.append(results)
                         elif results == -2:
-                            failledURLS.append(row[1])
+                            failledURLS.append(row[0])
                         else:
-                            with open('data/top25000out.csv', 'a') as outcsvfile:
-                                writer = csv.writer(outcsvfile, delimiter=',', quotechar='"')
-                                writer.writerow([row[0]] + results)
+                            if output != "console":
+                                with open(output, 'a') as outcsvfile:
+                                    writer = csv.writer(outcsvfile, delimiter=',', quotechar='"')
+                                    writer.writerow([row[0]] + results)
+                            else :
+                                print ([row[0]] + results)
 
                     except Exception as e:
                         failledURLS.append(row[0])
@@ -906,20 +910,24 @@ if __name__ == "__main__":
             if results == -1:
                 notReacheable.append(results)
             else:
-                with  open('data/top25000out.csv', 'a') as outcsvfile:
-                    writer = csv.writer(outcsvfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-                    writer.writerow([url] + results)
+                if output != "console":
+                    with  open(output, 'a') as outcsvfile:
+                        writer = csv.writer(outcsvfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+                        writer.writerow([url] + results)
+                else :
+                    print([url] + results)
         except:
             realfailledURLS.append(url)
         proc.terminate()
 
 
-    print("failed : ")
-    print(realfailledURLS)
+    if output != "console":
+        with  open(output, 'a') as outcsvfile:
+            writer = csv.writer(outcsvfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+            for fail in realfailledURLS:
+                writer.writerow(fail)
+    else :
+        for fail in realfailledURLS:
+            print(fail)
 
 
-
-
-
-
-    print("Time for 100 URL : " + str(time.time()-t0))
