@@ -43,7 +43,7 @@ K.set_session(sess)
 from keras.layers import Input, Dense, Reshape, Flatten
 from keras.layers import BatchNormalization
 from keras.layers.advanced_activations import LeakyReLU
-from keras.models import Sequential, Model
+from keras.models import Sequential, Model, model_from_json
 from keras.utils import plot_model
 
 import UCI
@@ -143,6 +143,58 @@ class GAN():
         validity = model(img)
 
         return Model(img, validity)
+
+    def save(self, prefix, path):
+        """
+        Save the GAN model in path/prefix+suffix
+        :param prefix: string
+        :param path: string
+        :return: nothing
+        """
+
+        ## Save models
+        #Combined
+        combined_model_json = self.combined.to_json()
+        with open(path+"/"+prefix+"combined_model.json", "w") as json_file:
+            json_file.write(combined_model_json)
+        #Discriminator
+        discriminator_model_json = self.discriminator.to_json()
+        with open(path+"/"+prefix+"discriminator_model.json", "w") as json_file:
+            json_file.write(discriminator_model_json)
+        # Generator
+        generator_model_json = self.generator.to_json()
+        with open(path+"/"+prefix+"generator_model.json", "w") as json_file:
+            json_file.write(generator_model_json)
+
+        ## Save weights
+        self.combined.save_weights(path+"/"+prefix+"combined_model.h5")
+        self.discriminator.save_weights(path + "/" + prefix + "discriminator_model.h5")
+        self.generator.save_weights(path + "/" + prefix + "generator_model.h5")
+
+    def load(self, prefix, path):
+        ## Load models
+        # Combined
+        json_file = open(path+"/"+prefix+"combined_model.json", 'r')
+        loaded_model_json = json_file.read()
+        json_file.close()
+        self.combined = model_from_json(loaded_model_json)
+
+        # Discriminator
+        json_file = open(path + "/" + prefix + "discriminator_model.json", 'r')
+        loaded_model_json = json_file.read()
+        json_file.close()
+        self.discriminator = model_from_json(loaded_model_json)
+
+        # Generator
+        json_file = open(path + "/" + prefix + "generator_model.json", 'r')
+        loaded_model_json = json_file.read()
+        json_file.close()
+        self.generator = model_from_json(loaded_model_json)
+
+        ## Load weights
+        self.combined.load_weights(path+"/"+prefix+"combined_model.h5")
+        self.discriminator.load_weights(path + "/" + prefix + "discriminator_model.h5")
+        self.generator.load_weights(path + "/" + prefix + "generator_model.h5")
 
     def train(self, epochs, batch_size=128, plotFrequency=20):
         """
