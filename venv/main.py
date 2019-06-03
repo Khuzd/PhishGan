@@ -6,26 +6,307 @@ University of Gloucestershire
 Author : Pierrick ROBIC--BUTEZ
 2019
 """
+seed_value = 42
+
+# 1. Set the `PYTHONHASHSEED` environment variable at a fixed value
+import os
+
+os.environ['PYTHONHASHSEED'] = '0'
+os.environ['CUDA_VISIBLE_DEVICES'] = ''
+
+# 2. Set the `python` built-in pseudo-random generator at a fixed value
+import random
+
+random.seed(seed_value)
+
+# 3. Set the `numpy` pseudo-random generator at a fixed value
+import numpy as np
+
+np.random.seed(seed_value)
+
+# 4. Set the `tensorflow` pseudo-random generator at a fixed value
+import tensorflow as tf
+
+tf.set_random_seed(seed_value)
+
+# 5. Configure a new global `tensorflow` session
+from keras import backend as K
+
+session_conf = tf.ConfigProto(intra_op_parallelism_threads=1, inter_op_parallelism_threads=1, device_count={"CPU": 1})
+sess = tf.Session(graph=tf.get_default_graph(), config=session_conf)
+K.set_session(sess)
+
 
 import argparse
+import GanGraphGeneration
+import UrlToDatabase
+from multiprocessing import Process, Queue
+import csv
+from GANv2 import GAN
+
+THRESHOLD = 0.88
+
+
+def graph(args):
+    """
+    Function for the graphParser
+    :param args: Namespace
+    :return: nothing
+    """
+    GanGraphGeneration.multiGraph(args.beginLR[0],args.endLR[0],args.stepLR[0],args.epochs[0],args.beginSample[0],args.endSample[0],args.stepSample[0],args.pltFrequency[0])
+
+def extraction(args):
+    """
+        Function for the extractionParser
+        :param args: Namespace
+        :return: nothing
+        """
+    if "URL" in args:
+        queue = Queue()
+        proc = Process(target=UrlToDatabase.UrlToDatabase,
+                       args=(args.URL[0], queue,))
+        proc.start()
+        try:
+            results = queue.get(timeout=50)
+        except:
+            results = "fail"
+
+        if args.output[0] == "console":
+            print(str(args.URL[0]) + str(results))
+        else :
+            with open(args.output[0], 'a') as outcsvfile:
+                writer = csv.writer(outcsvfile, delimiter=',', quotechar='"')
+                writer.writerow(args.URL[0] + results)
+
+    elif "file" in args:
+        UrlToDatabase.extraction(args.file[0],args.output[0],args.begin[0])
+
+    elif "list" in args:
+        for url in args.list():
+            queue = Queue()
+            proc = Process(target=UrlToDatabase.UrlToDatabase,
+                           args=(url, queue,))
+            proc.start()
+            try:
+                results = queue.get(timeout=50)
+            except:
+                results = "fail"
+            if args.output[0] == "console":
+                print(str(url) + str(results))
+            else:
+                with open(args.output[0], 'a') as outcsvfile:
+                    writer = csv.writer(outcsvfile, delimiter=',', quotechar='"')
+                    writer.writerow(url + results)
+
+def creation(args):
+    """
+        Function for the creationParser
+        :param args: Namespace
+        :return: nothing
+        """
+    random.seed(seed_value)
+    np.random.seed(seed_value)
+    tf.set_random_seed(seed_value)
+    session_conf = tf.ConfigProto(intra_op_parallelism_threads=1, inter_op_parallelism_threads=1,
+                                  device_count={"CPU": 1})
+    sess = tf.Session(graph=tf.get_default_graph(), config=session_conf)
+    K.set_session(sess)
+    gan = GAN(lr=args.lr[0])
+    gan.train(args.epochs[0],args.size[0])
+    gan.save(args.name[0],args.location[0])
+
+def prediction(args):
+    """
+        Function for the predictParser
+        :param args: Namespace
+        :return: nothing
+        """
+    gan = GAN(0.1)
+    gan.load(args.name[0],args.location[0])
+
+    if "URL" in args:
+        queue = Queue()
+        proc = Process(target=UrlToDatabase.UrlToDatabase,
+                       args=(args.URL[0], queue,))
+        proc.start()
+        try:
+            features = queue.get(timeout=50)
+            results = gan.discriminator.predict_on_batch(features)
+        except:
+            print("fail")
+            return
+
+        if "verbose" in args:
+            if args.output[0] == "console":
+                if results[0]<THRESHOLD:
+                    print(str(args.URL[0]) + " : " + str(results[0]) + " -> phishing")
+                else :
+                    print(str(args.URL[0]) + " : " + str(results[0]) + " -> safe")
+
+            else :
+                with open(args.output[0], 'a') as outcsvfile:
+                    writer = csv.writer(outcsvfile, delimiter=',', quotechar='"')
+                    if results[0] < THRESHOLD:
+                        writer.writerow(str(args.URL[0]) + " : " + str(results[0]) + " -> phishing")
+                    else :
+                        writer.writerow(str(args.URL[0]) + " : " + str(results[0]) + " -> safe")
+
+        else :
+            if args.output[0] == "console":
+                if results[0]<THRESHOLD:
+                    print(str(args.URL[0]) + " -> phishing")
+                else :
+                    print(str(args.URL[0]) + " -> safe")
+
+            else :
+                with open(args.output[0], 'a') as outcsvfile:
+                    writer = csv.writer(outcsvfile, delimiter=',', quotechar='"')
+                    if results[0] < THRESHOLD:
+                        writer.writerow(str(args.URL[0]) + " -> phishing")
+                    else :
+                        writer.writerow(str(args.URL[0]) + " -> safe")
+
+    if "list" in args:
+        for url in args.list:
+            queue = Queue()
+            proc = Process(target=UrlToDatabase.UrlToDatabase,
+                           args=(url, queue,))
+            proc.start()
+            try:
+                features = queue.get(timeout=50)
+                results = gan.discriminator.predict_on_batch(features)
+            except:
+                print("fail")
+                return
+
+            if "verbose" in args:
+                if args.output[0] == "console":
+                    if results[0] < THRESHOLD:
+                        print(str(url) + " : " + str(results[0]) + " -> phishing")
+                    else:
+                        print(str(url) + " : " + str(results[0]) + " -> safe")
+
+                else:
+                    with open(args.output[0], 'a') as outcsvfile:
+                        writer = csv.writer(outcsvfile, delimiter=',', quotechar='"')
+                        if results[0] < THRESHOLD:
+                            writer.writerow(str(url) + " : " + str(results[0]) + " -> phishing")
+                        else:
+                            writer.writerow(str(url) + " : " + str(results[0]) + " -> safe")
+
+            else:
+                if args.output[0] == "console":
+                    if results[0] < THRESHOLD:
+                        print(str(url) + " -> phishing")
+                    else:
+                        print(str(url) + " -> safe")
+
+                else:
+                    with open(args.output[0], 'a') as outcsvfile:
+                        writer = csv.writer(outcsvfile, delimiter=',', quotechar='"')
+                        if results[0] < THRESHOLD:
+                            writer.writerow(str(url) + " -> phishing")
+                        else:
+                            writer.writerow(str(url) + " -> safe")
+
+    if "file" in args:
+        with open(args.file[0], newline='', encoding='utf-8') as csvinfile:
+            for url in csv.reader(csvinfile, delimiter=',', quotechar='|'):
+                queue = Queue()
+                proc = Process(target=UrlToDatabase.UrlToDatabase,
+                               args=(url, queue,))
+                proc.start()
+                try:
+                    features = queue.get(timeout=50)
+                    results = gan.discriminator.predict_on_batch(features)
+                except:
+                    print("fail")
+                    return
+
+                if "verbose" in args:
+                    if args.output[0] == "console":
+                        if results[0] < THRESHOLD:
+                            print(str(url) + " : " + str(results[0]) + " -> phishing")
+                        else:
+                            print(str(url) + " : " + str(results[0]) + " -> safe")
+
+                    else:
+                        with open(args.output[0], 'a') as outcsvfile:
+                            writer = csv.writer(outcsvfile, delimiter=',', quotechar='"')
+                            if results[0] < THRESHOLD:
+                                writer.writerow(str(url) + " : " + str(results[0]) + " -> phishing")
+                            else:
+                                writer.writerow(str(url) + " : " + str(results[0]) + " -> safe")
+
+                else:
+                    if args.output[0] == "console":
+                        if results[0] < THRESHOLD:
+                            print(str(url) + " -> phishing")
+                        else:
+                            print(str(url) + " -> safe")
+
+                    else:
+                        with open(args.output[0], 'a') as outcsvfile:
+                            writer = csv.writer(outcsvfile, delimiter=',', quotechar='"')
+                            if results[0] < THRESHOLD:
+                                writer.writerow(str(url) + " -> phishing")
+                            else:
+                                writer.writerow(str(url) + " -> safe")
+
+
+
+
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Gan interaction program")
+    subparsers = parser.add_subparsers(help='commands')
 
-    graphsGroup = parser.add_argument_group('GraphsGeneration', 'Used to generate graphs')
-    graphsGroup.add_argument("-v", "--verbose", action="store_true")
-    graphsGroup.add_argument("-b", "--berbose", action="store_true")
 
-    extractGroup = parser.add_argument_group('Features extracion', 'Used to extract features from URL')
-    extractGroup.add_argument("-g", "--gerbose", action="store_true")
-    extractGroup.add_argument("-c", "--cerbose", action="store_true")
+    graphParser = subparsers.add_parser("graph", help="Used to generate graphs of the accuracy and loss for a GAN")
+    graphParser.add_argument("--beginLR", required= True, nargs=1, type=float, help="First learning rate")
+    graphParser.add_argument("--endLR", required= True, nargs=1, type=float, help="Last learning rate")
+    graphParser.add_argument("--stepLR", required= True, nargs=1, type=float, help="Step of the learning rate")
+    graphParser.add_argument("--beginSample", required= True, nargs=1, type=int, help="First sample size")
+    graphParser.add_argument("--endSample", required= True, nargs=1, type=int, help="Last sample size")
+    graphParser.add_argument("--stepSample", required= True, nargs=1, type=int, help="Step of the sample size")
+    graphParser.add_argument("--epochs", required= True, nargs=1, type=int, help="Number of epoches for the training")
+    graphParser.add_argument("--pltFrequency", required= True, nargs=1, type=int, help="Frequency of the plots on graphs")
+    graphParser.set_defaults(func=graph)
 
-    testingGroup = parser.add_argument_group('GAN prediction' , 'Used to predict the category of URL')
 
-    createModelGroup = parser.add_argument_group('Model GAN creation' , 'Used to create a GAN model and to save it')
+    extractParser = subparsers.add_parser("extract", help="Used to extract features from an URL or a list of URLs")
+    typeInputExtract = extractParser.add_mutually_exclusive_group(required=True)
+    typeInputExtract.add_argument("-u", "--URL", nargs=1, type=str, help="One URL to extract features from it")
+    typeInputExtract.add_argument("-f", "--file", nargs=1, type=str, help="File which contains URL(s) to extract features from it. Format : one URL per line")
+    typeInputExtract.add_argument("-l", "--list", type=str, help="List of URLs to extract features from them")
+    extractParser.add_argument("-b", "--begin", default=1, type=int, nargs=1, help="Number of the lines where the extraction will begin")
+    extractParser.add_argument("-o", "--output", default="console", type=str, nargs=1, help="Option to chose the type of ouptput : console or file. If file, the value have to be the path to a existing file")
+    extractParser.set_defaults(func=extraction)
 
-    #exclusionMode = parser.
 
+    creationParser = subparsers.add_parser("create", help="Used to create a GAN model and save it")
+    creationParser.add_argument("-e", "--epochs", required=True, nargs=1, type=int, help="Number of epoches for the training")
+    creationParser.add_argument("-s", "--size", required=True, nargs=1, type=int, help="Size of the sample for the training")
+    creationParser.add_argument("-r", "--lr", required=True, nargs=1, type=float, help="Learning rate for the training")
+    creationParser.add_argument("-l", "--location", required=True, nargs=1, type=str, help="Location for the save")
+    creationParser.add_argument('-n', "--name", required=True, nargs=1, type=str, help="Name of the save")
+    creationParser.set_defaults(func=creation)
+
+
+    predictParser = subparsers.add_parser("predict", help="Used to to predict phisihing comportement of an URL")
+    typeInputPredict = predictParser.add_mutually_exclusive_group(required=True)
+    typeInputPredict.add_argument("-u", "--URL", nargs=1, type=str, help="One URL to extract features from it")
+    typeInputPredict.add_argument("-li", "--list", type=str, help="List of URLs to extract features from them")
+    typeInputPredict.add_argument("-f", "--file", nargs=1, type=str,
+                                  help="File which contains URL(s) to extract features from it. Format : one URL per line")
+    predictParser.add_argument("-v", "--verbose", default = False, type=bool, nargs=1, help="Verbose option")
+    predictParser.add_argument("-l", "--location", required=True, nargs=1, type=str, help="Location of the GAN save")
+    predictParser.add_argument("-o", "--output", default="console", type=str, nargs=1, help="Option to chose the type of ouptput : console or file. If file, the value have to be the path to a existing file")
+    predictParser.set_defaults(func=prediction)
 
 
     args = parser.parse_args()
+    args.func(args)
+
+
