@@ -19,6 +19,7 @@ def csvToList(path):
     with open(path, newline='') as csvfile:
         for row in csv.reader(csvfile, delimiter=',', quotechar='|'):
             listFeatures.append(row[1:])
+        csvfile.close()
 
     nameFeatures = listFeatures[0]
     results=[]

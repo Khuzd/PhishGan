@@ -85,6 +85,7 @@ class GAN():
         # Trains the generator to fool the discriminator
         self.combined = Model(z, validity)
         self.combined.compile(loss='binary_crossentropy', optimizer=optimizer)
+        del validity,img,z,optimizer
 
     def build_generator(self, plot=False):
         """
@@ -171,6 +172,8 @@ class GAN():
         self.discriminator.save_weights(path + "/" + prefix + "discriminator_model.h5")
         self.generator.save_weights(path + "/" + prefix + "generator_model.h5")
 
+        del generator_model_json,discriminator_model_json,combined_model_json
+
     def load(self, prefix, path):
         ## Load models
         # Combined
@@ -195,6 +198,8 @@ class GAN():
         self.combined.load_weights(path+"/"+prefix+"combined_model.h5")
         self.discriminator.load_weights(path + "/" + prefix + "discriminator_model.h5")
         self.generator.load_weights(path + "/" + prefix + "generator_model.h5")
+
+        del json_file,loaded_model_json
 
     def train(self, epochs, batch_size=128, plotFrequency=20):
         """
@@ -279,5 +284,8 @@ class GAN():
                 vaccuracy.append(vd_loss[1])
                 vDloss.append(vd_loss[0])
                 vGloss.append(vg_loss)
+
+            del idxt, imgst,idxv,imgsv, noise, g_loss, gen_data, d_loss, d_loss_real, d_loss_fake,vd_loss_real,vd_loss,vd_loss_fake, vg_loss
+        del X_train
 
         return (X, accuracy, Dloss, Gloss, vaccuracy, vDloss, vGloss)

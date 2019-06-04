@@ -104,3 +104,6 @@ def multiGraph(begin_lr, end_lr, step_lr, epochs, begin_sampleSize, end_SampleSi
                                                                         plotFrequency=plotFrequency)
             graphCreation(X, Dloss, vDloss, lr, sample, "loss", Gloss, vGloss)
             graphCreation(X, accuracy, vacc, lr, sample, "accuracy")
+            del gan, sess, session_conf, X, accuracy, Dloss, Gloss, vacc, vDloss, vGloss
+            K.clear_session()
+
