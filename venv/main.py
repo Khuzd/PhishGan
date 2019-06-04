@@ -61,42 +61,47 @@ def extraction(args):
         :param args: Namespace
         :return: nothing
         """
-    if "URL" in args:
+    print (args)
+    if args.URL !=None:
         queue = Queue()
         proc = Process(target=UrlToDatabase.UrlToDatabase,
                        args=(args.URL[0], queue,))
         proc.start()
         try:
             results = queue.get(timeout=50)
-        except:
-            results = "fail"
+            proc.join()
+        except Exception as e:
+            results = " fail "+str(e)
 
-        if args.output[0] == "console":
-            print(str(args.URL[0]) + str(results))
+        if args.output == "console" or args.output[0] == "console":
+            print(str(args.URL[0]) + " " + str(results))
         else :
             with open(args.output[0], 'a') as outcsvfile:
-                writer = csv.writer(outcsvfile, delimiter=',', quotechar='"')
-                writer.writerow(args.URL[0] + results)
+                writer = csv.writer(outcsvfile, delimiter=' ', quotechar='"')
+                writer.writerow([args.URL[0]] + [str(results)])
+        proc.terminate()
 
-    elif "file" in args:
+    elif args.file != None:
         UrlToDatabase.extraction(args.file[0],args.output[0],args.begin[0])
 
-    elif "list" in args:
-        for url in args.list():
+    elif args.list !=None:
+        for url in args.list:
             queue = Queue()
             proc = Process(target=UrlToDatabase.UrlToDatabase,
                            args=(url, queue,))
             proc.start()
             try:
                 results = queue.get(timeout=50)
-            except:
-                results = "fail"
-            if args.output[0] == "console":
+                proc.join()
+            except Exception as e:
+                results = " fail " + str(e)
+            if args.output == "console" or args.output[0] == "console":
                 print(str(url) + str(results))
             else:
                 with open(args.output[0], 'a') as outcsvfile:
-                    writer = csv.writer(outcsvfile, delimiter=',', quotechar='"')
-                    writer.writerow(url + results)
+                    writer = csv.writer(outcsvfile, delimiter=' ', quotechar='"')
+                    writer.writerow([str(url)] + [str(results)])
+            proc.terminate()
 
 def creation(args):
     """
@@ -124,20 +129,20 @@ def prediction(args):
     gan = GAN(0.1)
     gan.load(args.name[0],args.location[0])
 
-    if "URL" in args:
+    if args.URL != None:
         queue = Queue()
         proc = Process(target=UrlToDatabase.UrlToDatabase,
                        args=(args.URL[0], queue,))
         proc.start()
         try:
             features = queue.get(timeout=50)
-            results = gan.discriminator.predict_on_batch(features)
+            results = gan.discriminator.predict_on_batch(np.array(features).astype(np.int)[:].reshape(1, 30, 1))
         except:
             print("fail")
             return
 
-        if "verbose" in args:
-            if args.output[0] == "console":
+        if args.verbose == True:
+            if args.output == "console" or args.output[0] == "console":
                 if results[0]<THRESHOLD:
                     print(str(args.URL[0]) + " : " + str(results[0]) + " -> phishing")
                 else :
@@ -145,14 +150,14 @@ def prediction(args):
 
             else :
                 with open(args.output[0], 'a') as outcsvfile:
-                    writer = csv.writer(outcsvfile, delimiter=',', quotechar='"')
+                    writer = csv.writer(outcsvfile, delimiter=' ', quotechar='"')
                     if results[0] < THRESHOLD:
-                        writer.writerow(str(args.URL[0]) + " : " + str(results[0]) + " -> phishing")
+                        writer.writerow([str(args.URL[0]) + " : " + str(results[0]) + " -> phishing"])
                     else :
-                        writer.writerow(str(args.URL[0]) + " : " + str(results[0]) + " -> safe")
+                        writer.writerow([str(args.URL[0]) + " : " + str(results[0]) + " -> safe"])
 
         else :
-            if args.output[0] == "console":
+            if args.output == "console" or args.output[0] == "console":
                 if results[0]<THRESHOLD:
                     print(str(args.URL[0]) + " -> phishing")
                 else :
@@ -160,13 +165,13 @@ def prediction(args):
 
             else :
                 with open(args.output[0], 'a') as outcsvfile:
-                    writer = csv.writer(outcsvfile, delimiter=',', quotechar='"')
+                    writer = csv.writer(outcsvfile, delimiter=' ', quotechar='"')
                     if results[0] < THRESHOLD:
-                        writer.writerow(str(args.URL[0]) + " -> phishing")
+                        writer.writerow([str(args.URL[0])] + [" -> phishing"])
                     else :
-                        writer.writerow(str(args.URL[0]) + " -> safe")
+                        writer.writerow([str(args.URL[0])] + [" -> safe"])
 
-    if "list" in args:
+    if args.list != None:
         for url in args.list:
             queue = Queue()
             proc = Process(target=UrlToDatabase.UrlToDatabase,
@@ -174,13 +179,13 @@ def prediction(args):
             proc.start()
             try:
                 features = queue.get(timeout=50)
-                results = gan.discriminator.predict_on_batch(features)
+                results = gan.discriminator.predict_on_batch(np.array(features).astype(np.int)[:].reshape(1, 30, 1))
             except:
                 print("fail")
                 return
 
-            if "verbose" in args:
-                if args.output[0] == "console":
+            if args.verbose == True:
+                if args.output == "console" or args.output[0] == "console":
                     if results[0] < THRESHOLD:
                         print(str(url) + " : " + str(results[0]) + " -> phishing")
                     else:
@@ -188,14 +193,14 @@ def prediction(args):
 
                 else:
                     with open(args.output[0], 'a') as outcsvfile:
-                        writer = csv.writer(outcsvfile, delimiter=',', quotechar='"')
+                        writer = csv.writer(outcsvfile, delimiter=' ', quotechar='"')
                         if results[0] < THRESHOLD:
-                            writer.writerow(str(url) + " : " + str(results[0]) + " -> phishing")
+                            writer.writerow([str(url) + " : " + str(results[0]) + " -> phishing"])
                         else:
-                            writer.writerow(str(url) + " : " + str(results[0]) + " -> safe")
+                            writer.writerow([str(url) + " : " + str(results[0]) + " -> safe"])
 
             else:
-                if args.output[0] == "console":
+                if args.output == "console" or args.output[0] == "console":
                     if results[0] < THRESHOLD:
                         print(str(url) + " -> phishing")
                     else:
@@ -203,13 +208,13 @@ def prediction(args):
 
                 else:
                     with open(args.output[0], 'a') as outcsvfile:
-                        writer = csv.writer(outcsvfile, delimiter=',', quotechar='"')
+                        writer = csv.writer(outcsvfile, delimiter=' ', quotechar='"')
                         if results[0] < THRESHOLD:
-                            writer.writerow(str(url) + " -> phishing")
+                            writer.writerow([str(url) + " -> phishing"])
                         else:
-                            writer.writerow(str(url) + " -> safe")
+                            writer.writerow([str(url) + " -> safe"])
 
-    if "file" in args:
+    if args.file != None:
         with open(args.file[0], newline='', encoding='utf-8') as csvinfile:
             for url in csv.reader(csvinfile, delimiter=',', quotechar='|'):
                 queue = Queue()
@@ -218,13 +223,13 @@ def prediction(args):
                 proc.start()
                 try:
                     features = queue.get(timeout=50)
-                    results = gan.discriminator.predict_on_batch(features)
+                    results = gan.discriminator.predict_on_batch(np.array(features).astype(np.int)[:].reshape(1, 30, 1))
                 except:
                     print("fail")
                     return
 
-                if "verbose" in args:
-                    if args.output[0] == "console":
+                if args.verbose == True:
+                    if args.output == "console" or args.output[0] == "console":
                         if results[0] < THRESHOLD:
                             print(str(url) + " : " + str(results[0]) + " -> phishing")
                         else:
@@ -232,14 +237,14 @@ def prediction(args):
 
                     else:
                         with open(args.output[0], 'a') as outcsvfile:
-                            writer = csv.writer(outcsvfile, delimiter=',', quotechar='"')
+                            writer = csv.writer(outcsvfile, delimiter=' ', quotechar='"')
                             if results[0] < THRESHOLD:
-                                writer.writerow(str(url) + " : " + str(results[0]) + " -> phishing")
+                                writer.writerow([str(url) + " : " + str(results[0]) + " -> phishing"])
                             else:
-                                writer.writerow(str(url) + " : " + str(results[0]) + " -> safe")
+                                writer.writerow([str(url) + " : " + str(results[0]) + " -> safe"])
 
                 else:
-                    if args.output[0] == "console":
+                    if args.output == "console" or args.output[0] == "console":
                         if results[0] < THRESHOLD:
                             print(str(url) + " -> phishing")
                         else:
@@ -247,11 +252,11 @@ def prediction(args):
 
                     else:
                         with open(args.output[0], 'a') as outcsvfile:
-                            writer = csv.writer(outcsvfile, delimiter=',', quotechar='"')
+                            writer = csv.writer(outcsvfile, delimiter=' ', quotechar='"')
                             if results[0] < THRESHOLD:
-                                writer.writerow(str(url) + " -> phishing")
+                                writer.writerow([str(url) + " -> phishing"])
                             else:
-                                writer.writerow(str(url) + " -> safe")
+                                writer.writerow([str(url) + " -> safe"])
 
 
 
@@ -279,7 +284,7 @@ if __name__ == "__main__":
     typeInputExtract = extractParser.add_mutually_exclusive_group(required=True)
     typeInputExtract.add_argument("-u", "--URL", nargs=1, type=str, help="One URL to extract features from it")
     typeInputExtract.add_argument("-f", "--file", nargs=1, type=str, help="File which contains URL(s) to extract features from it. Format : one URL per line")
-    typeInputExtract.add_argument("-l", "--list", type=str, help="List of URLs to extract features from them")
+    typeInputExtract.add_argument("-l", "--list", nargs = '+', help="List of URLs to extract features from them")
     extractParser.add_argument("-b", "--begin", default=1, type=int, nargs=1, help="Number of the lines where the extraction will begin")
     extractParser.add_argument("-o", "--output", default="console", type=str, nargs=1, help="Option to chose the type of ouptput : console or file. If file, the value have to be the path to a existing file")
     extractParser.set_defaults(func=extraction)
@@ -297,16 +302,19 @@ if __name__ == "__main__":
     predictParser = subparsers.add_parser("predict", help="Used to to predict phisihing comportement of an URL")
     typeInputPredict = predictParser.add_mutually_exclusive_group(required=True)
     typeInputPredict.add_argument("-u", "--URL", nargs=1, type=str, help="One URL to extract features from it")
-    typeInputPredict.add_argument("-li", "--list", type=str, help="List of URLs to extract features from them")
+    typeInputPredict.add_argument("-li", "--list", nargs = '+', help="List of URLs to extract features from them")
     typeInputPredict.add_argument("-f", "--file", nargs=1, type=str,
                                   help="File which contains URL(s) to extract features from it. Format : one URL per line")
-    predictParser.add_argument("-v", "--verbose", default = False, type=bool, nargs=1, help="Verbose option")
+    predictParser.add_argument("-v", "--verbose", action="store_true", help="Verbose option")
     predictParser.add_argument("-l", "--location", required=True, nargs=1, type=str, help="Location of the GAN save")
+    predictParser.add_argument('-n', "--name", required=True, nargs=1, type=str, help="Name of the save")
     predictParser.add_argument("-o", "--output", default="console", type=str, nargs=1, help="Option to chose the type of ouptput : console or file. If file, the value have to be the path to a existing file")
     predictParser.set_defaults(func=prediction)
 
 
     args = parser.parse_args()
+    print (args)
     args.func(args)
+    exit(0)
 
 
