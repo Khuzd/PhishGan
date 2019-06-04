@@ -150,39 +150,39 @@ def prediction(args):
     gan.load(args.name[0],args.location[0])
 
     if args.file != None:
-        for features in UCI.csvToList(args.file[0])[1]:
-            # print(features)
-            results = gan.discriminator.predict_on_batch(np.array(features).astype(np.int)[:].reshape(1, 30, 1))
+        data = UCI.csvToList(args.file[0])[1]
+        for url in data.keys():
+            results = gan.discriminator.predict_on_batch(np.array(data[url]).astype(np.int)[:].reshape(1, 30, 1))
 
             if args.verbose == True:
                 if args.output == "console" or args.output[0] == "console":
                     if results[0] < THRESHOLD:
-                        print(str(features[0]) + " : " + str(results[0]) + " -> phishing")
+                        print(str(url) + " : " + str(results[0]) + " -> phishing")
                     else:
-                        print(str(features[0]) + " : " + str(results[0]) + " -> safe")
+                        print(str(url) + " : " + str(results[0]) + " -> safe")
 
                 else:
                     with open(args.output[0], 'a') as outcsvfile:
                         writer = csv.writer(outcsvfile, delimiter=' ', quotechar='"')
                         if results[0] < THRESHOLD:
-                            writer.writerow([str(features[0]) + " : " + str(results[0]) + " -> phishing"])
+                            writer.writerow([str(url) + " : " + str(results[0]) + " -> phishing"])
                         else:
-                            writer.writerow([str(features[0]) + " : " + str(results[0]) + " -> safe"])
+                            writer.writerow([str(url) + " : " + str(results[0]) + " -> safe"])
 
             else:
                 if args.output == "console" or args.output[0] == "console":
                     if results[0] < THRESHOLD:
-                        print(str(features[0]) + " -> phishing")
+                        print(str(url) + " -> phishing")
                     else:
-                        print(str(features[0]) + " -> safe")
+                        print(str(url) + " -> safe")
 
                 else:
                     with open(args.output[0], 'a') as outcsvfile:
                         writer = csv.writer(outcsvfile, delimiter=' ', quotechar='"')
                         if results[0] < THRESHOLD:
-                            writer.writerow([str(features[0]) + " -> phishing"])
+                            writer.writerow([str(url) + " -> phishing"])
                         else:
-                            writer.writerow([str(features[0]) + " -> safe"])
+                            writer.writerow([str(url) + " -> safe"])
 
 
 

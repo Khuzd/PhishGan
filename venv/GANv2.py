@@ -209,7 +209,7 @@ class GAN():
         """
 
         # Load the dataset
-        X_train = UCI.csvToList(path)[1]
+        X_train = list(UCI.csvToList(path)[1].values())
 
         # Adversarial ground truths
         valid = np.ones((batch_size, 1))

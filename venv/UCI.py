@@ -15,17 +15,16 @@ def csvToList(path):
     :param path: path to the UCI csv file
     :return: (title of features list, list of features for all sites)
     """
-    listFeatures =[]
+    features = {}
     with open(path, newline='') as csvfile:
         for row in csv.reader(csvfile, delimiter=',', quotechar='|'):
-            listFeatures.append(row[1:])
+            features[row[0]] = row[1:]
         csvfile.close()
 
-    nameFeatures = listFeatures[0]
     results=[]
     # for i in range(len(listFeatures)):
     #     # results.append(listFeatures[i][-1])
     #     listFeatures[i]=listFeatures[i][:len(listFeatures[i])-1]
 
-    return nameFeatures,listFeatures,results
+    return results, features
 
