@@ -50,9 +50,6 @@ import UCI
 
 os.environ["PATH"] += os.pathsep + 'C:/Program Files (x86)/Graphviz2.38/bin'
 
-UCI_PATH = 'data/UCI_dataset.csv'
-CLEAN_PATH = 'data/top25000out - Copy.csv'
-
 
 class GAN():
     def __init__(self, lr):
@@ -201,17 +198,18 @@ class GAN():
 
         del json_file,loaded_model_json
 
-    def train(self, epochs, batch_size=128, plotFrequency=20):
+    def train(self, epochs, path, batch_size=128, plotFrequency=20):
         """
         Train the GAN
         :param epochs: int
+        :param path: string (path to the dataset used to train the GAN)
         :param batch_size: int
         :param plotFrequency: int
         :return: list of 7 list (to plot training/validation accuracy/loss of generator/discriminator)
         """
 
         # Load the dataset
-        X_train = UCI.csvToList(UCI_PATH)[1]
+        X_train = UCI.csvToList(path)[0]
 
         # Adversarial ground truths
         valid = np.ones((batch_size, 1))

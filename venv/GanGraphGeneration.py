@@ -70,7 +70,7 @@ def graphCreation(X, YD, VYD, lr, sample, label, YG=None, VYG=None):
     plt.clf()
 
 
-def multiGraph(begin_lr, end_lr, step_lr, epochs, begin_sampleSize, end_SampleSize, step_sampleSize, plotFrequency):
+def multiGraph(begin_lr, end_lr, step_lr, epochs, begin_sampleSize, end_SampleSize, step_sampleSize, plotFrequency, datasetPath):
     """
     Create multiple graph for the GAN to analyse parameters efficiency
     :param begin_lr: float (first learning rate)
@@ -81,6 +81,7 @@ def multiGraph(begin_lr, end_lr, step_lr, epochs, begin_sampleSize, end_SampleSi
     :param end_SampleSize: int (last sample size)
     :param step_sampleSize: int (step of the sample size increase)
     :param plotFrequency: int (number of epochs between two following points)
+    :param datasetPath: string (path to the dataset used to train the GAN)
     :return:
     """
 
@@ -101,7 +102,7 @@ def multiGraph(begin_lr, end_lr, step_lr, epochs, begin_sampleSize, end_SampleSi
             print("sample : %f ; lr : %f" % (sample, lr))
             gan = GAN(lr=lr)
             X, accuracy, Dloss, Gloss, vacc, vDloss, vGloss = gan.train(epochs=epochs, batch_size=sample,
-                                                                        plotFrequency=plotFrequency)
+                                                                        plotFrequency=plotFrequency, path=datasetPath)
             graphCreation(X, Dloss, vDloss, lr, sample, "loss", Gloss, vGloss)
             graphCreation(X, accuracy, vacc, lr, sample, "accuracy")
             del gan, sess, session_conf, X, accuracy, Dloss, Gloss, vacc, vDloss, vGloss

@@ -46,6 +46,9 @@ from GANv2 import GAN
 
 THRESHOLD = 0.88
 
+UCI_PATH = 'data/UCI_dataset.csv'
+CLEAN_PATH = 'data/top25000out - Copy.csv'
+
 
 def graph(args):
     """
@@ -53,7 +56,16 @@ def graph(args):
     :param args: Namespace
     :return: nothing
     """
-    GanGraphGeneration.multiGraph(args.beginLR[0],args.endLR[0],args.stepLR[0],args.epochs[0],args.beginSample[0],args.endSample[0],args.stepSample[0],args.pltFrequency[0])
+
+    if args.dataset[0] == "UCI":
+        dataset = UCI_PATH
+    elif args.dataset[0] == "clean":
+        dataset = CLEAN_PATH
+    else:
+        dataset = args.dataset[0]
+
+
+    GanGraphGeneration.multiGraph(args.beginLR[0],args.endLR[0],args.stepLR[0],args.epochs[0],args.beginSample[0],args.endSample[0],args.stepSample[0],args.pltFrequency[0],dataset)
 
 def extraction(args):
     """
@@ -117,7 +129,15 @@ def creation(args):
     sess = tf.Session(graph=tf.get_default_graph(), config=session_conf)
     K.set_session(sess)
     gan = GAN(lr=args.lr[0])
-    gan.train(args.epochs[0],args.size[0])
+
+    if args.dataset[0] == "UCI":
+        dataset = UCI_PATH
+    elif args.dataset[0] == "clean":
+        dataset = CLEAN_PATH
+    else:
+        dataset = args.dataset[0]
+
+    gan.train(args.epochs[0],args.size[0], dataset)
     gan.save(args.name[0],args.location[0])
 
 def prediction(args):
@@ -260,9 +280,6 @@ def prediction(args):
 
 
 
-
-
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Gan interaction program")
     subparsers = parser.add_subparsers(help='commands')
@@ -277,6 +294,8 @@ if __name__ == "__main__":
     graphParser.add_argument("--stepSample", required= True, nargs=1, type=int, help="Step of the sample size")
     graphParser.add_argument("--epochs", required= True, nargs=1, type=int, help="Number of epoches for the training")
     graphParser.add_argument("--pltFrequency", required= True, nargs=1, type=int, help="Frequency of the plots on graphs")
+    graphParser.add_argument('-d', "--dataset", required=True, nargs=1, type=str,
+                                help="Dataset used to train the GAN. Can be UCI, clean or path")
     graphParser.set_defaults(func=graph)
 
 
@@ -296,6 +315,7 @@ if __name__ == "__main__":
     creationParser.add_argument("-r", "--lr", required=True, nargs=1, type=float, help="Learning rate for the training")
     creationParser.add_argument("-l", "--location", required=True, nargs=1, type=str, help="Location for the save")
     creationParser.add_argument('-n', "--name", required=True, nargs=1, type=str, help="Name of the save")
+    creationParser.add_argument('-d', "--dataset", required=True, nargs=1, type=str, help="Dataset used to train the GAN. Can be UCI, clean or path")
     creationParser.set_defaults(func=creation)
 
 
@@ -313,7 +333,6 @@ if __name__ == "__main__":
 
 
     args = parser.parse_args()
-    print (args)
     args.func(args)
     exit(0)
 
