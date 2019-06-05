@@ -42,7 +42,7 @@ import decimal
 from GANv2 import GAN
 
 
-def graphCreation(X, YD, VYD, lr, sample, label, YG=None, VYG=None, path="graphs"):
+def graphCreation(X, YD, VYD, lr, sample, label, YG=None, VYG=None, path="graphs",suffix=""):
     """
     create graph and save it in /graphs directory
     :param X: list (X axis)
@@ -53,6 +53,7 @@ def graphCreation(X, YD, VYD, lr, sample, label, YG=None, VYG=None, path="graphs
     :param label: string
     :param YG: list (Y generator training)
     :param VYG: list (Y generator validation)
+    :param suffix: str
     """
 
     plt.plot(X, YD, label="Training Discriminator")
@@ -66,11 +67,11 @@ def graphCreation(X, YD, VYD, lr, sample, label, YG=None, VYG=None, path="graphs
     plt.ylabel(label)
     plt.legend()
     plt.savefig(path + "/" + str(sample) + "/" + str(label) + str(
-        decimal.Decimal(lr).quantize(decimal.Decimal('.0001'), rounding=decimal.ROUND_DOWN)) + ".png")
+        decimal.Decimal(lr).quantize(decimal.Decimal('.0001'), rounding=decimal.ROUND_DOWN)) + suffix + ".png")
     plt.clf()
 
 
-def multiGraph(begin_lr, end_lr, step_lr, epochs, begin_sampleSize, end_SampleSize, step_sampleSize, plotFrequency, datasetPath, outPath="graphs"):
+def multiGraph(begin_lr, end_lr, step_lr, epochs, begin_sampleSize, end_SampleSize, step_sampleSize, plotFrequency, datasetPath, outPath="graphs", divide=1):
     """
     Create multiple graph for the GAN to analyse parameters efficiency
     :param begin_lr: float (first learning rate)
@@ -82,6 +83,7 @@ def multiGraph(begin_lr, end_lr, step_lr, epochs, begin_sampleSize, end_SampleSi
     :param step_sampleSize: int (step of the sample size increase)
     :param plotFrequency: int (number of epochs between two following points)
     :param datasetPath: string (path to the dataset used to train the GAN)
+    :param divide: Into how many graphs the simulation is divided
     :return:
     """
 
@@ -103,8 +105,14 @@ def multiGraph(begin_lr, end_lr, step_lr, epochs, begin_sampleSize, end_SampleSi
             gan = GAN(lr=lr)
             X, accuracy, Dloss, Gloss, vacc, vDloss, vGloss = gan.train(epochs=epochs, batch_size=sample,
                                                                         plotFrequency=plotFrequency, path=datasetPath)
-            graphCreation(X, Dloss, vDloss, lr, sample, "loss", Gloss, vGloss, path=outPath)
-            graphCreation(X, accuracy, vacc, lr, sample, "accuracy", path=outPath)
+            if divide == 1:
+                graphCreation(X, Dloss, vDloss, lr, sample, "loss", Gloss, vGloss, path=outPath)
+                graphCreation(X, accuracy, vacc, lr, sample, "accuracy", path=outPath)
+            else:
+                for i in range(divide):
+                    lenght = len(X)
+                    graphCreation(X[i*(lenght//divide):(i+1)*(lenght//divide)], Dloss[i*(lenght//divide):(i+1)*(lenght//divide)], vDloss[i*(lenght//divide):(i+1)*(lenght//divide)], lr, sample, "loss", Gloss[i*(lenght//divide):(i+1)*(lenght//divide)], vGloss[i*(lenght//divide):(i+1)*(lenght//divide)], path=outPath, suffix="part"+str(i))
+                    graphCreation(X[i*(lenght//divide):(i+1)*(lenght//divide)], accuracy[i*(lenght//divide):(i+1)*(lenght//divide)], vacc[i*(lenght//divide):(i+1)*(lenght//divide)], lr, sample, "accuracy", path=outPath, suffix="part"+str(i))
             del gan, sess, session_conf, X, accuracy, Dloss, Gloss, vacc, vDloss, vGloss
             K.clear_session()
 

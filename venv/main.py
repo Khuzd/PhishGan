@@ -64,8 +64,9 @@ def graph(args):
     else:
         dataset = args.dataset[0]
 
-
-    GanGraphGeneration.multiGraph(args.beginLR[0],args.endLR[0],args.stepLR[0],args.epochs[0],args.beginSample[0],args.endSample[0],args.stepSample[0],args.pltFrequency[0],dataset, outPath=''.join(args.output))
+    if type(args.division) == list:
+        args.division = args.division[0]
+    GanGraphGeneration.multiGraph(args.beginLR[0],args.endLR[0],args.stepLR[0],args.epochs[0],args.beginSample[0],args.endSample[0],args.stepSample[0],args.pltFrequency[0],dataset, outPath=''.join(args.output), divide=args.division)
 
 def extraction(args):
     """
@@ -204,6 +205,8 @@ if __name__ == "__main__":
                                 help="Dataset used to train the GAN. Can be UCI, clean or path")
     graphParser.add_argument('-o', "--output", default="graphs", nargs=1, type=str,
                              help="Dataset used to train the GAN. Can be UCI, clean or path")
+    graphParser.add_argument('-di', "--division", default=1, nargs=1, type=int,
+                             help="Into how many graphs the simulation is divided")
 
     graphParser.set_defaults(func=graph)
 
@@ -239,7 +242,7 @@ if __name__ == "__main__":
 
 
     args = parser.parse_args()
-    # print(args)
+    print(args)
     args.func(args)
     exit(0)
 
