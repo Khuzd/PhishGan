@@ -36,7 +36,6 @@ session_conf = tf.ConfigProto(intra_op_parallelism_threads=1, inter_op_paralleli
 sess = tf.Session(graph=tf.get_default_graph(), config=session_conf)
 K.set_session(sess)
 
-
 import argparse
 import GanGraphGeneration
 import UrlToDatabase
@@ -44,6 +43,7 @@ from multiprocessing import Process, Queue
 import csv
 from GANv2 import GAN
 import UCI
+
 THRESHOLD = 0.88
 
 UCI_PATH = 'data/UCI_dataset.csv'
@@ -66,7 +66,10 @@ def graph(args):
 
     if type(args.division) == list:
         args.division = args.division[0]
-    GanGraphGeneration.multiGraph(args.beginLR[0],args.endLR[0],args.stepLR[0],args.epochs[0],args.beginSample[0],args.endSample[0],args.stepSample[0],args.pltFrequency[0],dataset, outPath=''.join(args.output), divide=args.division)
+    GanGraphGeneration.multiGraph(args.beginLR[0], args.endLR[0], args.stepLR[0], args.epochs[0], args.beginSample[0],
+                                  args.endSample[0], args.stepSample[0], args.pltFrequency[0], dataset,
+                                  outPath=''.join(args.output), divide=args.division)
+
 
 def extraction(args):
     """
@@ -74,8 +77,8 @@ def extraction(args):
         :param args: Namespace
         :return: nothing
         """
-    print (args)
-    if args.URL !=None:
+    print(args)
+    if args.URL != None:
         queue = Queue()
         proc = Process(target=UrlToDatabase.UrlToDatabase,
                        args=(args.URL[0], queue,))
@@ -84,20 +87,20 @@ def extraction(args):
             results = queue.get(timeout=50)
             proc.join()
         except Exception as e:
-            results = " fail "+str(e)
+            results = " fail " + str(e)
 
         if args.output == "console" or args.output[0] == "console":
             print(str(args.URL[0]) + " " + str(results))
-        else :
+        else:
             with open(args.output[0], 'a') as outcsvfile:
                 writer = csv.writer(outcsvfile, delimiter=' ', quotechar='"')
                 writer.writerow([args.URL[0]] + [str(results)])
         proc.terminate()
 
     elif args.file != None:
-        UrlToDatabase.extraction(args.file[0],args.output[0],args.begin[0])
+        UrlToDatabase.extraction(args.file[0], args.output[0], args.begin[0])
 
-    elif args.list !=None:
+    elif args.list != None:
         for url in args.list:
             queue = Queue()
             proc = Process(target=UrlToDatabase.UrlToDatabase,
@@ -115,6 +118,7 @@ def extraction(args):
                     writer = csv.writer(outcsvfile, delimiter=' ', quotechar='"')
                     writer.writerow([str(url)] + [str(results)])
             proc.terminate()
+
 
 def creation(args):
     """
@@ -139,7 +143,8 @@ def creation(args):
         dataset = args.dataset[0]
 
     gan.train(args.epochs[0], dataset, args.size[0])
-    gan.save(args.name[0],args.location[0])
+    gan.save(args.name[0], args.location[0])
+
 
 def prediction(args):
     """
@@ -148,7 +153,7 @@ def prediction(args):
         :return: nothing
         """
     gan = GAN(0.1)
-    gan.load(args.name[0],args.location[0])
+    gan.load(args.name[0], args.location[0])
 
     if args.file != None:
         data = UCI.csvToList(args.file[0])[1]
@@ -186,23 +191,22 @@ def prediction(args):
                             writer.writerow([str(url) + " -> safe"])
 
 
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Gan interaction program")
     subparsers = parser.add_subparsers(help='commands')
 
-
     graphParser = subparsers.add_parser("graph", help="Used to generate graphs of the accuracy and loss for a GAN")
-    graphParser.add_argument("--beginLR", required= True, nargs=1, type=float, help="First learning rate")
-    graphParser.add_argument("--endLR", required= True, nargs=1, type=float, help="Last learning rate")
-    graphParser.add_argument("--stepLR", required= True, nargs=1, type=float, help="Step of the learning rate")
-    graphParser.add_argument("--beginSample", required= True, nargs=1, type=int, help="First sample size")
-    graphParser.add_argument("--endSample", required= True, nargs=1, type=int, help="Last sample size")
-    graphParser.add_argument("--stepSample", required= True, nargs=1, type=int, help="Step of the sample size")
-    graphParser.add_argument("--epochs", required= True, nargs=1, type=int, help="Number of epoches for the training")
-    graphParser.add_argument("--pltFrequency", required= True, nargs=1, type=int, help="Frequency of the plots on graphs")
+    graphParser.add_argument("--beginLR", required=True, nargs=1, type=float, help="First learning rate")
+    graphParser.add_argument("--endLR", required=True, nargs=1, type=float, help="Last learning rate")
+    graphParser.add_argument("--stepLR", required=True, nargs=1, type=float, help="Step of the learning rate")
+    graphParser.add_argument("--beginSample", required=True, nargs=1, type=int, help="First sample size")
+    graphParser.add_argument("--endSample", required=True, nargs=1, type=int, help="Last sample size")
+    graphParser.add_argument("--stepSample", required=True, nargs=1, type=int, help="Step of the sample size")
+    graphParser.add_argument("--epochs", required=True, nargs=1, type=int, help="Number of epoches for the training")
+    graphParser.add_argument("--pltFrequency", required=True, nargs=1, type=int,
+                             help="Frequency of the plots on graphs")
     graphParser.add_argument('-d', "--dataset", required=True, nargs=1, type=str,
-                                help="Dataset used to train the GAN. Can be UCI, clean or path")
+                             help="Dataset used to train the GAN. Can be UCI, clean or path")
     graphParser.add_argument('-o', "--output", default="graphs", nargs=1, type=str,
                              help="Dataset used to train the GAN. Can be UCI, clean or path")
     graphParser.add_argument('-di', "--division", default=1, nargs=1, type=int,
@@ -210,40 +214,41 @@ if __name__ == "__main__":
 
     graphParser.set_defaults(func=graph)
 
-
     extractParser = subparsers.add_parser("extract", help="Used to extract features from an URL or a list of URLs")
     typeInputExtract = extractParser.add_mutually_exclusive_group(required=True)
     typeInputExtract.add_argument("-u", "--URL", nargs=1, type=str, help="One URL to extract features from it")
-    typeInputExtract.add_argument("-f", "--file", nargs=1, type=str, help="File which contains URL(s) to extract features from it. Format : one URL per line")
-    typeInputExtract.add_argument("-l", "--list", nargs = '+', help="List of URLs to extract features from them")
-    extractParser.add_argument("-b", "--begin", default=1, type=int, nargs=1, help="Number of the lines where the extraction will begin")
-    extractParser.add_argument("-o", "--output", default="console", type=str, nargs=1, help="Option to chose the type of ouptput : console or file. If file, the value have to be the path to a existing file")
+    typeInputExtract.add_argument("-f", "--file", nargs=1, type=str,
+                                  help="File which contains URL(s) to extract features from it. Format : one URL per line")
+    typeInputExtract.add_argument("-l", "--list", nargs='+', help="List of URLs to extract features from them")
+    extractParser.add_argument("-b", "--begin", default=1, type=int, nargs=1,
+                               help="Number of the lines where the extraction will begin")
+    extractParser.add_argument("-o", "--output", default="console", type=str, nargs=1,
+                               help="Option to chose the type of ouptput : console or file. If file, the value have to be the path to a existing file")
     extractParser.set_defaults(func=extraction)
 
-
     creationParser = subparsers.add_parser("create", help="Used to create a GAN model and save it")
-    creationParser.add_argument("-e", "--epochs", required=True, nargs=1, type=int, help="Number of epoches for the training")
-    creationParser.add_argument("-s", "--size", required=True, nargs=1, type=int, help="Size of the sample for the training")
+    creationParser.add_argument("-e", "--epochs", required=True, nargs=1, type=int,
+                                help="Number of epoches for the training")
+    creationParser.add_argument("-s", "--size", required=True, nargs=1, type=int,
+                                help="Size of the sample for the training")
     creationParser.add_argument("-r", "--lr", required=True, nargs=1, type=float, help="Learning rate for the training")
     creationParser.add_argument("-l", "--location", required=True, nargs=1, type=str, help="Location for the save")
     creationParser.add_argument('-n', "--name", required=True, nargs=1, type=str, help="Name of the save")
-    creationParser.add_argument('-d', "--dataset", required=True, nargs=1, type=str, help="Dataset used to train the GAN. Can be UCI, clean or path")
+    creationParser.add_argument('-d', "--dataset", required=True, nargs=1, type=str,
+                                help="Dataset used to train the GAN. Can be UCI, clean or path")
     creationParser.set_defaults(func=creation)
-
 
     predictParser = subparsers.add_parser("predict", help="Used to to predict phisihing comportement of an URL")
     predictParser.add_argument("-f", "--file", nargs=1, type=str, required=True,
-                                  help="File which contains URL(s) to extract features from it. Format : one URL per line")
+                               help="File which contains URL(s) to extract features from it. Format : one URL per line")
     predictParser.add_argument("-v", "--verbose", action="store_true", help="Verbose option")
     predictParser.add_argument("-l", "--location", required=True, nargs=1, type=str, help="Location of the GAN save")
     predictParser.add_argument('-n', "--name", required=True, nargs=1, type=str, help="Name of the save")
-    predictParser.add_argument("-o", "--output", default="console", type=str, nargs=1, help="Option to chose the type of ouptput : console or file. If file, the value have to be the path to a existing file")
+    predictParser.add_argument("-o", "--output", default="console", type=str, nargs=1,
+                               help="Option to chose the type of ouptput : console or file. If file, the value have to be the path to a existing file")
     predictParser.set_defaults(func=prediction)
-
 
     args = parser.parse_args()
     print(args)
     args.func(args)
     exit(0)
-
-

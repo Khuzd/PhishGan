@@ -22,10 +22,10 @@ from multiprocessing import Process, Queue
 import csv
 
 columns = ["having_IP_Address", "URL_Length", "Shortining_Service", "having_At_Symbol", "double_slash_redirecting",
-               "Prefix_Suffix", "having_Sub_Domain", "SSLfinal_State", "Domain_registeration_length", "Favicon", "port",
-               "HTTPS_token", "Request_URL", "URL_of_Anchor", "Links_in_tags", "SFH", "Submitting_to_email",
-               "Abnormal_URL", "Redirect", "on_mouseover", "RightClick", "popUpWidnow", "Iframe", "age_of_domain",
-               "DNSRecord", "web_traffic", "Page_Rank", "Google_Index", "Links_pointing_to_page", "Statistical_report"]
+           "Prefix_Suffix", "having_Sub_Domain", "SSLfinal_State", "Domain_registeration_length", "Favicon", "port",
+           "HTTPS_token", "Request_URL", "URL_of_Anchor", "Links_in_tags", "SFH", "Submitting_to_email",
+           "Abnormal_URL", "Redirect", "on_mouseover", "RightClick", "popUpWidnow", "Iframe", "age_of_domain",
+           "DNSRecord", "web_traffic", "Page_Rank", "Google_Index", "Links_pointing_to_page", "Statistical_report"]
 
 URL_SHORTENER = ["shrinkee.com", "goo.gl", "7.ly", "adf.ly", "admy.link", "al.ly", "bc.vc", "bit.do", "doiop.com",
                  "ity.im", "url.ie", "is.gd", "linkmoji.co", "sh.dz24.info", "lynk.my", "mcaf.ee", "yep.it", "ow.ly",
@@ -56,7 +56,6 @@ PORTS_TO_SCAN = [(21, False), (22, False), (23, False), (80, True), (443, True),
 
 TRUSTED_ISSUERS = ["geotrust", "godaddy", "network solutions", "thawte", "comodo", "doster", "verisign", "symantec",
                    "rapidssl", "digicert"]
-
 
 
 def IPtesting(domain):
@@ -447,12 +446,12 @@ def abnormalURLTesting(url):
     :param url: string
     :return: -1 or 1
     """
-    try :
+    try:
         whoisURL = whois.whois(url)["domain_name"]
         if type(whoisURL) == list:
             whoisURL = whoisURL[0]
 
-        if (whoisURL!= None and whoisURL.lower() not in url):
+        if (whoisURL != None and whoisURL.lower() not in url):
             return 1
         return -1
     except socket.gaierror:
@@ -633,16 +632,15 @@ def googleIndexTesting(url):
     #
     # return 1
     try:
-        soup = BeautifulSoup(requests.get("https://www.ecosia.org/search?q=site%3A"+url, stream=False).content,features="lxml")
-        results = re.findall('\d+',soup.find("",{"class":"card-title card-title-result-count"}).text)
-        if len(results) == 1 and results[0]=='0':
+        soup = BeautifulSoup(requests.get("https://www.ecosia.org/search?q=site%3A" + url, stream=False).content,
+                             features="lxml")
+        results = re.findall('\d+', soup.find("", {"class": "card-title card-title-result-count"}).text)
+        if len(results) == 1 and results[0] == '0':
             return 1
         return -1
     except Exception as e:
         print(e)
         pass
-
-
 
 
 def linksPointingToTesting(url):
@@ -653,7 +651,8 @@ def linksPointingToTesting(url):
     """
     soup = BeautifulSoup(requests.get("https://www.alexa.com/siteinfo/" + url).content, features="lxml")
     try:
-        countLinks = int("".join(soup.find("", {"class": "linksin"}).find("", {"class": "big data"}).get_text().split(",")))
+        countLinks = int(
+            "".join(soup.find("", {"class": "linksin"}).find("", {"class": "big data"}).get_text().split(",")))
     except AttributeError:
         return 1
     if countLinks == 0:
@@ -711,12 +710,12 @@ def UrlToDatabase(url, queue):
         try:
             whoisDomain = whois.whois(str(domain))
             retry = False
-        except (whois.parser.PywhoisError,socket.gaierror):
+        except (whois.parser.PywhoisError, socket.gaierror):
             print("URL : " + domain + " not in whois database")
             # time.sleep(1.5)
             queue.put(-1)
             return
-        except (ConnectionResetError,socket.timeout):
+        except (ConnectionResetError, socket.timeout):
             pass
 
     try:
@@ -772,7 +771,7 @@ def UrlToDatabase(url, queue):
 
     # testing expiration date of domain
     features.append(expirationDomainTesting(whoisDomain))
-    if features[-1]== -2:
+    if features[-1] == -2:
         return -1
     # testing favicon href
     features.append(faviconTesting(html, domain))
@@ -823,7 +822,7 @@ def UrlToDatabase(url, queue):
 
     # testing domain age
     features.append(domainAgeTesting(whoisDomain))
-    if features[-1]== -2:
+    if features[-1] == -2:
         return -1
 
     # testing DNS record
@@ -835,9 +834,9 @@ def UrlToDatabase(url, queue):
     # testing page rank
     features.append(pageRankTesting(domain))
 
-    #features.append(googleIndexTesting(url))
+    # features.append(googleIndexTesting(url))
     features.append(-1)
-    if features[-1]== -2:
+    if features[-1] == -2:
         return -2
 
     features.append(linksPointingToTesting(url))
@@ -852,53 +851,53 @@ if __name__ == "__main__":
     # execute only if run as a script
     pass
 
+
 def extraction(input, output, begin=1):
-    failledURLS=[]
+    failledURLS = []
     notReacheable = []
-
-
 
     count = 1
     begin = begin
-    with open(input, newline='', encoding = 'utf-8') as csvinfile:
+    with open(input, newline='', encoding='utf-8') as csvinfile:
 
-            for row in csv.reader(csvinfile, delimiter=',', quotechar='|'):
-                print ("first : " + str(count))
+        for row in csv.reader(csvinfile, delimiter=',', quotechar='|'):
+            print("first : " + str(count))
 
-                if count >= begin:
-                    queue = Queue()
-                    proc = Process(target=UrlToDatabase,
-                                   args=(row[0], queue,))  # creation of a process calling longfunction with the specified arguments
-                    proc.start()
+            if count >= begin:
+                queue = Queue()
+                proc = Process(target=UrlToDatabase,
+                               args=(row[0],
+                                     queue,))  # creation of a process calling longfunction with the specified arguments
+                proc.start()
 
-                    try:
-                        results = queue.get(timeout=50)
-                        print(results)
-                        proc.join()
-                        if results == -1:
-                            notReacheable.append(results)
-                        elif results == -2:
-                            failledURLS.append(row[0])
-                        else:
-                            if output != "console":
-                                with open(output, 'a') as outcsvfile:
-                                    writer = csv.writer(outcsvfile, delimiter=',', quotechar='"')
-                                    writer.writerow([row[0]] + results)
-                            else :
-                                print ([row[0]] + results)
-
-                    except Exception as e:
+                try:
+                    results = queue.get(timeout=50)
+                    print(results)
+                    proc.join()
+                    if results == -1:
+                        notReacheable.append(results)
+                    elif results == -2:
                         failledURLS.append(row[0])
-                        print(e)
-                    proc.terminate()
-                count += 1
+                    else:
+                        if output != "console":
+                            with open(output, 'a') as outcsvfile:
+                                writer = csv.writer(outcsvfile, delimiter=',', quotechar='"')
+                                writer.writerow([row[0]] + results)
+                        else:
+                            print([row[0]] + results)
+
+                except Exception as e:
+                    failledURLS.append(row[0])
+                    print(e)
+                proc.terminate()
+            count += 1
 
     realfailledURLS = []
 
-    count=1
+    count = 1
     for url in failledURLS:
         print("second" + str(count))
-        count +=1
+        count += 1
         queue = Queue()
         proc = Process(target=UrlToDatabase,
                        args=(url, queue,))  # creation of a process calling longfunction with the specified arguments
@@ -914,20 +913,17 @@ def extraction(input, output, begin=1):
                     with  open(output, 'a') as outcsvfile:
                         writer = csv.writer(outcsvfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
                         writer.writerow([url] + results)
-                else :
+                else:
                     print([url] + results)
         except:
             realfailledURLS.append(url)
         proc.terminate()
-
 
     if output != "console":
         with  open(output, 'a') as outcsvfile:
             writer = csv.writer(outcsvfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
             for fail in realfailledURLS:
                 writer.writerow(fail)
-    else :
+    else:
         for fail in realfailledURLS:
             print(fail)
-
-

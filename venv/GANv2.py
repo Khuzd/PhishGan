@@ -7,7 +7,6 @@ Author : Pierrick ROBIC--BUTEZ
 2019
 """
 
-
 from __future__ import print_function, division
 
 seed_value = 42
@@ -84,7 +83,7 @@ class GAN():
         # Trains the generator to fool the discriminator
         self.combined = Model(z, validity)
         self.combined.compile(loss='binary_crossentropy', optimizer=optimizer)
-        del validity,img,z,optimizer
+        del validity, img, z, optimizer
 
     def build_generator(self, plot=False):
         """
@@ -153,25 +152,25 @@ class GAN():
         """
 
         ## Save models
-        #Combined
+        # Combined
         combined_model_json = self.combined.to_json()
-        with open(path+"/"+prefix+"combined_model.json", "w") as json_file:
+        with open(path + "/" + prefix + "combined_model.json", "w") as json_file:
             json_file.write(combined_model_json)
-        #Discriminator
+        # Discriminator
         discriminator_model_json = self.discriminator.to_json()
-        with open(path+"/"+prefix+"discriminator_model.json", "w") as json_file:
+        with open(path + "/" + prefix + "discriminator_model.json", "w") as json_file:
             json_file.write(discriminator_model_json)
         # Generator
         generator_model_json = self.generator.to_json()
-        with open(path+"/"+prefix+"generator_model.json", "w") as json_file:
+        with open(path + "/" + prefix + "generator_model.json", "w") as json_file:
             json_file.write(generator_model_json)
 
         ## Save weights
-        self.combined.save_weights(path+"/"+prefix+"combined_model.h5")
+        self.combined.save_weights(path + "/" + prefix + "combined_model.h5")
         self.discriminator.save_weights(path + "/" + prefix + "discriminator_model.h5")
         self.generator.save_weights(path + "/" + prefix + "generator_model.h5")
 
-        del generator_model_json,discriminator_model_json,combined_model_json
+        del generator_model_json, discriminator_model_json, combined_model_json
 
     def load(self, prefix, path):
         """
@@ -182,7 +181,7 @@ class GAN():
         """
         ## Load models
         # Combined
-        json_file = open(path+"/"+prefix+"combined_model.json", 'r')
+        json_file = open(path + "/" + prefix + "combined_model.json", 'r')
         loaded_model_json = json_file.read()
         json_file.close()
         self.combined = model_from_json(loaded_model_json)
@@ -200,13 +199,13 @@ class GAN():
         self.generator = model_from_json(loaded_model_json)
 
         ## Load weights
-        self.combined.load_weights(path+"/"+prefix+"combined_model.h5")
+        self.combined.load_weights(path + "/" + prefix + "combined_model.h5")
         self.discriminator.load_weights(path + "/" + prefix + "discriminator_model.h5")
         self.generator.load_weights(path + "/" + prefix + "generator_model.h5")
 
-        del json_file,loaded_model_json
+        del json_file, loaded_model_json
 
-    def classReport(self, cleanTestDataset, phishTestDataset , threshold, reverse=False):
+    def classReport(self, cleanTestDataset, phishTestDataset, threshold, reverse=False):
         """
         Classification report for the GAN after training
         :param cleanTestDataset: list of list
@@ -215,8 +214,8 @@ class GAN():
         :param reverse: bool
         :return: print
         """
-        
-        true = [0] * len(cleanTestDataset) + [1]*len(phishTestDataset)
+
+        true = [0] * len(cleanTestDataset) + [1] * len(phishTestDataset)
         predict = []
 
         for i in cleanTestDataset:
@@ -237,8 +236,7 @@ class GAN():
             else:
                 predict.append(1)
 
-        return (classification_report(np.array(true),np.array(predict)))
-
+        return (classification_report(np.array(true), np.array(predict)))
 
     def train(self, epochs, path, batch_size=128, plotFrequency=20):
         """
@@ -316,7 +314,7 @@ class GAN():
             # Plot the progress
             if epoch % plotFrequency == 0:
                 print("%d [D loss: %f, acc.: %.2f%%] [G loss: %f] [D vloss: %f, vacc.: %.2f%%] [G vloss: %f]" % (
-                epoch, d_loss[0], 100 * d_loss[1], g_loss, vd_loss[0], 100 * vd_loss[1], vg_loss))
+                    epoch, d_loss[0], 100 * d_loss[1], g_loss, vd_loss[0], 100 * vd_loss[1], vg_loss))
                 accuracy.append(d_loss[1])
                 X.append(epoch)
                 Dloss.append(d_loss[0])
@@ -325,7 +323,7 @@ class GAN():
                 vDloss.append(vd_loss[0])
                 vGloss.append(vg_loss)
 
-            del idxt, imgst,idxv,imgsv, noise, g_loss, gen_data, d_loss, d_loss_real, d_loss_fake,vd_loss_real,vd_loss,vd_loss_fake, vg_loss
+            del idxt, imgst, idxv, imgsv, noise, g_loss, gen_data, d_loss, d_loss_real, d_loss_fake, vd_loss_real, vd_loss, vd_loss_fake, vg_loss
         del X_train
 
         return (X, accuracy, Dloss, Gloss, vaccuracy, vDloss, vGloss)

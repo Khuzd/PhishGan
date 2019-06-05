@@ -42,7 +42,7 @@ import decimal
 from GANv2 import GAN
 
 
-def graphCreation(X, YD, VYD, lr, sample, label, YG=None, VYG=None, path="graphs",suffix=""):
+def graphCreation(X, YD, VYD, lr, sample, label, YG=None, VYG=None, path="graphs", suffix=""):
     """
     create graph and save it in /graphs directory
     :param X: list (X axis)
@@ -71,7 +71,8 @@ def graphCreation(X, YD, VYD, lr, sample, label, YG=None, VYG=None, path="graphs
     plt.clf()
 
 
-def multiGraph(begin_lr, end_lr, step_lr, epochs, begin_sampleSize, end_SampleSize, step_sampleSize, plotFrequency, datasetPath, outPath="graphs", divide=1):
+def multiGraph(begin_lr, end_lr, step_lr, epochs, begin_sampleSize, end_SampleSize, step_sampleSize, plotFrequency,
+               datasetPath, outPath="graphs", divide=1):
     """
     Create multiple graph for the GAN to analyse parameters efficiency
     :param begin_lr: float (first learning rate)
@@ -111,8 +112,15 @@ def multiGraph(begin_lr, end_lr, step_lr, epochs, begin_sampleSize, end_SampleSi
             else:
                 for i in range(divide):
                     lenght = len(X)
-                    graphCreation(X[i*(lenght//divide):(i+1)*(lenght//divide)], Dloss[i*(lenght//divide):(i+1)*(lenght//divide)], vDloss[i*(lenght//divide):(i+1)*(lenght//divide)], lr, sample, "loss", Gloss[i*(lenght//divide):(i+1)*(lenght//divide)], vGloss[i*(lenght//divide):(i+1)*(lenght//divide)], path=outPath, suffix="part"+str(i))
-                    graphCreation(X[i*(lenght//divide):(i+1)*(lenght//divide)], accuracy[i*(lenght//divide):(i+1)*(lenght//divide)], vacc[i*(lenght//divide):(i+1)*(lenght//divide)], lr, sample, "accuracy", path=outPath, suffix="part"+str(i))
+                    graphCreation(X[i * (lenght // divide):(i + 1) * (lenght // divide)],
+                                  Dloss[i * (lenght // divide):(i + 1) * (lenght // divide)],
+                                  vDloss[i * (lenght // divide):(i + 1) * (lenght // divide)], lr, sample, "loss",
+                                  Gloss[i * (lenght // divide):(i + 1) * (lenght // divide)],
+                                  vGloss[i * (lenght // divide):(i + 1) * (lenght // divide)], path=outPath,
+                                  suffix="part" + str(i))
+                    graphCreation(X[i * (lenght // divide):(i + 1) * (lenght // divide)],
+                                  accuracy[i * (lenght // divide):(i + 1) * (lenght // divide)],
+                                  vacc[i * (lenght // divide):(i + 1) * (lenght // divide)], lr, sample, "accuracy",
+                                  path=outPath, suffix="part" + str(i))
             del gan, sess, session_conf, X, accuracy, Dloss, Gloss, vacc, vDloss, vGloss
             K.clear_session()
-
