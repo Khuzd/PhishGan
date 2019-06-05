@@ -65,7 +65,7 @@ def graph(args):
         dataset = args.dataset[0]
 
 
-    GanGraphGeneration.multiGraph(args.beginLR[0],args.endLR[0],args.stepLR[0],args.epochs[0],args.beginSample[0],args.endSample[0],args.stepSample[0],args.pltFrequency[0],dataset)
+    GanGraphGeneration.multiGraph(args.beginLR[0],args.endLR[0],args.stepLR[0],args.epochs[0],args.beginSample[0],args.endSample[0],args.stepSample[0],args.pltFrequency[0],dataset, outPath=''.join(args.output))
 
 def extraction(args):
     """
@@ -202,6 +202,9 @@ if __name__ == "__main__":
     graphParser.add_argument("--pltFrequency", required= True, nargs=1, type=int, help="Frequency of the plots on graphs")
     graphParser.add_argument('-d', "--dataset", required=True, nargs=1, type=str,
                                 help="Dataset used to train the GAN. Can be UCI, clean or path")
+    graphParser.add_argument('-o', "--output", default="graphs", nargs=1, type=str,
+                             help="Dataset used to train the GAN. Can be UCI, clean or path")
+
     graphParser.set_defaults(func=graph)
 
 

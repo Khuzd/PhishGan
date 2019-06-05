@@ -42,7 +42,7 @@ import decimal
 from GANv2 import GAN
 
 
-def graphCreation(X, YD, VYD, lr, sample, label, YG=None, VYG=None):
+def graphCreation(X, YD, VYD, lr, sample, label, YG=None, VYG=None, path="graphs"):
     """
     create graph and save it in /graphs directory
     :param X: list (X axis)
@@ -65,12 +65,12 @@ def graphCreation(X, YD, VYD, lr, sample, label, YG=None, VYG=None):
     plt.xlabel("epochs")
     plt.ylabel(label)
     plt.legend()
-    plt.savefig("graphs/" + str(sample) + "/" + str(label) + str(
+    plt.savefig(path + "/" + str(sample) + "/" + str(label) + str(
         decimal.Decimal(lr).quantize(decimal.Decimal('.0001'), rounding=decimal.ROUND_DOWN)) + ".png")
     plt.clf()
 
 
-def multiGraph(begin_lr, end_lr, step_lr, epochs, begin_sampleSize, end_SampleSize, step_sampleSize, plotFrequency, datasetPath):
+def multiGraph(begin_lr, end_lr, step_lr, epochs, begin_sampleSize, end_SampleSize, step_sampleSize, plotFrequency, datasetPath, outPath="graphs"):
     """
     Create multiple graph for the GAN to analyse parameters efficiency
     :param begin_lr: float (first learning rate)
@@ -87,7 +87,7 @@ def multiGraph(begin_lr, end_lr, step_lr, epochs, begin_sampleSize, end_SampleSi
 
     for sample in range(begin_sampleSize, end_SampleSize, step_sampleSize):
         try:
-            os.mkdir("graphs/" + str(sample))
+            os.mkdir(outPath + "/" + str(sample))
         except FileExistsError:
             pass
         for lr in np.arange(begin_lr, end_lr, step_lr):
@@ -103,8 +103,8 @@ def multiGraph(begin_lr, end_lr, step_lr, epochs, begin_sampleSize, end_SampleSi
             gan = GAN(lr=lr)
             X, accuracy, Dloss, Gloss, vacc, vDloss, vGloss = gan.train(epochs=epochs, batch_size=sample,
                                                                         plotFrequency=plotFrequency, path=datasetPath)
-            graphCreation(X, Dloss, vDloss, lr, sample, "loss", Gloss, vGloss)
-            graphCreation(X, accuracy, vacc, lr, sample, "accuracy")
+            graphCreation(X, Dloss, vDloss, lr, sample, "loss", Gloss, vGloss, path=outPath)
+            graphCreation(X, accuracy, vacc, lr, sample, "accuracy", path=outPath)
             del gan, sess, session_conf, X, accuracy, Dloss, Gloss, vacc, vDloss, vGloss
             K.clear_session()
 
