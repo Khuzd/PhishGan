@@ -220,7 +220,7 @@ class GAN():
         predict = []
 
         for i in cleanTestDataset:
-            prediction = self.discriminator.predict(i)
+            prediction = self.discriminator.predict_on_batch(np.array(i).astype(np.int)[:].reshape(1, 30, 1))
             if reverse and prediction[0] > threshold:
                 predict.append(0)
             elif not reverse and prediction[0] < threshold:
@@ -229,7 +229,7 @@ class GAN():
                 predict.append(1)
 
         for i in phishTestDataset:
-            prediction = self.discriminator.predict(i)
+            prediction = self.discriminator.predict_on_batch(np.array(i).astype(np.int)[:].reshape(1, 30, 1))
             if reverse and prediction[0] < threshold:
                 predict.append(0)
             elif not reverse and prediction[0] > threshold:
