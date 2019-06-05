@@ -46,6 +46,8 @@ from keras.layers.advanced_activations import LeakyReLU
 from keras.models import Sequential, Model, model_from_json
 from keras.utils import plot_model
 
+from sklearn.metrics import classification_report
+
 import UCI
 
 os.environ["PATH"] += os.pathsep + 'C:/Program Files (x86)/Graphviz2.38/bin'
@@ -172,6 +174,12 @@ class GAN():
         del generator_model_json,discriminator_model_json,combined_model_json
 
     def load(self, prefix, path):
+        """
+        Load the GAN model in path/prefix+suffix
+        :param prefix: string
+        :param path: string
+        :return: nothing
+        """
         ## Load models
         # Combined
         json_file = open(path+"/"+prefix+"combined_model.json", 'r')
@@ -197,6 +205,40 @@ class GAN():
         self.generator.load_weights(path + "/" + prefix + "generator_model.h5")
 
         del json_file,loaded_model_json
+
+    def classReport(self, cleanTestDataset, phishTestDataset , threshold, reverse=False):
+        """
+        Classification report for the GAN after training
+        :param cleanTestDataset: list of list
+        :param phishTestDataset:  list of list
+        :param threshold: float
+        :param reverse: bool
+        :return: print
+        """
+        
+        true = [0] * len(cleanTestDataset) + [1]*len(phishTestDataset)
+        predict = []
+
+        for i in cleanTestDataset:
+            prediction = self.discriminator.predict(i)
+            if reverse and prediction[0] > threshold:
+                predict.append(0)
+            elif not reverse and prediction[0] < threshold:
+                predict.append(0)
+            else:
+                predict.append(1)
+
+        for i in phishTestDataset:
+            prediction = self.discriminator.predict(i)
+            if reverse and prediction[0] < threshold:
+                predict.append(0)
+            elif not reverse and prediction[0] > threshold:
+                predict.append(0)
+            else:
+                predict.append(1)
+
+        return (classification_report(np.array(true),np.array(predict)))
+
 
     def train(self, epochs, path, batch_size=128, plotFrequency=20):
         """
