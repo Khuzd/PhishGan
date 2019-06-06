@@ -68,7 +68,7 @@ def graph(args):
         args.division = args.division[0]
     GanGraphGeneration.multiGraph(args.beginLR[0], args.endLR[0], args.stepLR[0], args.epochs[0], args.beginSample[0],
                                   args.endSample[0], args.stepSample[0], args.pltFrequency[0], dataset,
-                                  outPath=''.join(args.output), divide=args.division)
+                                  outPath=''.join(args.output), divide=args.division, type=args.type[0])
 
 
 def extraction(args):
@@ -195,6 +195,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Gan interaction program")
     subparsers = parser.add_subparsers(help='commands')
 
+
     graphParser = subparsers.add_parser("graph", help="Used to generate graphs of the accuracy and loss for a GAN")
     graphParser.add_argument("--beginLR", required=True, nargs=1, type=float, help="First learning rate")
     graphParser.add_argument("--endLR", required=True, nargs=1, type=float, help="Last learning rate")
@@ -211,8 +212,10 @@ if __name__ == "__main__":
                              help="Dataset used to train the GAN. Can be UCI, clean or path")
     graphParser.add_argument('-di', "--division", default=1, nargs=1, type=int,
                              help="Into how many graphs the simulation is divided")
-
+    graphParser.add_argument('-t', "--type", required=True, choices=["phish","clean"], nargs=1, type=str,
+                             help="Into how many graphs the simulation is divided")
     graphParser.set_defaults(func=graph)
+
 
     extractParser = subparsers.add_parser("extract", help="Used to extract features from an URL or a list of URLs")
     typeInputExtract = extractParser.add_mutually_exclusive_group(required=True)
@@ -226,6 +229,7 @@ if __name__ == "__main__":
                                help="Option to chose the type of ouptput : console or file. If file, the value have to be the path to a existing file")
     extractParser.set_defaults(func=extraction)
 
+
     creationParser = subparsers.add_parser("create", help="Used to create a GAN model and save it")
     creationParser.add_argument("-e", "--epochs", required=True, nargs=1, type=int,
                                 help="Number of epoches for the training")
@@ -238,6 +242,7 @@ if __name__ == "__main__":
                                 help="Dataset used to train the GAN. Can be UCI, clean or path")
     creationParser.set_defaults(func=creation)
 
+
     predictParser = subparsers.add_parser("predict", help="Used to to predict phisihing comportement of an URL")
     predictParser.add_argument("-f", "--file", nargs=1, type=str, required=True,
                                help="File which contains URL(s) to extract features from it. Format : one URL per line")
@@ -247,6 +252,7 @@ if __name__ == "__main__":
     predictParser.add_argument("-o", "--output", default="console", type=str, nargs=1,
                                help="Option to chose the type of ouptput : console or file. If file, the value have to be the path to a existing file")
     predictParser.set_defaults(func=prediction)
+
 
     args = parser.parse_args()
     print(args)

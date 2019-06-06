@@ -42,7 +42,7 @@ import decimal
 from GANv2 import GAN
 
 
-def graphCreation(X, YD, VYD, lr, sample, label, YG=None, VYG=None, path="graphs", suffix=""):
+def graphCreation(X, YD, VYD, lr, sample, label, bestEpoch,bestAccu, YG=None, VYG=None, path="graphs", suffix=""):
     """
     create graph and save it in /graphs directory
     :param X: list (X axis)
@@ -51,6 +51,8 @@ def graphCreation(X, YD, VYD, lr, sample, label, YG=None, VYG=None, path="graphs
     :param lr: float (learning rate)
     :param sample: int
     :param label: string
+    :param bestEpoch int
+    :param bestAccu float
     :param YG: list (Y generator training)
     :param VYG: list (Y generator validation)
     :param suffix: str
@@ -62,7 +64,7 @@ def graphCreation(X, YD, VYD, lr, sample, label, YG=None, VYG=None, path="graphs
         plt.plot(X, YG, label="Trainig Generator")
         plt.plot(X, VYG, label="Validation Generator")
 
-    plt.title(label + " with a sample size of " + str(sample) + " and learning rate of " + str(lr))
+    plt.title(label + " with a sample size of " + str(sample) + " and learning rate of " + str(lr) + "\n best Epoch: " + bestEpoch + "best accuracy: " + bestAccu)
     plt.xlabel("epochs")
     plt.ylabel(label)
     plt.legend()
@@ -72,7 +74,7 @@ def graphCreation(X, YD, VYD, lr, sample, label, YG=None, VYG=None, path="graphs
 
 
 def multiGraph(begin_lr, end_lr, step_lr, epochs, begin_sampleSize, end_SampleSize, step_sampleSize, plotFrequency,
-               datasetPath, outPath="graphs", divide=1):
+               datasetPath, outPath="graphs", divide=1, type="phish"):
     """
     Create multiple graph for the GAN to analyse parameters efficiency
     :param begin_lr: float (first learning rate)
@@ -104,23 +106,29 @@ def multiGraph(begin_lr, end_lr, step_lr, epochs, begin_sampleSize, end_SampleSi
 
             print("sample : %f ; lr : %f" % (sample, lr))
             gan = GAN(lr=lr)
-            X, accuracy, Dloss, Gloss, vacc, vDloss, vGloss = gan.train(epochs=epochs, batch_size=sample,
+            gan.dataType = type
+            X, accuracy, Dloss, Gloss, vacc, vDloss, vGloss, bestReport, bestEpoch = gan.train(epochs=epochs, batch_size=sample,
                                                                         plotFrequency=plotFrequency, path=datasetPath)
             if divide == 1:
-                graphCreation(X, Dloss, vDloss, lr, sample, "loss", Gloss, vGloss, path=outPath)
-                graphCreation(X, accuracy, vacc, lr, sample, "accuracy", path=outPath)
+                graphCreation(X, Dloss, vDloss, lr, sample, "loss",bestEpoch,bestReport["accuracy"], Gloss, vGloss, path=outPath)
+                graphCreation(X, accuracy, vacc, lr, sample, "accuracy",bestEpoch,bestReport["accuracy"], path=outPath)
             else:
                 for i in range(divide):
                     lenght = len(X)
                     graphCreation(X[i * (lenght // divide):(i + 1) * (lenght // divide)],
                                   Dloss[i * (lenght // divide):(i + 1) * (lenght // divide)],
-                                  vDloss[i * (lenght // divide):(i + 1) * (lenght // divide)], lr, sample, "loss",
+                                  vDloss[i * (lenght // divide):(i + 1) * (lenght // divide)], lr, sample, "loss",bestEpoch,bestReport["accuracy"],
                                   Gloss[i * (lenght // divide):(i + 1) * (lenght // divide)],
                                   vGloss[i * (lenght // divide):(i + 1) * (lenght // divide)], path=outPath,
                                   suffix="part" + str(i))
                     graphCreation(X[i * (lenght // divide):(i + 1) * (lenght // divide)],
                                   accuracy[i * (lenght // divide):(i + 1) * (lenght // divide)],
-                                  vacc[i * (lenght // divide):(i + 1) * (lenght // divide)], lr, sample, "accuracy",
+                                  vacc[i * (lenght // divide):(i + 1) * (lenght // divide)], lr, sample, "accuracy",bestEpoch,bestReport["accuracy"],
                                   path=outPath, suffix="part" + str(i))
-            del gan, sess, session_conf, X, accuracy, Dloss, Gloss, vacc, vDloss, vGloss
+
+            with open(outPath + "/" + str(sample) + "/"  +"Report_"+ str(decimal.Decimal(lr).quantize(decimal.Decimal('.0001'), rounding=decimal.ROUND_DOWN)) +  ".txt", "w", newline='', encoding='utf-8') as reportFile:
+                reportFile.write(str(bestReport))
+
+
+            del gan, sess, session_conf, X, accuracy, Dloss, Gloss, vacc, vDloss, vGloss, bestReport, bestEpoch
             K.clear_session()

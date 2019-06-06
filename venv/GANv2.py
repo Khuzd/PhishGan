@@ -51,6 +51,9 @@ import UCI
 
 os.environ["PATH"] += os.pathsep + 'C:/Program Files (x86)/Graphviz2.38/bin'
 
+PHIS_PATH_TEST = "data/verified_onlineouttraintest.csv"
+CLEAN_PATH_TEST = "data/top25000outtest.csv"
+
 
 class GAN():
     def __init__(self, lr):
@@ -60,6 +63,8 @@ class GAN():
         self.channels = 1
         self.countData = 30
         self.data_shape = (self.countData, self.channels)
+
+        self.dataType = "phish"
 
         optimizer = tf.train.AdamOptimizer(learning_rate=lr)
 
@@ -205,7 +210,7 @@ class GAN():
 
         del json_file, loaded_model_json
 
-    def classReport(self, cleanTestDataset, phishTestDataset, threshold, reverse=False):
+    def classReport(self, cleanTestDataset, phishTestDataset, threshold):
         """
         Classification report for the GAN after training
         :param cleanTestDataset: list of list
@@ -218,25 +223,16 @@ class GAN():
         true = [0] * len(cleanTestDataset) + [1] * len(phishTestDataset)
         predict = []
 
-        for i in cleanTestDataset:
+        for i in cleanTestDataset + phishTestDataset:
             prediction = self.discriminator.predict_on_batch(np.array(i).astype(np.int)[:].reshape(1, 30, 1))
-            if reverse and prediction[0] > threshold:
-                predict.append(0)
-            elif not reverse and prediction[0] < threshold:
-                predict.append(0)
-            else:
+            if self.dataType == "phish" and prediction[0][0] > threshold:
                 predict.append(1)
-
-        for i in phishTestDataset:
-            prediction = self.discriminator.predict_on_batch(np.array(i).astype(np.int)[:].reshape(1, 30, 1))
-            if reverse and prediction[0] < threshold:
-                predict.append(0)
-            elif not reverse and prediction[0] > threshold:
-                predict.append(0)
-            else:
+            elif self.dataType != "phish" and prediction[0][0] < threshold:
                 predict.append(1)
+            else:
+                predict.append(0)
 
-        return (classification_report(np.array(true), np.array(predict)))
+        return (classification_report(np.array(true), np.array(predict),output_dict = True))
 
     def train(self, epochs, path, batch_size=128, plotFrequency=20):
         """
@@ -248,8 +244,12 @@ class GAN():
         :return: list of 7 list (to plot training/validation accuracy/loss of generator/discriminator)
         """
 
-        # Load the dataset
+        # Load the training dataset
         X_train = list(UCI.csvToList(path)[1].values())
+
+        # Load testing datasets
+        phisTest = list(UCI.csvToList(PHIS_PATH_TEST)[1].values())
+        cleanTest = list(UCI.csvToList(CLEAN_PATH_TEST)[1].values())
 
         # Adversarial ground truths
         valid = np.ones((batch_size, 1))
@@ -263,6 +263,8 @@ class GAN():
         vDloss = []
         vGloss = []
         X = []
+        bestEpoch=-1
+        bestClass={"accuracy":0}
 
         for epoch in range(epochs):
 
@@ -322,8 +324,15 @@ class GAN():
                 vaccuracy.append(vd_loss[1])
                 vDloss.append(vd_loss[0])
                 vGloss.append(vg_loss)
+            report = self.classReport(cleanTest,phisTest,0.85)
+
+            if "accuracy" in report:
+                if report["accuracy"] > bestClass["accuracy"]:
+                    bestClass = report
+                    bestEpoch = epoch
+            del report
 
             del idxt, imgst, idxv, imgsv, noise, g_loss, gen_data, d_loss, d_loss_real, d_loss_fake, vd_loss_real, vd_loss, vd_loss_fake, vg_loss
         del X_train
 
-        return (X, accuracy, Dloss, Gloss, vaccuracy, vDloss, vGloss)
+        return (X, accuracy, Dloss, Gloss, vaccuracy, vDloss, vGloss, bestClass, bestEpoch)
