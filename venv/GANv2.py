@@ -222,12 +222,19 @@ class GAN():
 
         true = [0] * len(cleanTestDataset) + [1] * len(phishTestDataset)
         predict = []
+        prediction = []
+
 
         for i in cleanTestDataset + phishTestDataset:
-            prediction = self.discriminator.predict_on_batch(np.array(i).astype(np.int)[:].reshape(1, 30, 1))
-            if self.dataType == "phish" and prediction[0][0] > threshold:
+            prediction.append(self.discriminator.predict_on_batch(np.array(i).astype(np.int)[:].reshape(1, 30, 1)))
+
+
+        threshold = ((sum(prediction[:len(cleanTestDataset)])/len(cleanTestDataset)) + (sum(prediction[len(cleanTestDataset):])/len(phishTestDataset))) / 2
+
+        for i in prediction:
+            if self.dataType == "phish" and i[0][0] > threshold:
                 predict.append(1)
-            elif self.dataType != "phish" and prediction[0][0] < threshold:
+            elif self.dataType != "phish" and i[0][0] < threshold:
                 predict.append(1)
             else:
                 predict.append(0)
