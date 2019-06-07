@@ -220,7 +220,7 @@ class GAN():
         :return: print
         """
 
-        true = [0] * len(cleanTestDataset) + [1] * len(phishTestDataset)
+        true = ["clean"] * len(cleanTestDataset) + ["phish"] * len(phishTestDataset)
         predict = []
         prediction = []
 
@@ -233,11 +233,11 @@ class GAN():
 
         for i in prediction:
             if self.dataType == "phish" and i[0][0] > threshold:
-                predict.append(1)
+                predict.append("phish")
             elif self.dataType != "phish" and i[0][0] < threshold:
-                predict.append(1)
+                predict.append("phish")
             else:
-                predict.append(0)
+                predict.append("clean")
 
         return (classification_report(np.array(true), np.array(predict),output_dict = True))
 
