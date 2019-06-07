@@ -64,7 +64,7 @@ def graphCreation(X, YD, VYD, lr, sample, label, bestEpoch,bestAccu, YG=None, VY
         plt.plot(X, YG, label="Trainig Generator")
         plt.plot(X, VYG, label="Validation Generator")
 
-    plt.title(label + " with a sample size of " + str(sample) + " and learning rate of " + str(lr) + "\n best Epoch: " + bestEpoch + "best accuracy: " + bestAccu)
+    plt.title(label + " with a sample size of " + str(sample) + " and learning rate of " + str(lr) + "\n best Epoch: " + str(bestEpoch) + " - best accuracy: " + str(bestAccu))
     plt.xlabel("epochs")
     plt.ylabel(label)
     plt.legend()
