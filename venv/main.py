@@ -44,10 +44,25 @@ import csv
 from GANv2 import GAN
 import UCI
 
-THRESHOLD = 0.88
-
 UCI_PATH = 'data/UCI_dataset.csv'
 CLEAN_PATH = 'data/top25000out.csv'
+
+
+class MyParser(argparse.ArgumentParser):
+    def print_help(self, file=None):
+        self._print_message(self.format_help(), file)
+
+        subparsers_actions = [
+            action for action in self._actions
+            if isinstance(action, argparse._SubParsersAction)]
+        # there will probably only be one subparser_action,
+        # but better save than sorry
+        for subparsers_action in subparsers_actions:
+            # get all subparsers and print help
+            for choice, subparser in subparsers_action.choices.items():
+                self._print_message("Subparser '{}'\n".format(choice), file)
+                self._print_message(subparser.format_help(), file)
+        self.exit()
 
 
 def graph(args):
@@ -200,7 +215,7 @@ def reportGraph(args):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Gan interaction program")
+    parser = MyParser(description="Gan interaction program")
     subparsers = parser.add_subparsers(help='commands')
 
 
@@ -266,11 +281,19 @@ if __name__ == "__main__":
     reportGraphParser = subparsers.add_parser("reportGraph", help="Used to plot graphs of accuracies from classification report")
     reportGraphParser.add_argument("-p", "--path", nargs=1, type=str, required=True,
                                help="path to the folder contained the folders for each sample size")
-
     reportGraphParser.set_defaults(func=reportGraph)
 
-
     args = parser.parse_args()
+
+    if args.help:
+        print("tototototo")
+        graphParser.format_help()
+        extractParser.format_help()
+        creationParser.format_help()
+        predictParser.format_help()
+        reportGraphParser.format_help()
+        exit(0)
+
     # print(args)
     args.func(args)
     exit(0)
