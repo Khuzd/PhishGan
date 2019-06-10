@@ -190,6 +190,14 @@ def prediction(args):
                         else:
                             writer.writerow([str(url) + " -> safe"])
 
+def reportGraph(args):
+    """
+            Function for the reportGraphParser
+            :param args: Namespace
+            :return: nothing
+            """
+    GanGraphGeneration.reportAccuracyGraph(args.path[0])
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Gan interaction program")
@@ -243,7 +251,7 @@ if __name__ == "__main__":
     creationParser.set_defaults(func=creation)
 
 
-    predictParser = subparsers.add_parser("predict", help="Used to to predict phisihing comportement of an URL")
+    predictParser = subparsers.add_parser("predict", help="Used to predict phisihing comportement of an URL")
     predictParser.add_argument("-f", "--file", nargs=1, type=str, required=True,
                                help="File which contains URL(s) to extract features from it. Format : one URL per line")
     predictParser.add_argument("-v", "--verbose", action="store_true", help="Verbose option")
@@ -254,7 +262,15 @@ if __name__ == "__main__":
     predictParser.set_defaults(func=prediction)
 
 
+
+    reportGraphParser = subparsers.add_parser("reportGraph", help="Used to plot graphs of accuracies from classification report")
+    reportGraphParser.add_argument("-p", "--path", nargs=1, type=str, required=True,
+                               help="path to the folder contained the folders for each sample size")
+
+    reportGraphParser.set_defaults(func=reportGraph)
+
+
     args = parser.parse_args()
-    print(args)
+    # print(args)
     args.func(args)
     exit(0)

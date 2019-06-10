@@ -40,7 +40,9 @@ K.set_session(sess)
 import matplotlib.pyplot as plt
 import decimal
 from GANv2 import GAN
-
+import os
+import glob
+import re
 
 def graphCreation(X, YD, VYD, lr, sample, label, bestEpoch,bestAccu, YG=None, VYG=None, path="graphs", suffix=""):
     """
@@ -132,3 +134,29 @@ def multiGraph(begin_lr, end_lr, step_lr, epochs, begin_sampleSize, end_SampleSi
 
             del gan, sess, session_conf, X, accuracy, Dloss, Gloss, vacc, vDloss, vGloss, bestReport, bestEpoch
             K.clear_session()
+
+def reportAccuracyGraph(path):
+    """
+    Plot graph of accuracies from classification reports
+    :param path: str (path to the folder contained the folders for each sample size)
+    :return: nothing
+    """
+
+
+    for folder in os.listdir(path):
+        # print(path+"/"+folder)
+        accuracies = []
+        LRs=[]
+        for report in glob.glob(path+"/"+folder+"/"+"*.txt"):
+            file = open(report)
+            content = file.read()
+            file.close()
+            accuracies.append(float(re.findall("\d+\.\d+",re.findall(r"}, 'accuracy': 0.\d*?,",content)[0])[0]))
+            LRs.append(float(re.findall(r"\d+\.\d+",report)[0]))
+
+            plt.plot(LRs, accuracies)
+            plt.title("Accuracies for a sample size of " + str(folder))
+            plt.xlabel("Learning rate")
+            plt.ylabel("Accuracy")
+            plt.savefig(path + "/" + folder + "accuracyGraph.png")
+            plt.clf()

@@ -110,6 +110,7 @@ class GAN():
         model.add(Dense(np.prod(self.data_shape), activation='tanh'))
         model.add(Reshape(self.data_shape))
 
+        # Saving the model diagram
         if plot:
             plot_model(model, to_file="generator.png", show_shapes=True, show_layer_names=True)
             return
@@ -137,6 +138,7 @@ class GAN():
         model.add(LeakyReLU(alpha=0.2))
         model.add(Dense(1, activation='sigmoid'))
 
+        # Saving the model diagram
         if plot:
             plot_model(model, to_file="discriminator.png", show_shapes=True, show_layer_names=True)
             return
@@ -210,27 +212,27 @@ class GAN():
 
         del json_file, loaded_model_json
 
-    def classReport(self, cleanTestDataset, phishTestDataset, threshold):
+    def classReport(self, cleanTestDataset, phishTestDataset):
         """
         Classification report for the GAN after training
         :param cleanTestDataset: list of list
         :param phishTestDataset:  list of list
-        :param threshold: float
-        :param reverse: bool
         :return: print
         """
 
+        ## Construct the true results
         true = ["clean"] * len(cleanTestDataset) + ["phish"] * len(phishTestDataset)
         predict = []
         prediction = []
 
-
+        ## Make prediction
         for i in cleanTestDataset + phishTestDataset:
             prediction.append(self.discriminator.predict_on_batch(np.array(i).astype(np.int)[:].reshape(1, 30, 1)))
 
-
+        ## Calculate the best threshold
         threshold = ((sum(prediction[:len(cleanTestDataset)])/len(cleanTestDataset)) + (sum(prediction[len(cleanTestDataset):])/len(phishTestDataset))) / 2
 
+        ## Generate the predict results
         for i in prediction:
             if self.dataType == "phish" and i[0][0] > threshold:
                 predict.append("phish")
@@ -263,7 +265,7 @@ class GAN():
         valid = np.ones((batch_size, 1))
         fake = np.zeros((batch_size, 1))
 
-        # initialize list for the return values
+        # Initialize list for the return values
         accuracy = []
         Dloss = []
         Gloss = []
@@ -275,10 +277,6 @@ class GAN():
         bestClass={"accuracy":0}
 
         for epoch in range(epochs):
-
-            # ---------------------
-            #  Train Discriminator
-            # ---------------------
 
             ## Select a random batch of images
             # for training
@@ -295,12 +293,16 @@ class GAN():
             # Generate a batch of new data for training
             gen_data = self.generator.predict(noise)
 
-            # Train the discriminator
+            # ---------------------
+            #  Train Discriminator
+            # ---------------------
             d_loss_real = self.discriminator.train_on_batch(imgst.reshape(batch_size, self.countData, 1), valid)
             d_loss_fake = self.discriminator.train_on_batch(gen_data, fake)
             d_loss = 0.5 * np.add(d_loss_real, d_loss_fake)
 
+            # ---------------------
             #  Train Generator
+            # ---------------------
             noise = np.random.normal(0, 1, (batch_size, self.countData))
 
             # Train the generator (to have the discriminator label samples as valid)
@@ -312,12 +314,16 @@ class GAN():
             # Generate a batch of new data for validation
             gen_data = self.generator.predict(noise)
 
-            # Validate the discriminator
+            # ---------------------
+            #  Validate Discriminator
+            # ---------------------
             vd_loss_real = self.discriminator.test_on_batch(imgsv.reshape(batch_size, self.countData, 1), valid)
             vd_loss_fake = self.discriminator.test_on_batch(gen_data, fake)
             vd_loss = 0.5 * np.add(vd_loss_real, vd_loss_fake)
 
-            # Validate the generator
+            # ---------------------
+            #  Validate Generator
+            # ---------------------
             noise = np.random.normal(0, 1, (batch_size, self.countData))
             vg_loss = self.combined.test_on_batch(noise, valid)
 
@@ -333,8 +339,9 @@ class GAN():
                 vDloss.append(vd_loss[0])
                 vGloss.append(vg_loss)
 
+            # Generate the classificaiton report if necessary
             if predict:
-                report = self.classReport(cleanTest,phisTest,0.85)
+                report = self.classReport(cleanTest,phisTest)
 
                 if "accuracy" in report:
                     if report["accuracy"] > bestClass["accuracy"]:
