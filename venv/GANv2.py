@@ -241,13 +241,14 @@ class GAN():
 
         return (classification_report(np.array(true), np.array(predict),output_dict = True))
 
-    def train(self, epochs, path, batch_size=128, plotFrequency=20):
+    def train(self, epochs, path, batch_size=128, plotFrequency=20, predict = False):
         """
         Train the GAN
         :param epochs: int
         :param path: string (path to the dataset used to train the GAN)
         :param batch_size: int
         :param plotFrequency: int
+        :param predict bool (if the training include prediction on test datasets)
         :return: list of 7 list (to plot training/validation accuracy/loss of generator/discriminator)
         """
 
@@ -331,13 +332,15 @@ class GAN():
                 vaccuracy.append(vd_loss[1])
                 vDloss.append(vd_loss[0])
                 vGloss.append(vg_loss)
-            report = self.classReport(cleanTest,phisTest,0.85)
 
-            if "accuracy" in report:
-                if report["accuracy"] > bestClass["accuracy"]:
-                    bestClass = report
-                    bestEpoch = epoch
-            del report
+            if predict:
+                report = self.classReport(cleanTest,phisTest,0.85)
+
+                if "accuracy" in report:
+                    if report["accuracy"] > bestClass["accuracy"]:
+                        bestClass = report
+                        bestEpoch = epoch
+                del report
 
             del idxt, imgst, idxv, imgsv, noise, g_loss, gen_data, d_loss, d_loss_real, d_loss_fake, vd_loss_real, vd_loss, vd_loss_fake, vg_loss
         del X_train

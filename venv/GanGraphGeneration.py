@@ -108,7 +108,7 @@ def multiGraph(begin_lr, end_lr, step_lr, epochs, begin_sampleSize, end_SampleSi
             gan = GAN(lr=lr)
             gan.dataType = type
             X, accuracy, Dloss, Gloss, vacc, vDloss, vGloss, bestReport, bestEpoch = gan.train(epochs=epochs, batch_size=sample,
-                                                                        plotFrequency=plotFrequency, path=datasetPath)
+                                                                        plotFrequency=plotFrequency, path=datasetPath,predict=True)
             if divide == 1:
                 graphCreation(X, Dloss, vDloss, lr, sample, "loss",bestEpoch,bestReport["accuracy"], Gloss, vGloss, path=outPath)
                 graphCreation(X, accuracy, vacc, lr, sample, "accuracy",bestEpoch,bestReport["accuracy"], path=outPath)
