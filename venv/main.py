@@ -177,7 +177,7 @@ def prediction(args):
 
             if args.verbose == True:
                 if args.output == "console" or args.output[0] == "console":
-                    if results[0] < THRESHOLD:
+                    if results[0] < args.threshold[0]:
                         print(str(url) + " : " + str(results[0]) + " -> phishing")
                     else:
                         print(str(url) + " : " + str(results[0]) + " -> safe")
@@ -185,14 +185,14 @@ def prediction(args):
                 else:
                     with open(args.output[0], 'a') as outcsvfile:
                         writer = csv.writer(outcsvfile, delimiter=' ', quotechar='"')
-                        if results[0] < THRESHOLD:
+                        if results[0] < args.threshold[0]:
                             writer.writerow([str(url) + " : " + str(results[0]) + " -> phishing"])
                         else:
                             writer.writerow([str(url) + " : " + str(results[0]) + " -> safe"])
 
             else:
                 if args.output == "console" or args.output[0] == "console":
-                    if results[0] < THRESHOLD:
+                    if results[0] < args.threshold[0]:
                         print(str(url) + " -> phishing")
                     else:
                         print(str(url) + " -> safe")
@@ -200,7 +200,7 @@ def prediction(args):
                 else:
                     with open(args.output[0], 'a') as outcsvfile:
                         writer = csv.writer(outcsvfile, delimiter=' ', quotechar='"')
-                        if results[0] < THRESHOLD:
+                        if results[0] < args.threshold[0]:
                             writer.writerow([str(url) + " -> phishing"])
                         else:
                             writer.writerow([str(url) + " -> safe"])
@@ -274,6 +274,7 @@ if __name__ == "__main__":
     predictParser.add_argument('-n', "--name", required=True, nargs=1, type=str, help="Name of the save")
     predictParser.add_argument("-o", "--output", default="console", type=str, nargs=1,
                                help="Option to chose the type of ouptput : console or file. If file, the value have to be the path to a existing file")
+    predictParser.add_argument('-t', "--threshold", required=True, nargs=1, type=int, help="Threshold for the probability of phishing/non-phishing")
     predictParser.set_defaults(func=prediction)
 
 
