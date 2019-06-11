@@ -284,16 +284,6 @@ if __name__ == "__main__":
     reportGraphParser.set_defaults(func=reportGraph)
 
     args = parser.parse_args()
-
-    # if args.help:
-    #     print("tototototo")
-    #     graphParser.format_help()
-    #     extractParser.format_help()
-    #     creationParser.format_help()
-    #     predictParser.format_help()
-    #     reportGraphParser.format_help()
-    #     exit(0)
-
     # print(args)
     args.func(args)
     exit(0)
