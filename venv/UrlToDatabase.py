@@ -601,6 +601,8 @@ def trafficTesting(domain):
 
 
 def pageRankTesting(domain):
+    answer = requests.get("https://openpagerank.com/api/v1.0/getPageRank?domains%5B0%5D=" + domain,headers={"API-OPR": "cswc0oc4wo0gs0ssgk044044wosc0ggwgoksocg8"})
+
     return -1
 
 
