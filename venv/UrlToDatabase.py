@@ -614,6 +614,7 @@ def pageRankTesting(domain):
         else:
             return -1
     except KeyError:
+        print("domain pagerank not found")
         return 1
 
 
