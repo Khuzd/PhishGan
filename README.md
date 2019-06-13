@@ -40,6 +40,15 @@ python main.py graph [-h] --beginLR BEGINLR --endLR ENDLR --stepLR STEPLR
                      {phish,clean}
 ```
 
+Example:
+```
+python main.py graph --beginLR 0.005 --endLR 0.01 --stepLR 0.001
+                     --beginSample 50 --endSample 100
+                     --stepSample 10 --epochs 1500 --pltFrequency
+                     10 -d data/UCI_dataset.csv -o graphs/UCI -di 3 -t
+                     phish
+```
+
 If you need any help for this functionality: 
 ```
 python main.py graph -h
@@ -52,6 +61,11 @@ You can generate multiple graphs of prediction accuracy from the classification 
 
 ```
 python main.py reportGraph [-h] -p PATH
+```
+
+Example:
+```
+python main.py reportGraph -p graphs/UCI
 ```
 
 If you need any help for this functionality: 
@@ -67,6 +81,11 @@ You can generate a GAN model with specific parameters and save it. To do that:
 ```
 python main.py create [-h] -e EPOCHS -s SIZE -r LR -l LOCATION -n NAME -d
                       DATASET
+```
+
+Example:
+```
+python main.py create -e 1500 -s 75 -r 0.005 -l saves -n UCI_model -d data/UCI_dataset.csv
 ```
 
 If you need any help for this functionality: 
@@ -85,6 +104,13 @@ python main.py extract [-h] (-u URL | -f FILE | -l LIST [LIST ...]) [-b BEGIN]
                        [-o OUTPUT]
 ```
 
+Examples:
+```
+python main.py extract -u https://www.amazon.co.uk
+python main.py extract -f data/original/Phishtank.csv -o tmp/results.txt
+python main.py extract -l https://www.amazon.co.uk https://www.ebay.co.uk
+```
+
 If you need any help for this functionality: 
 ```
 python main.py extract -h
@@ -97,6 +123,11 @@ Now you have some features and a GAN model obtained after last steps, you can ma
 
 ```
 python main.py predict [-h] -f FILE [-v] -l LOCATION -n NAME [-o OUTPUT]
+```
+
+Example:
+```
+python main.py predict -f data/Phishtank_outtest.csv -l saves -n UCI_model
 ```
 
 If you need any help for this functionality: 
