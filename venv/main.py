@@ -93,7 +93,7 @@ def extraction(args):
         :return: nothing
         """
     print(args)
-    if args.URL != None:
+    if args.URL is not None:
         queue = Queue()
         proc = Process(target=UrlToDatabase.UrlToDatabase,
                        args=(args.URL[0], queue,))
@@ -112,10 +112,10 @@ def extraction(args):
                 writer.writerow([args.URL[0]] + [str(results)])
         proc.terminate()
 
-    elif args.file != None:
+    elif args.file is not None:
         UrlToDatabase.extraction(args.file[0], args.output[0], args.begin[0])
 
-    elif args.list != None:
+    elif args.list is not None:
         for url in args.list:
             queue = Queue()
             proc = Process(target=UrlToDatabase.UrlToDatabase,
@@ -170,12 +170,12 @@ def prediction(args):
     gan = GAN(0.1)
     gan.load(args.name[0], args.location[0])
 
-    if args.file != None:
+    if args.file is not None:
         data = UCI.csvToList(args.file[0])[1]
         for url in data.keys():
             results = gan.discriminator.predict_on_batch(np.array(data[url]).astype(np.int)[:].reshape(1, 30, 1))
 
-            if args.verbose == True:
+            if args.verbose is True:
                 if args.output == "console" or args.output[0] == "console":
                     if results[0] < args.threshold[0]:
                         print(str(url) + " : " + str(results[0]) + " -> phishing")
@@ -205,6 +205,7 @@ def prediction(args):
                         else:
                             writer.writerow([str(url) + " -> safe"])
 
+
 def reportGraph(args):
     """
             Function for the reportGraphParser
@@ -217,7 +218,6 @@ def reportGraph(args):
 if __name__ == "__main__":
     parser = MyParser(description="Gan interaction program")
     subparsers = parser.add_subparsers(help='commands')
-
 
     graphParser = subparsers.add_parser("graph", help="Used to generate graphs of the accuracy and loss for a GAN")
     graphParser.add_argument("--beginLR", required=True, nargs=1, type=float, help="First learning rate")
@@ -235,23 +235,23 @@ if __name__ == "__main__":
                              help="Dataset used to train the GAN. Can be UCI, clean or path")
     graphParser.add_argument('-di', "--division", default=1, nargs=1, type=int,
                              help="Into how many graphs the simulation is divided")
-    graphParser.add_argument('-t', "--type", required=True, choices=["phish","clean"], nargs=1, type=str,
+    graphParser.add_argument('-t', "--type", required=True, choices=["phish", "clean"], nargs=1, type=str,
                              help="Into how many graphs the simulation is divided")
     graphParser.set_defaults(func=graph)
-
 
     extractParser = subparsers.add_parser("extract", help="Used to extract features from an URL or a list of URLs")
     typeInputExtract = extractParser.add_mutually_exclusive_group(required=True)
     typeInputExtract.add_argument("-u", "--URL", nargs=1, type=str, help="One URL to extract features from it")
     typeInputExtract.add_argument("-f", "--file", nargs=1, type=str,
-                                  help="File which contains URL(s) to extract features from it. Format : one URL per line")
+                                  help="File which contains URL(s) to extract features from it. Format : one URL per "
+                                       "line")
     typeInputExtract.add_argument("-l", "--list", nargs='+', help="List of URLs to extract features from them")
     extractParser.add_argument("-b", "--begin", default=1, type=int, nargs=1,
                                help="Number of the lines where the extraction will begin")
     extractParser.add_argument("-o", "--output", default="console", type=str, nargs=1,
-                               help="Option to chose the type of ouptput : console or file. If file, the value have to be the path to a existing file")
+                               help="Option to chose the type of ouptput : console or file. If file, the value have "
+                                    "to be the path to a existing file")
     extractParser.set_defaults(func=extraction)
-
 
     creationParser = subparsers.add_parser("create", help="Used to create a GAN model and save it")
     creationParser.add_argument("-e", "--epochs", required=True, nargs=1, type=int,
@@ -265,7 +265,6 @@ if __name__ == "__main__":
                                 help="Dataset used to train the GAN. Can be UCI, clean or path")
     creationParser.set_defaults(func=creation)
 
-
     predictParser = subparsers.add_parser("predict", help="Used to predict phisihing comportement of an URL")
     predictParser.add_argument("-f", "--file", nargs=1, type=str, required=True,
                                help="File which contains URL(s) to extract features from it. Format : one URL per line")
@@ -273,15 +272,16 @@ if __name__ == "__main__":
     predictParser.add_argument("-l", "--location", required=True, nargs=1, type=str, help="Location of the GAN save")
     predictParser.add_argument('-n', "--name", required=True, nargs=1, type=str, help="Name of the save")
     predictParser.add_argument("-o", "--output", default="console", type=str, nargs=1,
-                               help="Option to chose the type of ouptput : console or file. If file, the value have to be the path to a existing file")
-    predictParser.add_argument('-t', "--threshold", required=True, nargs=1, type=int, help="Threshold for the probability of phishing/non-phishing")
+                               help="Option to chose the type of ouptput : console or file. If file, the value have "
+                                    "to be the path to a existing file")
+    predictParser.add_argument('-t', "--threshold", required=True, nargs=1, type=int,
+                               help="Threshold for the probability of phishing/non-phishing")
     predictParser.set_defaults(func=prediction)
 
-
-
-    reportGraphParser = subparsers.add_parser("reportGraph", help="Used to plot graphs of accuracies from classification report")
+    reportGraphParser = subparsers.add_parser("reportGraph",
+                                              help="Used to plot graphs of accuracies from classification report")
     reportGraphParser.add_argument("-p", "--path", nargs=1, type=str, required=True,
-                               help="path to the folder contained the folders for each sample size")
+                                   help="path to the folder contained the folders for each sample size")
     reportGraphParser.set_defaults(func=reportGraph)
 
     args = parser.parse_args()
