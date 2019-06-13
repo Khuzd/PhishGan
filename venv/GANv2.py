@@ -350,7 +350,8 @@ class GAN:
                         bestEpoch = epoch
                 del report
 
-            del idxt, imgst, idxv, imgsv, noise, g_loss, gen_data, d_loss, d_loss_real, d_loss_fake, vd_loss_real, vd_loss, vd_loss_fake, vg_loss
+            del idxt, imgst, idxv, imgsv, noise, g_loss, gen_data, d_loss, d_loss_real, d_loss_fake, vd_loss_real,\
+                vd_loss, vd_loss_fake, vg_loss
         del X_train
 
         return X, accuracy, Dloss, Gloss, vaccuracy, vDloss, vGloss, bestClass, bestEpoch

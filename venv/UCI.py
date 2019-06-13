@@ -9,6 +9,7 @@ Author : Pierrick ROBIC--BUTEZ
 
 import csv
 
+
 def csvToList(path):
     """
 
@@ -21,10 +22,9 @@ def csvToList(path):
             features[row[0]] = row[1:]
         csvfile.close()
 
-    results=[]
+    results = []
     # for i in range(len(listFeatures)):
     #     # results.append(listFeatures[i][-1])
     #     listFeatures[i]=listFeatures[i][:len(listFeatures[i])-1]
 
     return results, features
-

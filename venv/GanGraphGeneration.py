@@ -44,7 +44,8 @@ import os
 import glob
 import re
 
-def graphCreation(X, YD, VYD, lr, sample, label, bestEpoch,bestAccu, YG=None, VYG=None, path="graphs", suffix=""):
+
+def graphCreation(X, YD, VYD, lr, sample, label, bestEpoch, bestAccu, YG=None, VYG=None, path="graphs", suffix=""):
     """
     create graph and save it in /graphs directory
     :param X: list (X axis)
@@ -57,6 +58,7 @@ def graphCreation(X, YD, VYD, lr, sample, label, bestEpoch,bestAccu, YG=None, VY
     :param bestAccu float
     :param YG: list (Y generator training)
     :param VYG: list (Y generator validation)
+    :param path string
     :param suffix: str
     """
 
@@ -66,7 +68,9 @@ def graphCreation(X, YD, VYD, lr, sample, label, bestEpoch,bestAccu, YG=None, VY
         plt.plot(X, YG, label="Trainig Generator")
         plt.plot(X, VYG, label="Validation Generator")
 
-    plt.title(label + " with a sample size of " + str(sample) + " and learning rate of " + str(lr) + "\n best Epoch: " + str(bestEpoch) + " - best accuracy: " + str(bestAccu))
+    plt.title(
+        label + " with a sample size of " + str(sample) + " and learning rate of " + str(lr) + "\n best Epoch: " + str(
+            bestEpoch) + " - best accuracy: " + str(bestAccu))
     plt.xlabel("epochs")
     plt.ylabel(label)
     plt.legend()
@@ -76,7 +80,7 @@ def graphCreation(X, YD, VYD, lr, sample, label, bestEpoch,bestAccu, YG=None, VY
 
 
 def multiGraph(begin_lr, end_lr, step_lr, epochs, begin_sampleSize, end_SampleSize, step_sampleSize, plotFrequency,
-               datasetPath, outPath="graphs", divide=1, type="phish"):
+               datasetPath, outPath="graphs", divide=1, dataType="phish"):
     """
     Create multiple graph for the GAN to analyse parameters efficiency
     :param begin_lr: float (first learning rate)
@@ -88,7 +92,9 @@ def multiGraph(begin_lr, end_lr, step_lr, epochs, begin_sampleSize, end_SampleSi
     :param step_sampleSize: int (step of the sample size increase)
     :param plotFrequency: int (number of epochs between two following points)
     :param datasetPath: string (path to the dataset used to train the GAN)
+    :param outPath: string (path to the output files)
     :param divide: Into how many graphs the simulation is divided
+    :param dataType: string (can be phish or clean)
     :return:
     """
 
@@ -108,32 +114,41 @@ def multiGraph(begin_lr, end_lr, step_lr, epochs, begin_sampleSize, end_SampleSi
 
             print("sample : %f ; lr : %f" % (sample, lr))
             gan = GAN(lr=lr)
-            gan.dataType = type
-            X, accuracy, Dloss, Gloss, vacc, vDloss, vGloss, bestReport, bestEpoch = gan.train(epochs=epochs, batch_size=sample,
-                                                                        plotFrequency=plotFrequency, path=datasetPath,predict=True)
+            gan.dataType = dataType
+            X, accuracy, Dloss, Gloss, vacc, vDloss, vGloss, bestReport, bestEpoch = gan.train(epochs=epochs,
+                                                                                               batch_size=sample,
+                                                                                               plotFrequency=plotFrequency,
+                                                                                               path=datasetPath,
+                                                                                               predict=True)
             if divide == 1:
-                graphCreation(X, Dloss, vDloss, lr, sample, "loss",bestEpoch,bestReport["accuracy"], Gloss, vGloss, path=outPath)
-                graphCreation(X, accuracy, vacc, lr, sample, "accuracy",bestEpoch,bestReport["accuracy"], path=outPath)
+                graphCreation(X, Dloss, vDloss, lr, sample, "loss", bestEpoch, bestReport["accuracy"], Gloss, vGloss,
+                              path=outPath)
+                graphCreation(X, accuracy, vacc, lr, sample, "accuracy", bestEpoch, bestReport["accuracy"],
+                              path=outPath)
             else:
                 for i in range(divide):
                     lenght = len(X)
                     graphCreation(X[i * (lenght // divide):(i + 1) * (lenght // divide)],
                                   Dloss[i * (lenght // divide):(i + 1) * (lenght // divide)],
-                                  vDloss[i * (lenght // divide):(i + 1) * (lenght // divide)], lr, sample, "loss",bestEpoch,bestReport["accuracy"],
+                                  vDloss[i * (lenght // divide):(i + 1) * (lenght // divide)], lr, sample, "loss",
+                                  bestEpoch, bestReport["accuracy"],
                                   Gloss[i * (lenght // divide):(i + 1) * (lenght // divide)],
                                   vGloss[i * (lenght // divide):(i + 1) * (lenght // divide)], path=outPath,
                                   suffix="part" + str(i))
                     graphCreation(X[i * (lenght // divide):(i + 1) * (lenght // divide)],
                                   accuracy[i * (lenght // divide):(i + 1) * (lenght // divide)],
-                                  vacc[i * (lenght // divide):(i + 1) * (lenght // divide)], lr, sample, "accuracy",bestEpoch,bestReport["accuracy"],
+                                  vacc[i * (lenght // divide):(i + 1) * (lenght // divide)], lr, sample, "accuracy",
+                                  bestEpoch, bestReport["accuracy"],
                                   path=outPath, suffix="part" + str(i))
 
-            with open(outPath + "/" + str(sample) + "/"  +"Report_"+ str(decimal.Decimal(lr).quantize(decimal.Decimal('.0001'), rounding=decimal.ROUND_DOWN)) +  ".txt", "w", newline='', encoding='utf-8') as reportFile:
+            with open(outPath + "/" + str(sample) + "/" + "Report_" + str(
+                    decimal.Decimal(lr).quantize(decimal.Decimal('.0001'), rounding=decimal.ROUND_DOWN)) + ".txt", "w",
+                      newline='', encoding='utf-8') as reportFile:
                 reportFile.write(str(bestReport))
-
 
             del gan, sess, session_conf, X, accuracy, Dloss, Gloss, vacc, vDloss, vGloss, bestReport, bestEpoch
             K.clear_session()
+
 
 def reportAccuracyGraph(path):
     """
@@ -142,17 +157,16 @@ def reportAccuracyGraph(path):
     :return: nothing
     """
 
-
     for folder in os.listdir(path):
         # print(path+"/"+folder)
         accuracies = []
-        LRs=[]
-        for report in glob.glob(path+"/"+folder+"/"+"*.txt"):
+        LRs = []
+        for report in glob.glob(path + "/" + folder + "/" + "*.txt"):
             file = open(report)
             content = file.read()
             file.close()
-            accuracies.append(float(re.findall("\d+\.\d+",re.findall(r"}, 'accuracy': 0.\d*?,",content)[0])[0]))
-            LRs.append(float(re.findall(r"\d+\.\d+",report)[0]))
+            accuracies.append(float(re.findall("\d+\.\d+", re.findall(r"}, 'accuracy': 0.\d*?,", content)[0])[0]))
+            LRs.append(float(re.findall(r"\d+\.\d+", report)[0]))
 
             plt.plot(LRs, accuracies)
             plt.title("Accuracies for a sample size of " + str(folder))

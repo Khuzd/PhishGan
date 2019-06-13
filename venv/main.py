@@ -83,7 +83,7 @@ def graph(args):
         args.division = args.division[0]
     GanGraphGeneration.multiGraph(args.beginLR[0], args.endLR[0], args.stepLR[0], args.epochs[0], args.beginSample[0],
                                   args.endSample[0], args.stepSample[0], args.pltFrequency[0], dataset,
-                                  outPath=''.join(args.output), divide=args.division, type=args.type[0])
+                                  outPath=''.join(args.output), divide=args.division, dataType=args.type[0])
 
 
 def extraction(args):
