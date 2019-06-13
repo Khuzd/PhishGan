@@ -51,8 +51,8 @@ import UCI
 
 os.environ["PATH"] += os.pathsep + 'C:/Program Files (x86)/Graphviz2.38/bin'
 
-PHIS_PATH_TEST = "data/verified_onlineouttraintest.csv"
-CLEAN_PATH_TEST = "data/top25000outtest.csv"
+PHIS_PATH_TEST = "data/Phishtank_outtest.csv"
+CLEAN_PATH_TEST = "data/Amazon_top25000outtest.csv"
 
 
 class GAN():

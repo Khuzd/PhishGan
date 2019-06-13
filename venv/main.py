@@ -45,7 +45,7 @@ from GANv2 import GAN
 import UCI
 
 UCI_PATH = 'data/UCI_dataset.csv'
-CLEAN_PATH = 'data/top25000out.csv'
+CLEAN_PATH = 'data/Amazon_top25000outtrain.csv'
 
 
 class MyParser(argparse.ArgumentParser):

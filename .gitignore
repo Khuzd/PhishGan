@@ -12,3 +12,5 @@ venv/__pycache__/
 \.idea/
 
 geckodriver\.log
+
+venv/data/Unused/phishTank\.json
