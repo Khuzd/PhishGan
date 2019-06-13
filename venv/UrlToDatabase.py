@@ -14,7 +14,6 @@ import requests
 from bs4 import BeautifulSoup
 import socket
 import dns.resolver
-import googleIndexChecker
 import json
 import struct
 import ssl
@@ -65,9 +64,9 @@ def IPtesting(domain):
     :return: -1 or 1
     """
 
-    if (re.match(r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}", str(domain))) != None:
+    if (re.match(r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}", str(domain))) is not None:
         return 1
-    elif (re.match(r"0x..\.0x..\.0x..\.0x..", str(domain))) != None:
+    elif (re.match(r"0x..\.0x..\.0x..\.0x..", str(domain))) is not None:
         return 1
     else:
         return -1
@@ -80,9 +79,9 @@ def leghtTesting(url):
     :return: -1,0 or 1
     """
 
-    if ((len(url)) < 54):
+    if len(url) < 54:
         return -1
-    elif (len(url) > 54 and len(url) < 75):
+    elif 54 < len(url) < 75:
         return 0
     else:
         return 1
@@ -107,7 +106,7 @@ def atSymbolTetsting(url):
     :param url: string
     :return: -1 or 1
     """
-    if ("@" in url):
+    if "@" in url:
         return 1
     return -1
 
@@ -118,7 +117,7 @@ def doubleSlashTesting(url):
     :param url: string
     :return: -1 or 1
     """
-    if ("//" in url):
+    if "//" in url:
         return 1
     return -1
 
@@ -129,7 +128,7 @@ def dashTesting(url):
         :param url: string
         :return: -1 or 1
         """
-    if ("-" in url):
+    if "-" in url:
         return 1
     return -1
 
@@ -144,7 +143,7 @@ def subDomainTesting(domain):
         domain = domain.split("www.")[1]
 
     for tld in CCTLD:
-        if (re.match(("(.)*" + tld + "$"), str(domain))):
+        if re.match(("(.)*" + tld + "$"), str(domain)):
             domain = domain[:len(domain) - len(tld)]
             if domain.count('.') <= 1:
                 return -1
@@ -199,16 +198,16 @@ def ageCertificateTesting(domain):
     return 0
 
 
-def expirationDomainTesting(whois):
+def expirationDomainTesting(whoisResult):
     """
     test if the valid duration of the domain is enough long
-    :param whois:string
+    :param whoisResult:string
     :return: -1 or 1
     """
 
     now = datetime.datetime.now()
 
-    expiration = whois.expiration_date
+    expiration = whoisResult.expiration_date
     if type(expiration) == list:
         expiration = expiration[0]
 
@@ -234,10 +233,10 @@ def faviconTesting(html, domain):
     soup = BeautifulSoup(html, features="lxml")
     head = soup.find("head")
     favicon = None
-    if head != None:
+    if head is not None:
         favicon = head.find("link", {"rel": "icon"})
 
-    if favicon != None:
+    if favicon is not None:
         linkFavicon = favicon.get("href")
         if domain not in linkFavicon:
             return 1
@@ -261,9 +260,9 @@ def portTesting(domain):
             result = sock.connect_ex((remoteServerIP, port[0]))
             sock.close()
 
-            if result == 0 and port[1] == False:
+            if result == 0 and port[1] is False:
                 return 1
-            elif result != 0 and port[1] == True:
+            elif result != 0 and port[1] is True:
                 return 1
         return -1
 
@@ -413,13 +412,13 @@ def SFHTesting(html, domain):
     soup = BeautifulSoup(html, features="lxml")
 
     for form in soup.find_all("form"):
-        if (str(form.get("action")) == ""):
+        if str(form.get("action")) == "":
             return 1
 
-        elif (str(form.get("action")) == "about:blank"):
+        elif str(form.get("action")) == "about:blank":
             return 1
 
-        elif (domain not in str(form.get("action"))):
+        elif domain not in str(form.get("action")):
             return 0
     return -1
 
@@ -433,9 +432,9 @@ def emailTesting(html):
     soup = BeautifulSoup(html, features="lxml")
 
     for form in soup.find_all("form"):
-        if (re.match(r"mail\(.*?\)", str(form))):
+        if re.match(r"mail\(.*?\)", str(form)):
             return 1
-        elif (re.match(r"mailto:", str(form))):
+        elif re.match(r"mailto:", str(form)):
             return 1
     return -1
 
@@ -451,7 +450,7 @@ def abnormalURLTesting(url):
         if type(whoisURL) == list:
             whoisURL = whoisURL[0]
 
-        if (whoisURL != None and whoisURL.lower() not in url):
+        if whoisURL is not None and whoisURL.lower() not in url:
             return 1
         return -1
     except socket.gaierror:
@@ -462,6 +461,7 @@ def forwardingTesting(url, http):
     """
     test the number of forwarding
     :param url: string
+    :param http: string
     :return: -1,0 or 1
     """
     countForward = len(requests.get(http + "://" + url).history)
@@ -497,7 +497,7 @@ def rightClickTesting(html):
     :param html: string (html source code)
     :return: -1 or 1
     """
-    if (re.match(r"\"contextmenu\".*?preventdefaut", str(html)) != None):
+    if re.match(r"\"contextmenu\".*?preventdefaut", str(html)) is not None:
         return 1
     return -1
 
@@ -528,17 +528,16 @@ def IFrameTesting(html):
         return -1
 
 
-def domainAgeTesting(whois):
+def domainAgeTesting(whoisResult):
     """
     testing if domain age is greater than 6 months
-    :param doamin: string
+    :param whoisResult: string
     :return: -1 or 1
     """
 
     now = datetime.datetime.now()
-    today = datetime.date(now.year, now.month, now.day)
 
-    creation = whois.creation_date
+    creation = whoisResult.creation_date
 
     if type(creation) == list:
         creation = creation[0]
@@ -575,7 +574,7 @@ def DNSRecordTesting(domain):
     except:
         return 1
 
-    if empty == False:
+    if not empty:
         return -1
 
     return 1
@@ -606,10 +605,11 @@ def pageRankTesting(domain):
     :param domain: str
     :return: -1 or 1
     """
-    answer = requests.get("https://openpagerank.com/api/v1.0/getPageRank?domains%5B0%5D=" + domain,headers={"API-OPR": "cswc0oc4wo0gs0ssgk044044wosc0ggwgoksocg8"})
+    answer = requests.get("https://openpagerank.com/api/v1.0/getPageRank?domains%5B0%5D=" + domain,
+                          headers={"API-OPR": "cswc0oc4wo0gs0ssgk044044wosc0ggwgoksocg8"})
 
     try:
-        if answer.json()["response"][0]['page_rank_decimal'] <=2:
+        if answer.json()["response"][0]['page_rank_decimal'] <= 2:
             return 1
         else:
             return -1
@@ -660,7 +660,7 @@ def googleIndexTesting(url):
 def linksPointingToTesting(url):
     """
     collect the count of all sites which linked to the url on AWIS database and test if it is not abnormal
-    :param domain: string
+    :param url: string
     :return: -1,0 or 1
     """
     soup = BeautifulSoup(requests.get("https://www.alexa.com/siteinfo/" + url).content, features="lxml")
@@ -702,8 +702,10 @@ def statisticReportTEsting(domain):
 
 def UrlToDatabase(url, queue):
     """
-    analyse the url to create a list of 30 features which can be used for GAN implementation. Refer to documentation for all criteria
+    analyse the url to create a list of 30 features which can be used for GAN implementation. Refer to documentation
+    for all criteria
     :param url: string
+    :param queue: queue
     :return: list
     """
 
@@ -720,7 +722,7 @@ def UrlToDatabase(url, queue):
     domain = url.split("/")[0]
 
     retry = True
-    while (retry):  # to retry if whois database kick us
+    while retry:  # to retry if whois database kick us
         try:
             whoisDomain = whois.whois(str(domain))
             retry = False
@@ -866,13 +868,13 @@ if __name__ == "__main__":
     pass
 
 
-def extraction(input, output, begin=1):
+def extraction(inputFile, output, begin=1):
     failledURLS = []
     notReacheable = []
 
     count = 1
     begin = begin
-    with open(input, newline='', encoding='utf-8') as csvinfile:
+    with open(inputFile, newline='', encoding='utf-8') as csvinfile:
 
         for row in csv.reader(csvinfile, delimiter=',', quotechar='|'):
             print("first : " + str(count))
@@ -924,7 +926,7 @@ def extraction(input, output, begin=1):
                 notReacheable.append(results)
             else:
                 if output != "console":
-                    with  open(output, 'a') as outcsvfile:
+                    with open(output, 'a') as outcsvfile:
                         writer = csv.writer(outcsvfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
                         writer.writerow([url] + results)
                 else:
@@ -934,7 +936,7 @@ def extraction(input, output, begin=1):
         proc.terminate()
 
     if output != "console":
-        with  open(output, 'a') as outcsvfile:
+        with open(output, 'a') as outcsvfile:
             writer = csv.writer(outcsvfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
             for fail in realfailledURLS:
                 writer.writerow(fail)

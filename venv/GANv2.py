@@ -55,7 +55,7 @@ PHIS_PATH_TEST = "data/Phishtank_outtest.csv"
 CLEAN_PATH_TEST = "data/Amazon_top25000outtest.csv"
 
 
-class GAN():
+class GAN:
     def __init__(self, lr):
         """
         :param lr: float (learning rate)
@@ -230,7 +230,8 @@ class GAN():
             prediction.append(self.discriminator.predict_on_batch(np.array(i).astype(np.int)[:].reshape(1, 30, 1)))
 
         ## Calculate the best threshold
-        threshold = ((sum(prediction[:len(cleanTestDataset)])/len(cleanTestDataset)) + (sum(prediction[len(cleanTestDataset):])/len(phishTestDataset))) / 2
+        threshold = ((sum(prediction[:len(cleanTestDataset)]) / len(cleanTestDataset)) + (
+                sum(prediction[len(cleanTestDataset):]) / len(phishTestDataset))) / 2
 
         ## Generate the predict results
         for i in prediction:
@@ -241,9 +242,9 @@ class GAN():
             else:
                 predict.append("clean")
 
-        return (classification_report(np.array(true), np.array(predict),output_dict = True))
+        return classification_report(np.array(true), np.array(predict), output_dict=True)
 
-    def train(self, epochs, path, batch_size=128, plotFrequency=20, predict = False):
+    def train(self, epochs, path, batch_size=128, plotFrequency=20, predict=False):
         """
         Train the GAN
         :param epochs: int
@@ -273,8 +274,8 @@ class GAN():
         vDloss = []
         vGloss = []
         X = []
-        bestEpoch=-1
-        bestClass={"accuracy":0}
+        bestEpoch = -1
+        bestClass = {"accuracy": 0}
 
         for epoch in range(epochs):
 
@@ -341,7 +342,7 @@ class GAN():
 
             # Generate the classificaiton report if necessary
             if predict:
-                report = self.classReport(cleanTest,phisTest)
+                report = self.classReport(cleanTest, phisTest)
 
                 if "accuracy" in report:
                     if report["accuracy"] > bestClass["accuracy"]:
@@ -352,4 +353,4 @@ class GAN():
             del idxt, imgst, idxv, imgsv, noise, g_loss, gen_data, d_loss, d_loss_real, d_loss_fake, vd_loss_real, vd_loss, vd_loss_fake, vg_loss
         del X_train
 
-        return (X, accuracy, Dloss, Gloss, vaccuracy, vDloss, vGloss, bestClass, bestEpoch)
+        return X, accuracy, Dloss, Gloss, vaccuracy, vDloss, vGloss, bestClass, bestEpoch
