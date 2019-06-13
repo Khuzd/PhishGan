@@ -5,7 +5,9 @@ venv/Scripts/
 
 venv/data/phishTank\.json
 
-venv/graphs/
+venv/graphs/*
+
+!venv/graphs/.gitkeep
 
 venv/__pycache__/
 
