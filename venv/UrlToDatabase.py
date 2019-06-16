@@ -19,6 +19,7 @@ import struct
 import ssl
 from multiprocessing import Process, Queue
 import csv
+import googleIndexChecker
 
 columns = ["having_IP_Address", "URL_Length", "Shortining_Service", "having_At_Symbol", "double_slash_redirecting",
            "Prefix_Suffix", "having_Sub_Domain", "SSLfinal_State", "Domain_registeration_length", "Favicon", "port",
@@ -624,10 +625,10 @@ def googleIndexTesting(url):
     :param url: string
     :return: -1 or 1
     """
-    # index = googleIndexChecker.google_search("site:" + url)
-    # if index:
-    #     return -1
-    # return 1
+    index = googleIndexChecker.google_search("site:" + url)
+    if index:
+        return -1
+    return 1
     # html = requests.get('https://www.google.com/search?q=site:'+url, headers=headers, proxies=proxies).content
     # soup=BeautifulSoup(html, features="lxml")
     # try:
@@ -645,16 +646,16 @@ def googleIndexTesting(url):
     #         return -2
     #
     # return 1
-    try:
-        soup = BeautifulSoup(requests.get("https://www.ecosia.org/search?q=site%3A" + url, stream=False).content,
-                             features="lxml")
-        results = re.findall('\d+', soup.find("", {"class": "card-title card-title-result-count"}).text)
-        if len(results) == 1 and results[0] == '0':
-            return 1
-        return -1
-    except Exception as e:
-        print(e)
-        pass
+    # try:
+    #     soup = BeautifulSoup(requests.get("https://www.ecosia.org/search?q=site%3A" + url, stream=False).content,
+    #                          features="lxml")
+    #     results = re.findall('\d+', soup.find("", {"class": "card-title card-title-result-count"}).text)
+    #     if len(results) == 1 and results[0] == '0':
+    #         return 1
+    #     return -1
+    # except Exception as e:
+    #     print(e)
+    #     pass
 
 
 def linksPointingToTesting(url):
