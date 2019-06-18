@@ -522,8 +522,13 @@ def popUpTesting(html):
     :param html: string (html source code)
     :return: -1 or 1
     """
-    if re.match(r"prompt\(.+?\);", str(html)):
-        return 1
+    prompt = re.findall(r"prompt\(", str(html))
+    if prompt != []:
+        if len(prompt) > 4:
+            return 1
+        if len(prompt) > 2:
+            return 0
+        
     return -1
 
 
