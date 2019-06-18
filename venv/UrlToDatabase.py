@@ -498,8 +498,21 @@ def rightClickTesting(html):
     :param html: string (html source code)
     :return: -1 or 1
     """
-    if re.match(r"\"contextmenu\".*?preventdefaut", str(html)) is not None:
+    if re.findall(r"addEventListener\(.{1,2}?contextmenu", str(html)) != []:
         return 1
+
+    if re.findall(r"addEvent\(.{1,2}?contextmenu", str(html)) != []:
+        return 1
+
+    if re.findall(r"oncontextmenu", str(html)) != []:
+        return 1
+
+    # if re.findall(r"onmousedown", str(html)) != []:
+    #     return 1
+    #
+    # if re.findall(r"MOUSEDOWN", str(html)) != []:
+    #     return 1
+
     return -1
 
 
