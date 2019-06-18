@@ -433,9 +433,9 @@ def emailTesting(html):
     soup = BeautifulSoup(html, features="lxml")
 
     for form in soup.find_all("form"):
-        if re.match(r"mail\(.*?\)", str(form)):
+        if re.findall(r"mail\(.*?\)", str(form)) != []:
             return 1
-        elif re.match(r"mailto:", str(form)):
+        elif re.findall(r"mailto:", str(form)) != []:
             return 1
     return -1
 
