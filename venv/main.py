@@ -43,6 +43,7 @@ from multiprocessing import Process, Queue
 import csv
 from GANv2 import GAN
 import UCI
+import browser_history_extraction
 
 UCI_PATH = 'data/UCI_dataset.csv'
 CLEAN_PATH = 'data/Amazon_top25000outtrain.csv'
@@ -214,6 +215,23 @@ def reportGraph(args):
             """
     GanGraphGeneration.reportAccuracyGraph(args.path[0])
 
+def historyExtract(args):
+    """
+            Function for the historyExtractionParser
+            :param args: Namespace
+            :return: nothing
+            """
+    URLs = browser_history_extraction.chromeExtraction(args.date)
+    URLs += browser_history_extraction.firefoxExtraction(args.date)
+    if args.output == "console" or args.output[0] == "console":
+        print(URLs)
+
+    else :
+        for url in URLs:
+            with open(args.output[0], 'a') as outcsvfile:
+                writer = csv.writer(outcsvfile, delimiter=' ', quotechar='"')
+                writer.writerow([url])
+
 
 if __name__ == "__main__":
     parser = MyParser(description="Gan interaction program")
@@ -284,7 +302,16 @@ if __name__ == "__main__":
                                    help="path to the folder contained the folders for each sample size")
     reportGraphParser.set_defaults(func=reportGraph)
 
+
+    historyExtractionParser = subparsers.add_parser("history", help="Used to used to extract browsers history")
+    historyExtractionParser.add_argument("-o", "--output", default="console", type=str, nargs=1,
+                               help="Option to chose the type of ouptput : console or file. If file, the value have "
+                                    "to be the path to a existing file")
+    historyExtractionParser.add_argument("-d","--date",type=int,default=0,help="Used to set the date after which the URLs will be extracted from browsers history")
+    historyExtractionParser.set_defaults(func=historyExtract)
+
+
     args = parser.parse_args()
-    # print(args)
+    print(args)
     args.func(args)
     exit(0)
