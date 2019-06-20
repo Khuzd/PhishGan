@@ -223,6 +223,7 @@ def historyExtract(args):
             """
     URLs = browser_history_extraction.chromeExtraction(args.date)
     URLs += browser_history_extraction.firefoxExtraction(args.date)
+    URLs += browser_history_extraction.operaExtraction(args.date)
     if args.output == "console" or args.output[0] == "console":
         print(URLs)
 
