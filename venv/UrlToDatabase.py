@@ -95,7 +95,7 @@ def shortenerTEsting(url):
     :return: -1 or 1
     """
     for short in URL_SHORTENER:
-        if short.lower() in url:
+        if short.lower() in url.lower():
             return 1
 
     return -1
@@ -278,7 +278,7 @@ def httpTesting(url):
     :param url: string
     :return: -1 or 1
     """
-    if "http" in url:
+    if "http" in url.lower():
         return 1
 
     return -1
@@ -433,9 +433,9 @@ def emailTesting(html):
     soup = BeautifulSoup(html, features="lxml")
 
     for form in soup.find_all("form"):
-        if re.findall(r"mail\(.*?\)", str(form)) != []:
+        if "mail(" in str(form).lower():
             return 1
-        elif re.findall(r"mailto:", str(form)) != []:
+        elif "mailto:" in str(form).lower():
             return 1
     return -1
 
@@ -486,9 +486,10 @@ def barCustomTesting(html):
     soup = BeautifulSoup(html, features="lxml")
 
     for tag in soup.find_all(onmouseover=True):
-        if "window.status" in str(tag):
+        if "window.status" in str(tag).lower():
             return 1
-
+        else:
+            return 0
     return -1
 
 
@@ -498,14 +499,17 @@ def rightClickTesting(html):
     :param html: string (html source code)
     :return: -1 or 1
     """
-    if re.findall(r"addEventListener\(.{1,2}?contextmenu", str(html)) != []:
-        return 1
 
-    if re.findall(r"addEvent\(.{1,2}?contextmenu", str(html)) != []:
+    if "contextmenu" in str(html).lower():
         return 1
-
-    if re.findall(r"oncontextmenu", str(html)) != []:
-        return 1
+    # if re.findall(r"addEventListener\(.{1,2}?contextmenu", str(html)) != []:
+    #     return 1
+    #
+    # if re.findall(r"addEvent\(.{1,2}?contextmenu", str(html)) != []:
+    #     return 1
+    #
+    # if re.findall(r"oncontextmenu", str(html)) != []:
+    #     return 1
 
     # if re.findall(r"onmousedown", str(html)) != []:
     #     return 1
@@ -522,7 +526,7 @@ def popUpTesting(html):
     :param html: string (html source code)
     :return: -1 or 1
     """
-    prompt = re.findall(r"prompt\(", str(html))
+    prompt = re.findall(r"prompt\(", str(html)) + re.findall(r"confirm\(", str(html)) + re.findall(r"alert\(", str(html))
     if prompt != []:
         if len(prompt) > 4:
             return 1
