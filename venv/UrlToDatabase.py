@@ -19,6 +19,7 @@ import struct
 import ssl
 from multiprocessing import Process, Queue
 import csv
+import googleIndexChecker
 
 columns = ["having_IP_Address", "URL_Length", "Shortining_Service", "having_At_Symbol", "double_slash_redirecting",
            "Prefix_Suffix", "having_Sub_Domain", "SSLfinal_State", "Domain_registeration_length", "Favicon", "port",
@@ -94,7 +95,7 @@ def shortenerTEsting(url):
     :return: -1 or 1
     """
     for short in URL_SHORTENER:
-        if short.lower() in url:
+        if short.lower() in url.lower():
             return 1
 
     return -1
@@ -277,7 +278,7 @@ def httpTesting(url):
     :param url: string
     :return: -1 or 1
     """
-    if "http" in url:
+    if "http" in url.lower():
         return 1
 
     return -1
@@ -432,9 +433,9 @@ def emailTesting(html):
     soup = BeautifulSoup(html, features="lxml")
 
     for form in soup.find_all("form"):
-        if re.match(r"mail\(.*?\)", str(form)):
+        if "mail(" in str(form).lower():
             return 1
-        elif re.match(r"mailto:", str(form)):
+        elif "mailto:" in str(form).lower():
             return 1
     return -1
 
@@ -485,9 +486,10 @@ def barCustomTesting(html):
     soup = BeautifulSoup(html, features="lxml")
 
     for tag in soup.find_all(onmouseover=True):
-        if "window.status" in str(tag):
+        if "window.status" in str(tag).lower():
             return 1
-
+        else:
+            return 0
     return -1
 
 
@@ -497,8 +499,24 @@ def rightClickTesting(html):
     :param html: string (html source code)
     :return: -1 or 1
     """
-    if re.match(r"\"contextmenu\".*?preventdefaut", str(html)) is not None:
+
+    if "contextmenu" in str(html).lower():
         return 1
+    # if re.findall(r"addEventListener\(.{1,2}?contextmenu", str(html)) != []:
+    #     return 1
+    #
+    # if re.findall(r"addEvent\(.{1,2}?contextmenu", str(html)) != []:
+    #     return 1
+    #
+    # if re.findall(r"oncontextmenu", str(html)) != []:
+    #     return 1
+
+    # if re.findall(r"onmousedown", str(html)) != []:
+    #     return 1
+    #
+    # if re.findall(r"MOUSEDOWN", str(html)) != []:
+    #     return 1
+
     return -1
 
 
@@ -508,8 +526,13 @@ def popUpTesting(html):
     :param html: string (html source code)
     :return: -1 or 1
     """
-    if re.match(r"prompt\(.+?\);", str(html)):
-        return 1
+    prompt = re.findall(r"prompt\(", str(html)) + re.findall(r"confirm\(", str(html)) + re.findall(r"alert\(", str(html))
+    if prompt != []:
+        if len(prompt) > 4:
+            return 1
+        if len(prompt) > 2:
+            return 0
+        
     return -1
 
 
@@ -624,10 +647,10 @@ def googleIndexTesting(url):
     :param url: string
     :return: -1 or 1
     """
-    # index = googleIndexChecker.google_search("site:" + url)
-    # if index:
-    #     return -1
-    # return 1
+    index = googleIndexChecker.google_search("site:" + url)
+    if index:
+        return -1
+    return 1
     # html = requests.get('https://www.google.com/search?q=site:'+url, headers=headers, proxies=proxies).content
     # soup=BeautifulSoup(html, features="lxml")
     # try:
@@ -645,16 +668,16 @@ def googleIndexTesting(url):
     #         return -2
     #
     # return 1
-    try:
-        soup = BeautifulSoup(requests.get("https://www.ecosia.org/search?q=site%3A" + url, stream=False).content,
-                             features="lxml")
-        results = re.findall('\d+', soup.find("", {"class": "card-title card-title-result-count"}).text)
-        if len(results) == 1 and results[0] == '0':
-            return 1
-        return -1
-    except Exception as e:
-        print(e)
-        pass
+    # try:
+    #     soup = BeautifulSoup(requests.get("https://www.ecosia.org/search?q=site%3A" + url, stream=False).content,
+    #                          features="lxml")
+    #     results = re.findall('\d+', soup.find("", {"class": "card-title card-title-result-count"}).text)
+    #     if len(results) == 1 and results[0] == '0':
+    #         return 1
+    #     return -1
+    # except Exception as e:
+    #     print(e)
+    #     pass
 
 
 def linksPointingToTesting(url):

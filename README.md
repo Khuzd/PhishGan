@@ -155,6 +155,6 @@ This project is licensed under the MIT License
 
 * Dr Thomas WIN, my research tutor
 * University of California, Irvine for their dataset
-* eriklindernoren (https://github.com/eriklindernoren/) for his Keras GAN base code
+* [Eriklindernoren](https://github.com/eriklindernoren) for his Keras GAN base code
 
 
