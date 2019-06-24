@@ -897,10 +897,6 @@ def UrlToDatabase(url, queue):
     return
 
 
-if __name__ == "__main__":
-    # execute only if run as a script
-    pass
-
 
 def extraction(inputFile, output, begin=1):
     failledURLS = []
@@ -930,7 +926,7 @@ def extraction(inputFile, output, begin=1):
                         failledURLS.append(row[0])
                     else:
                         if output != "console":
-                            with open(output, 'a') as outcsvfile:
+                            with open(output, 'a', newline='') as outcsvfile:
                                 writer = csv.writer(outcsvfile, delimiter=',', quotechar='"')
                                 writer.writerow([row[0]] + results)
                         else:
@@ -960,7 +956,7 @@ def extraction(inputFile, output, begin=1):
                 notReacheable.append(results)
             else:
                 if output != "console":
-                    with open(output, 'a') as outcsvfile:
+                    with open(output, 'a', newline='') as outcsvfile:
                         writer = csv.writer(outcsvfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
                         writer.writerow([url] + results)
                 else:
@@ -970,7 +966,7 @@ def extraction(inputFile, output, begin=1):
         proc.terminate()
 
     if output != "console":
-        with open(output, 'a') as outcsvfile:
+        with open(output, 'a', newline='') as outcsvfile:
             writer = csv.writer(outcsvfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
             for fail in realfailledURLS:
                 writer.writerow(fail)

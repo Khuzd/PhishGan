@@ -108,7 +108,7 @@ def extraction(args):
         if args.output == "console" or args.output[0] == "console":
             print(str(args.URL[0]) + " " + str(results))
         else:
-            with open(args.output[0], 'a') as outcsvfile:
+            with open(args.output[0], 'a', newline='') as outcsvfile:
                 writer = csv.writer(outcsvfile, delimiter=' ', quotechar='"')
                 writer.writerow([args.URL[0]] + [str(results)])
         proc.terminate()
@@ -130,7 +130,7 @@ def extraction(args):
             if args.output == "console" or args.output[0] == "console":
                 print(str(url) + str(results))
             else:
-                with open(args.output[0], 'a') as outcsvfile:
+                with open(args.output[0], 'a', newline='') as outcsvfile:
                     writer = csv.writer(outcsvfile, delimiter=' ', quotechar='"')
                     writer.writerow([str(url)] + [str(results)])
             proc.terminate()
@@ -184,7 +184,7 @@ def prediction(args):
                         print(str(url) + " : " + str(results[0]) + " -> safe")
 
                 else:
-                    with open(args.output[0], 'a') as outcsvfile:
+                    with open(args.output[0], 'a', newline='') as outcsvfile:
                         writer = csv.writer(outcsvfile, delimiter=' ', quotechar='"')
                         if results[0] < args.threshold[0]:
                             writer.writerow([str(url) + " : " + str(results[0]) + " -> phishing"])
@@ -199,7 +199,7 @@ def prediction(args):
                         print(str(url) + " -> safe")
 
                 else:
-                    with open(args.output[0], 'a') as outcsvfile:
+                    with open(args.output[0], 'a', newline='') as outcsvfile:
                         writer = csv.writer(outcsvfile, delimiter=' ', quotechar='"')
                         if results[0] < args.threshold[0]:
                             writer.writerow([str(url) + " -> phishing"])
@@ -229,7 +229,7 @@ def historyExtract(args):
 
     else :
         for url in URLs:
-            with open(args.output[0], 'a') as outcsvfile:
+            with open(args.output[0], 'a', newline='') as outcsvfile:
                 writer = csv.writer(outcsvfile, delimiter=' ', quotechar='"')
                 writer.writerow([url])
 
