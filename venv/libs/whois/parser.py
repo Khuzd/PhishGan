@@ -105,6 +105,7 @@ class WhoisEntry(dict):
         'dnssec':               'dnssec: *([\S]+)',
         'name':                 'Registrant Name: *(.+)',
         'org':                  'Registrant\s*Organization: *(.+)',
+        'org1':                 'Admin\s*Organization: *(.+)',
         'address':              'Registrant Street: *(.+)',
         'city':                 'Registrant City: *(.+)',
         'state':                'Registrant State/Province: *(.+)',

@@ -316,7 +316,8 @@ def requestedURL(html, domain):
 
     for link in m:
         if domain not in link:
-            externalLinks += 1
+            if "http" in link or "www" in link:
+                externalLinks += 1
         totalLinks += 1
 
     if totalLinks != 0:
@@ -347,8 +348,9 @@ def anchorsTesting(html, domain):
     externalLinks = 0
 
     for anchor in anchors:
-        if 'http' in anchor and domain not in anchor:
-            externalLinks += 1
+        if domain not in anchor:
+            if "www" in anchor or "http" in anchor:
+                externalLinks += 1
 
     if externalLinks == 0 or externalLinks / totalLink < 0.31:
         return -1
@@ -420,7 +422,7 @@ def SFHTesting(html, domain):
         elif str(form.get("action")) == "about:blank":
             return 1
 
-        elif domain not in str(form.get("action")):
+        elif domain not in str(form.get("action")) or "http" in str(form.get("action")) or "www" in str(form.get("action")) :
             return 0
     return -1
 
@@ -431,13 +433,12 @@ def emailTesting(html):
     :param html: string (html source code)
     :return: -1 or 1
     """
-    soup = BeautifulSoup(html, features="lxml")
+    # soup = BeautifulSoup(html, features="lxml")
 
-    for form in soup.find_all("form"):
-        if "mail(" in str(form).lower():
-            return 1
-        elif "mailto:" in str(form).lower():
-            return 1
+    if "mail(" in str(html).lower():
+        return 1
+    elif "mailto:" in str(html).lower():
+        return 1
     return -1
 
 
@@ -448,26 +449,31 @@ def abnormalURLTesting(whoisResult):
     :return: -1 or 1
     """
 
-    domain = whoisResult["domain_name"].split(".")[0]
+    domain = whoisResult.domain.split(".")[0]
     if "org" in whoisResult:
         if type(whoisResult["org"]) == list:
             for org in whoisResult["org"]:
-                if domain in org:
+                for suborg in re.split(". | ", org):
+                    if suborg.lower() in domain.lower() :
+                        return -1
+        elif whoisResult["org"] != None:
+            for suborg in re.split(". | ", whoisResult["org"]):
+                if suborg.lower() in domain.lower():
                     return -1
-        else:
-            if domain in whoisResult["org"]:
-                return -1
 
     if "org1" in whoisResult:
         if type(whoisResult["org1"]) == list:
             for org in whoisResult["org1"]:
-                if domain in org:
+                for suborg in re.split(". | ", org):
+                    if suborg.lower() in domain.lower():
+                        return -1
+        elif whoisResult["org1"] != None:
+            for suborg in re.split(". | ", whoisResult["org1"]):
+                if suborg.lower() in domain.lower():
                     return -1
-        else:
-            if domain in whoisResult["org1"]:
-                return -1
 
     return 1
+
 
 def forwardingTesting(url, http):
     """
@@ -547,26 +553,35 @@ def popUpTesting(html):
     return -1
 
 
-def IFrameTesting(html):
+def IFrameTesting(html, domain):
     """
     testing if the site use Iframe
     :param html: string (html source code)
+    :param domain: string
     :return: -1 or 1
     """
 
     soup = BeautifulSoup(html, features="lxml")
-    if "iframe" in str(soup):
-        return 1
 
-    else:
-        return -1
+    for frame in soup.find_all("iframe"):
+        if frame.get("src") is not None and domain not in frame.get("src"):
+            if "www" in frame.get("src") or "http" in frame.get("src"):
+                return 1
+
+    return -1
+
+    # if "iframe" in str(soup):
+    #     return 1
+    #
+    # else:
+    #     return -1
 
 
 def domainAgeTesting(whoisResult):
     """
     testing if domain age is greater than 6 months
     :param whoisResult: dict
-    :return: -1 or 1
+    :return: -1, 0 or 1
     """
 
     now = datetime.datetime.now()
@@ -578,7 +593,7 @@ def domainAgeTesting(whoisResult):
     try:
         delta = now - creation
     except:
-        return -2
+        return 0
 
     if delta.days > 365 / 2:
         return -1

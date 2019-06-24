@@ -59,6 +59,7 @@ class NICClient(object):
     IANAHOST = "whois.iana.org"
     PANDIHOST = "whois.pandi.or.id"
     DENICHOST = "de.whois-servers.net"
+    MARKMONITORHOST = "whois.markmonitor.com"
     AI_HOST = "whois.ai"
     HR_HOST = "whois.dns.hr"
     APP_HOST = "whois.nic.google"
@@ -107,7 +108,7 @@ class NICClient(object):
                 raise e
             s = socks.socksocket()
             s.set_proxy(socks.SOCKS5, "127.0.0.1", int(9150))
-            s.settimeout(10)
+            s.settimeout(100)
             s.connect((hostname, 43))
         except socks.ProxyConnectionError:
             try :
@@ -117,6 +118,11 @@ class NICClient(object):
             except socket.timeout:
                 print("Connection problem, try to use Tor ! You only have to launch Tor to use it through this program")
                 return "Error"
+        except socks.GeneralProxyError:
+            s = socks.socksocket()
+            s.set_proxy(socks.SOCKS5, "127.0.0.1", int(9150))
+            s.settimeout(100)
+            s.connect((hostname, 43))
 
 
 
@@ -152,7 +158,7 @@ class NICClient(object):
             response += self.whois(query, nhost, 0)
         return response
 
-    def choose_server(self, domain):
+    def choose_server(self, domain, empty = True):
         """Choose initial lookup NIC host"""
         try:
             domain = domain.encode('idna').decode('utf-8')
@@ -179,6 +185,8 @@ class NICClient(object):
             return NICClient.APP_HOST
         elif tld == 'online':
             return 'whois.nic.online'
+        elif tld=='com' and empty:
+            return "whois.markmonitor.com"
         else:
             return tld + NICClient.QNICHOST_TAIL
 
@@ -210,6 +218,11 @@ class NICClient(object):
             # print(nichost)
             if nichost is not None:
                 result = self.whois(query_arg, nichost, flags)
+                if len(result) <= 2:
+                    nichost = self.choose_server(query_arg, False)
+                    # print(nichost)
+                    if nichost is not None:
+                        result = self.whois(query_arg, nichost, flags)
             else:
                 result = ''
         else:
