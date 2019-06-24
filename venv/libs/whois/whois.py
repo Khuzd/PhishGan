@@ -116,6 +116,7 @@ class NICClient(object):
                 s.connect((hostname, 43))
             except socket.timeout:
                 print("Connection problem, try to use Tor ! You only have to launch Tor to use it through this program")
+                return "Error"
 
 
 
