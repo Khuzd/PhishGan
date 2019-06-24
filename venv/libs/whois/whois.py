@@ -110,9 +110,13 @@ class NICClient(object):
             s.settimeout(10)
             s.connect((hostname, 43))
         except socks.ProxyConnectionError:
-            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            s.settimeout(10)
-            s.connect((hostname, 43))
+            try :
+                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                s.settimeout(10)
+                s.connect((hostname, 43))
+            except socket.timeout:
+                print("Connection problem, try to use Tor ! You only have to launch Tor to use it through this program")
+
 
 
         try:
