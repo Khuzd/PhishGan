@@ -8,7 +8,8 @@ Author : Pierrick ROBIC--BUTEZ
 """
 
 import re
-import whois
+from libs.whois import whois
+from libs.whois.parser import PywhoisError
 import datetime
 import requests
 from bs4 import BeautifulSoup
@@ -202,7 +203,7 @@ def ageCertificateTesting(domain):
 def expirationDomainTesting(whoisResult):
     """
     test if the valid duration of the domain is enough long
-    :param whoisResult:string
+    :param whoisResult: dict
     :return: -1 or 1
     """
 
@@ -440,23 +441,33 @@ def emailTesting(html):
     return -1
 
 
-def abnormalURLTesting(url):
+def abnormalURLTesting(whoisResult):
     """
-    test if the domain name from WHOIS is in the RUL
-    :param url: string
+    test if registrant name is in the url
+    :param whoisResult: dict
     :return: -1 or 1
     """
-    try:
-        whoisURL = whois.whois(url)["domain_name"]
-        if type(whoisURL) == list:
-            whoisURL = whoisURL[0]
 
-        if whoisURL is not None and whoisURL.lower() not in url:
-            return 1
-        return -1
-    except socket.gaierror:
-        return 1
+    domain = whoisResult["domain_name"].split(".")[0]
+    if "org" in whoisResult:
+        if type(whoisResult["org"]) == list:
+            for org in whoisResult["org"]:
+                if domain in org:
+                    return -1
+        else:
+            if domain in whoisResult["org"]:
+                return -1
 
+    if "org1" in whoisResult:
+        if type(whoisResult["org1"]) == list:
+            for org in whoisResult["org1"]:
+                if domain in org:
+                    return -1
+        else:
+            if domain in whoisResult["org1"]:
+                return -1
+
+    return 1
 
 def forwardingTesting(url, http):
     """
@@ -554,7 +565,7 @@ def IFrameTesting(html):
 def domainAgeTesting(whoisResult):
     """
     testing if domain age is greater than 6 months
-    :param whoisResult: string
+    :param whoisResult: dict
     :return: -1 or 1
     """
 
@@ -747,9 +758,9 @@ def UrlToDatabase(url, queue):
     retry = True
     while retry:  # to retry if whois database kick us
         try:
-            whoisDomain = whois.whois(str(domain))
+            whoisDomain = whois(str(domain))
             retry = False
-        except (whois.parser.PywhoisError, socket.gaierror):
+        except (PywhoisError, socket.gaierror):
             print("URL : " + domain + " not in whois database")
             # time.sleep(1.5)
             queue.put(-1)
@@ -842,7 +853,7 @@ def UrlToDatabase(url, queue):
     features.append(emailTesting(html))
 
     # testing abnormal url
-    features.append(abnormalURLTesting(url))
+    features.append(abnormalURLTesting(whoisDomain))
 
     # testing forwarding
     features.append(forwardingTesting(url, http))

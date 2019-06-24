@@ -447,7 +447,7 @@ class WhoisUs(WhoisEntry):
         'registrar_url':                  'Registrar URL \(registration services\): *(.+)',
         'status':                         'Domain Status: *(.+)',  # list of statuses
         'registrant_id':                  'Registrant ID: *(.+)',
-        'registrant_name':                'Registrant Name: *(.+)',
+        'org':                            'Registrant Name: *(.+)',
         'registrant_address1':            'Registrant Address1: *(.+)',
         'registrant_address2':            'Registrant Address2: *(.+)',
         'registrant_city':                'Registrant City: *(.+)',
@@ -570,8 +570,8 @@ class WhoisMe(WhoisEntry):
         'registrar':                   'Registrar:(.+)',
         'status':                      'Domain Status:(.+)',  # list of statuses
         'registrant_id':               'Registrant ID:(.+)',
-        'registrant_name':             'Registrant Name:(.+)',
-        'registrant_org':              'Registrant Organization:(.+)',
+        'org':                         'Registrant Name:(.+)',
+        'org1':                        'Registrant Organization:(.+)',
         'registrant_address':          'Registrant Address:(.+)',
         'registrant_address2':         'Registrant Address2:(.+)',
         'registrant_address3':         'Registrant Address3:(.+)',
@@ -658,7 +658,7 @@ class WhoisFr(WhoisEntry):
         'status': 'status: *(.+)',  # list of statuses
         'emails': EMAIL_REGEX,  # list of email addresses
         'updated_date': 'last-update: *(.+)',
-        'contact': 'contact: *(.+)',
+        'org': 'contact: *(.+)',
     }
 
     def __init__(self, domain, text):
