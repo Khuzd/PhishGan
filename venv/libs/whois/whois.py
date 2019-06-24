@@ -99,19 +99,21 @@ class NICClient(object):
         there for contact details
         """
         response = b''
-        if "SOCKS" in os.environ:
-             try:
-                  import socks
-             except ImportError as e:
-                  print("You need to install the Python socks module. Install PIP (https://bootstrap.pypa.io/get-pip.py) and then 'pip install PySocks'")
-                  raise e
-             socksproxy, port = os.environ["SOCKS"].split(":")
-             s = socks.socksocket()
-             s.set_proxy(socks.SOCKS5, socksproxy, int(port))
-        else:
-             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.settimeout(10)
-        s.connect((hostname, 43))
+        try:
+            try:
+                import socks
+            except ImportError as e:
+                print("You need to install the Python socks module. Install PIP (https://bootstrap.pypa.io/get-pip.py) and then 'pip install PySocks'")
+                raise e
+            s = socks.socksocket()
+            s.set_proxy(socks.SOCKS5, "127.0.0.1", int(9150))
+            s.settimeout(10)
+            s.connect((hostname, 43))
+        except socks.ProxyConnectionError:
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            s.settimeout(10)
+            s.connect((hostname, 43))
+
 
         try:
             query = query.decode('utf-8')
