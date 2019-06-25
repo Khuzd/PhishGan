@@ -96,8 +96,9 @@ def extraction(args):
     print(args)
     if args.URL is not None:
         queue = Queue()
-        proc = Process(target=UrlToDatabase.UrlToDatabase,
-                       args=(args.URL[0], queue,))
+        website = UrlToDatabase.URL(args.URL[0])
+        proc = Process(target=website.featuresExtraction,
+                       args=(queue,))
         proc.start()
         try:
             results = queue.get(timeout=50)
@@ -119,8 +120,9 @@ def extraction(args):
     elif args.list is not None:
         for url in args.list:
             queue = Queue()
-            proc = Process(target=UrlToDatabase.UrlToDatabase,
-                           args=(url, queue,))
+            website = UrlToDatabase.URL(url)
+            proc = Process(target=website.featuresExtraction,
+                           args=(queue,))
             proc.start()
             try:
                 results = queue.get(timeout=50)
