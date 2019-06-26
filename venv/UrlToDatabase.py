@@ -21,6 +21,7 @@ import ssl
 from multiprocessing import Process, Queue
 import csv
 import googleIndexChecker
+import socks
 
 columns = ["having_IP_Address", "URL_Length", "Shortining_Service", "having_At_Symbol", "double_slash_redirecting",
            "Prefix_Suffix", "having_Sub_Domain", "SSLfinal_State", "Domain_registeration_length", "Favicon", "port",
@@ -82,12 +83,13 @@ class URL:
             retry = True
             while retry:  # to retry if whois database kick us
                 try:
-                    self.whoisDomain = whois(str(self.domain))
                     retry = False
-                except (PywhoisError, socket.gaierror):
+                    self.whoisDomain = whois(str(self.domain))
+
+                except (PywhoisError, socket.gaierror, socks.GeneralProxyError):
                     print("URL : " + self.domain + " not in whois database")
                     # time.sleep(1.5)
-                except (ConnectionResetError, socket.timeout):
+                except (ConnectionResetError, socket.timeout, ConnectionAbortedError):
                     pass
 
             try:
