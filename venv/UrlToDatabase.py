@@ -923,7 +923,7 @@ class URL:
         return
 
 
-    def featuresExtraction(self, queue):
+    def featuresExtraction(self, queue = None):
         features = []
 
         # print(http)
@@ -971,8 +971,11 @@ class URL:
         self.expirationDomainTesting()
         features.append(self.expirationWeight)
         if features[-1] == -2:
-            queue.put(-1)
-            return
+            try :
+                queue.put(-1)
+                return
+            except:
+                return -1
         # testing favicon href
         self.faviconTesting()
         features.append(self.faviconWeight)
@@ -982,9 +985,12 @@ class URL:
         features.append(self.portWeight)
 
         if features[-1] == -2:
-            print("port testing error")
-            queue.put(-1)
-            return
+            try:
+                print("port testing error")
+                queue.put(-1)
+                return
+            except:
+                return -1
 
         # testing http token
         self.httpTesting()
@@ -1037,9 +1043,12 @@ class URL:
         # testing domain age
         self.domainAgeTesting()
         features.append(self.domainAgeWeight)
-        if features[-1] == -2:
-            queue.put(-1)
-            return
+        try:
+            if features[-1] == -2:
+                queue.put(-1)
+                return
+        except:
+            return -1
 
         # testing DNS record
         self.DNSRecordTesting()
@@ -1058,8 +1067,11 @@ class URL:
         features.append(self.indexingWeight)
 
         if features[-1] == -2:
-            queue.put(-2)
-            return
+            try :
+                queue.put(-2)
+                return
+            except:
+                return -1
 
         # testing links pointing to the webpage
         self.linksPointingToTesting()
@@ -1069,8 +1081,11 @@ class URL:
         self.statisticReportTEsting()
         features.append(self.statisticWeight)
 
-        queue.put(features)
-        return
+        try :
+            queue.put(features)
+            return
+        except:
+            return None
 
 
 def extraction(inputFile, output, begin=1):

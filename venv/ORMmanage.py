@@ -35,17 +35,29 @@ class MyBase:
     def create_tables(self):
         MyBase.Base.metadata.create_all(self.engine)
 
-    def adding_clean(self,url):
+    def adding_clean(self,url, extraction):
         website = UrlToDatabase.URL(url)
-        adding = MyBase.Clean(url=website.url, content=pickle.dumps(website))
-        self.session.add(adding)
-        self.session.commit()
+        if extraction:
+            if website.featuresExtraction() == None:
+                adding = MyBase.Clean(url=website.url, content=pickle.dumps(website))
+                self.session.add(adding)
+                self.session.commit()
+        else:
+            adding = MyBase.Clean(url=website.url, content=pickle.dumps(website))
+            self.session.add(adding)
+            self.session.commit()
 
-    def adding_phish(self,url):
+    def adding_phish(self,url, extraction):
         website = UrlToDatabase.URL(url)
-        adding = MyBase.Phish(url=website.url, content=pickle.dumps(website))
-        self.session.add(adding)
-        self.session.commit()
+        if extraction:
+            if website.featuresExtraction() == None:
+                adding = MyBase.Phish(url=website.url, content=pickle.dumps(website))
+                self.session.add(adding)
+                self.session.commit()
+        else:
+            adding = MyBase.Clean(url=website.url, content=pickle.dumps(website))
+            self.session.add(adding)
+            self.session.commit()
 
 
     def update_class(self):
