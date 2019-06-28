@@ -6,16 +6,15 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String
 from sqlalchemy.orm import sessionmaker
 
+
 class MyBase:
     Base = declarative_base()
 
-    def __init__(self,path):
+    def __init__(self, path):
         self.path = path
         self.engine = create_engine('sqlite:///' + self.path)
         self.Session = sessionmaker(bind=self.engine)
         self.session = self.Session()
-
-
 
     class Clean(Base):
         __tablename__ = 'cleanTest'
@@ -38,17 +37,16 @@ class MyBase:
         url = Column(String)
         content = Column(Binary)
 
-
     def create_tables(self):
         MyBase.Base.metadata.create_all(self.engine)
 
     def adding(self, url, table, extraction):
         try:
             if self.session.query(self.__getattribute__(table)).filter(
-                self.__getattribute__(table).url == url).count() == 0:
+                    self.__getattribute__(table).url == url).count() == 0:
                 print("adding: " + url)
                 website = UrlToDatabase.URL(url)
-        
+
                 if extraction:
                     if website.featuresExtraction() == None:
                         adding = self.__getattribute__(table)(url=website.url, content=pickle.dumps(website))
@@ -66,7 +64,7 @@ class MyBase:
         for result in queryPhish:
             oldUrl = pickle.loads(result.content)
 
-            tmp = UrlToDatabase.URL(result.url,True)
+            tmp = UrlToDatabase.URL(result.url, True)
 
             tmp.http = oldUrl.http
             tmp.domain = oldUrl.domain
@@ -111,7 +109,7 @@ class MyBase:
         for result in queryClean:
             oldUrl = pickle.loads(result.content)
 
-            tmp = UrlToDatabase.URL(result.url,True)
+            tmp = UrlToDatabase.URL(result.url, True)
 
             tmp.http = oldUrl.http
             tmp.domain = oldUrl.domain
@@ -151,4 +149,3 @@ class MyBase:
             result.content = pickle.dumps(tmp)
             self.session.commit()
         del queryClean
-

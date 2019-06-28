@@ -20,7 +20,7 @@ def chromeExtraction(date):
     """
 
     # path to user's history database (Chrome)
-    if platform.system()=='Windows':
+    if platform.system() == 'Windows':
         data_path = os.path.expanduser('~') + r"\AppData\Local\Google\Chrome\User Data\Default\\"
     elif platform.system() == 'Linux':
         data_path = os.path.expanduser('~') + r"/.config/google-chrome/Default/"
@@ -28,8 +28,6 @@ def chromeExtraction(date):
         data_path = os.path.expanduser('~') + r"/Library/Caches/Google/Chrome/Default/"
     else:
         return
-
-
 
     history_db = os.path.join(data_path, 'history')
 
@@ -55,9 +53,10 @@ def chromeExtraction(date):
 
         return URLs
 
-    else :
+    else:
         print("Chrome is not installed")
         return []
+
 
 def firefoxExtraction(date):
     """
@@ -79,8 +78,7 @@ def firefoxExtraction(date):
         return
 
     files = os.listdir(data_path)
-    history_db = os.path.join(data_path  + files[0] , 'places.sqlite')
-
+    history_db = os.path.join(data_path + files[0], 'places.sqlite')
 
     if os.path.isfile(history_db):
         c = sqlite3.connect(history_db)
@@ -97,14 +95,15 @@ def firefoxExtraction(date):
         results = cursor.fetchall()
 
         URLs = []
-        for url,last in results:
-            if last is not None and last>date and "http" in url:
+        for url, last in results:
+            if last is not None and last > date and "http" in url:
                 URLs.append(url)
 
         return URLs
-    else :
+    else:
         print("Firefox is not installed")
         return []
+
 
 def operaExtraction(date):
     """
@@ -129,7 +128,6 @@ def operaExtraction(date):
 
     history_db = os.path.join(data_path, 'History')
 
-
     if os.path.isfile(history_db):
         c = sqlite3.connect(history_db)
         cursor = c.cursor()
@@ -145,11 +143,11 @@ def operaExtraction(date):
         results = cursor.fetchall()
 
         URLs = []
-        for url,last in results:
-            if last is not None and last>date and "http" in url:
+        for url, last in results:
+            if last is not None and last > date and "http" in url:
                 URLs.append(url)
 
         return URLs
-    else :
+    else:
         print("Opera is not installed")
         return []

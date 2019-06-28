@@ -31,6 +31,7 @@ from __future__ import unicode_literals
 from __future__ import division
 from __future__ import absolute_import
 from future import standard_library
+
 standard_library.install_aliases()
 from builtins import *
 from builtins import object
@@ -40,8 +41,8 @@ import socket
 import optparse
 import os
 
-class NICClient(object):
 
+class NICClient(object):
     ABUSEHOST = "whois.abuse.net"
     NICHOST = "whois.crsnic.net"
     INICHOST = "whois.networksolutions.com"
@@ -68,7 +69,7 @@ class NICClient(object):
     WHOIS_RECURSE = 0x01
     WHOIS_QUICK = 0x02
 
-    ip_whois = [LNICHOST, RNICHOST, PNICHOST, BNICHOST,PANDIHOST]
+    ip_whois = [LNICHOST, RNICHOST, PNICHOST, BNICHOST, PANDIHOST]
 
     def __init__(self):
         self.use_qnichost = False
@@ -78,7 +79,8 @@ class NICClient(object):
         whois server for getting contact details.
         """
         nhost = None
-        match = re.compile('Domain Name: {}\s*.*?Whois Server: (.*?)\s'.format(query), flags=re.IGNORECASE|re.DOTALL).search(buf)
+        match = re.compile('Domain Name: {}\s*.*?Whois Server: (.*?)\s'.format(query),
+                           flags=re.IGNORECASE | re.DOTALL).search(buf)
         if match:
             nhost = match.groups()[0]
             # if the whois address is domain.tld/something then
@@ -92,7 +94,6 @@ class NICClient(object):
                     break
         return nhost
 
-
     def whois(self, query, hostname, flags, many_results=False):
         """Perform initial lookup with TLD whois server
         then, if the quick flag is false, search that result
@@ -104,14 +105,15 @@ class NICClient(object):
             try:
                 import socks
             except ImportError as e:
-                print("You need to install the Python socks module. Install PIP (https://bootstrap.pypa.io/get-pip.py) and then 'pip install PySocks'")
+                print(
+                    "You need to install the Python socks module. Install PIP (https://bootstrap.pypa.io/get-pip.py) and then 'pip install PySocks'")
                 raise e
             s = socks.socksocket()
             s.set_proxy(socks.SOCKS5, "127.0.0.1", int(9150))
             s.settimeout(100)
             s.connect((hostname, 43))
         except socks.ProxyConnectionError:
-            try :
+            try:
                 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 s.settimeout(10)
                 s.connect((hostname, 43))
@@ -123,8 +125,6 @@ class NICClient(object):
             s.set_proxy(socks.SOCKS5, "127.0.0.1", int(9150))
             s.settimeout(100)
             s.connect((hostname, 43))
-
-
 
         try:
             query = query.decode('utf-8')
@@ -139,7 +139,7 @@ class NICClient(object):
             query_bytes = '=' + query
         else:
             query_bytes = query
-        s.send(bytes(query_bytes,'utf-8') + b"\r\n")
+        s.send(bytes(query_bytes, 'utf-8') + b"\r\n")
         # recv returns bytes
         while True:
             d = s.recv(4096)
@@ -158,7 +158,7 @@ class NICClient(object):
             response += self.whois(query, nhost, 0)
         return response
 
-    def choose_server(self, domain, empty = True):
+    def choose_server(self, domain, empty=True):
         """Choose initial lookup NIC host"""
         try:
             domain = domain.encode('idna').decode('utf-8')
@@ -185,7 +185,7 @@ class NICClient(object):
             return NICClient.APP_HOST
         elif tld == 'online':
             return 'whois.nic.online'
-        elif tld=='com' and empty:
+        elif tld == 'com' and empty:
             return "whois.markmonitor.com"
         else:
             return tld + NICClient.QNICHOST_TAIL
@@ -288,8 +288,8 @@ def parse_command_line(argv):
                       const=NICClient.SNICHOST, dest="whoishost",
                       help="Lookup using host " + NICClient.SNICHOST)
     parser.add_option("-n", "--ina", action="store_const",
-                          const=NICClient.PANDIHOST, dest="whoishost",
-                          help="Lookup using host " + NICClient.PANDIHOST)
+                      const=NICClient.PANDIHOST, dest="whoishost",
+                      help="Lookup using host " + NICClient.PANDIHOST)
     parser.add_option("-?", "--help", action="help")
 
     return parser.parse_args(argv)

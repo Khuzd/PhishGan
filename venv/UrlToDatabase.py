@@ -61,7 +61,7 @@ TRUSTED_ISSUERS = ["geotrust", "godaddy", "network solutions", "thawte", "comodo
 
 
 class URL:
-    def __init__(self, url, manualInit = False):
+    def __init__(self, url, manualInit=False):
         self.http = None
         self.url = url
         self.domain = None
@@ -108,7 +108,6 @@ class URL:
                         print("Can not get HTML content from : " + self.url)
                         # time.sleep(1.5)
 
-
         ## Weights
         self.ipWeight = "error"
         self.lenghtWeight = "error"
@@ -141,7 +140,6 @@ class URL:
         self.linksWeight = "error"
         self.statisticWeight = "error"
 
-
     def IPtesting(self):
         """
         test if the domain is a IP adress
@@ -158,7 +156,6 @@ class URL:
         else:
             self.ipWeight = -1
             return
-
 
     def leghtTesting(self):
         """
@@ -177,7 +174,6 @@ class URL:
             self.lenghtWeight = 1
             return
 
-
     def shortenerTEsting(self):
         """
         test if the url is a short url
@@ -192,7 +188,6 @@ class URL:
         self.shorteningWeight = -1
         return
 
-
     def atSymbolTetsting(self):
         """
         test if the at symbol is in url
@@ -204,7 +199,6 @@ class URL:
             return
         self.atWeight = -1
         return
-
 
     def doubleSlashTesting(self):
         """
@@ -218,7 +212,6 @@ class URL:
         self.doubleSlashWeight = -1
         return
 
-
     def dashTesting(self):
         """
             test if there is dash in url
@@ -231,7 +224,6 @@ class URL:
         self.dashWeight = -1
         return
 
-
     def subDomainTesting(self):
         """
         test if there are too many subdomains
@@ -240,7 +232,7 @@ class URL:
         """
         if len(self.domain.split("www.")) == 2:
             domain = self.domain.split("www.")[1]
-        else :
+        else:
             domain = self.domain
 
         for tld in CCTLD:
@@ -264,7 +256,6 @@ class URL:
         else:
             self.subDomainWeight = 1
             return
-
 
     def ageCertificateTesting(self):
         """
@@ -307,7 +298,6 @@ class URL:
         self.certificateAgeWeight = 0
         return
 
-
     def expirationDomainTesting(self):
         """
         test if the valid duration of the domain is enough long
@@ -334,7 +324,6 @@ class URL:
             self.expirationWeight = 1
             return
 
-
     def faviconTesting(self):
         """
         test if the favicon url is from the same domain as the site
@@ -357,7 +346,6 @@ class URL:
 
         self.faviconWeight = -1
         return
-
 
     def portTesting(self):
         """
@@ -388,7 +376,6 @@ class URL:
             print(e)
             return -2
 
-
     def httpTesting(self):
         """
         test if there is the http token into the URL
@@ -401,7 +388,6 @@ class URL:
 
         self.httpWeight = -1
         return
-
 
     def requestedURL(self):
         """
@@ -450,7 +436,6 @@ class URL:
         self.requestedWeight = -1
         return
 
-
     def anchorsTesting(self):
         """
         test the percentage of external links anchors
@@ -483,7 +468,6 @@ class URL:
 
         self.anchorsWeight = 1
         return
-
 
     def tagsLinksTesting(self):
         """
@@ -532,7 +516,6 @@ class URL:
         self.tagWeight = -1
         return
 
-
     def SFHTesting(self):
         """
         test if the Server Form Handler of all forms is not suspicious
@@ -551,12 +534,12 @@ class URL:
                 self.SFHWeight = 1
                 return
 
-            elif self.domain not in str(form.get("action")) or "http" in str(form.get("action")) or "www" in str(form.get("action")) :
+            elif self.domain not in str(form.get("action")) or "http" in str(form.get("action")) or "www" in str(
+                    form.get("action")):
                 self.SFHWeight = 0
                 return
         self.SFHWeight = -1
         return
-
 
     def emailTesting(self):
         """
@@ -575,7 +558,6 @@ class URL:
         self.emailWeight = -1
         return
 
-
     def abnormalURLTesting(self):
         """
         test if registrant name is in the url
@@ -588,7 +570,7 @@ class URL:
             if type(self.whoisDomain["org"]) == list:
                 for org in self.whoisDomain["org"]:
                     for suborg in re.split(". | ", org):
-                        if suborg.lower() in domain.lower() :
+                        if suborg.lower() in domain.lower():
                             self.abnormalWeight = -1
                             return
             elif self.whoisDomain["org"] != None:
@@ -613,7 +595,6 @@ class URL:
         self.abnormalWeight = 1
         return
 
-
     def forwardingTesting(self):
         """
         test the number of forwarding
@@ -634,7 +615,6 @@ class URL:
         self.forwardWeight = 1
         return
 
-
     def barCustomTesting(self):
         """
         Check if the status bar is not abnormally modify
@@ -653,7 +633,6 @@ class URL:
                 return
         self.barCustomWeight = -1
         return
-
 
     def rightClickTesting(self):
         """
@@ -683,14 +662,14 @@ class URL:
         self.rightClickWeight = -1
         return
 
-
     def popUpTesting(self):
         """
         testing if popup with text fields
         :param html: string (html source code)
         :return: -1 or 1
         """
-        prompt = re.findall(r"prompt\(", str(self.html)) + re.findall(r"confirm\(", str(self.html)) + re.findall(r"alert\(", str(self.html))
+        prompt = re.findall(r"prompt\(", str(self.html)) + re.findall(r"confirm\(", str(self.html)) + re.findall(
+            r"alert\(", str(self.html))
         if prompt != []:
             if len(prompt) > 4:
                 self.popupWeight = 1
@@ -701,7 +680,6 @@ class URL:
 
         self.popupWeight = -1
         return
-
 
     def IFrameTesting(self):
         """
@@ -728,7 +706,6 @@ class URL:
         # else:
         #     return -1
 
-
     def domainAgeTesting(self):
         """
         testing if domain age is greater than 6 months
@@ -754,7 +731,6 @@ class URL:
         else:
             self.domainAgeWeight = 1
             return
-
 
     def DNSRecordTesting(self):
         """
@@ -788,7 +764,6 @@ class URL:
         self.dnsWeight = 1
         return
 
-
     def trafficTesting(self):
         """
         collect the website rank on AWIS database and test if it is not abnormal
@@ -810,7 +785,6 @@ class URL:
         self.trafficWeight = -1
         return
 
-
     def pageRankTesting(self):
         """
         Test the pagerank of the domain
@@ -831,7 +805,6 @@ class URL:
             print("domain pagerank not found")
             self.pageRankWeight = 1
             return
-
 
     def googleIndexTesting(self):
         """
@@ -873,7 +846,6 @@ class URL:
         #     print(e)
         #     pass
 
-
     def linksPointingToTesting(self):
         """
         collect the count of all sites which linked to the url on AWIS database and test if it is not abnormal
@@ -897,7 +869,6 @@ class URL:
         self.linksWeight = -1
         return
 
-
     def statisticReportTEsting(self):
         """
         test if the ip address of the domain is in top 50 of www.stopbadware.org
@@ -907,7 +878,8 @@ class URL:
         IPdomain = socket.gethostbyname(self.domain)
 
         jsonDictIP = json.loads(
-            requests.post("https://www.stopbadware.org/sites/all/themes/sbw/clearinghouse.php", data={'q': 'tops'}).text)
+            requests.post("https://www.stopbadware.org/sites/all/themes/sbw/clearinghouse.php",
+                          data={'q': 'tops'}).text)
 
         IPList = []
 
@@ -922,8 +894,7 @@ class URL:
         self.statisticWeight = -1
         return
 
-
-    def featuresExtraction(self, queue = None):
+    def featuresExtraction(self, queue=None):
         features = []
 
         # print(http)
@@ -971,7 +942,7 @@ class URL:
         self.expirationDomainTesting()
         features.append(self.expirationWeight)
         if features[-1] == -2:
-            try :
+            try:
                 queue.put(-1)
                 return
             except:
@@ -1067,7 +1038,7 @@ class URL:
         features.append(self.indexingWeight)
 
         if features[-1] == -2:
-            try :
+            try:
                 queue.put(-2)
                 return
             except:

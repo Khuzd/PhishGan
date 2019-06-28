@@ -164,7 +164,6 @@ class GAN:
         with open(path + "/" + prefix + "object.json", "w") as json_file:
             pickle.dump(self.__dict__, json_file, 2)
 
-
         ## Save models
         # Combined
         combined_model_json = self.combined.to_json()
@@ -178,7 +177,6 @@ class GAN:
         generator_model_json = self.generator.to_json()
         with open(path + "/" + prefix + "generator_model.json", "w") as json_file:
             json_file.write(generator_model_json)
-
 
         ## Save weights
         self.combined.save_weights(path + "/" + prefix + "combined_model.h5")
@@ -226,7 +224,7 @@ class GAN:
 
         del json_file, loaded_model_json
 
-    def classReport(self, cleanTestDataset, phishTestDataset, calculate = True):
+    def classReport(self, cleanTestDataset, phishTestDataset, calculate=True):
         """
         Classification report for the GAN after training
         :param cleanTestDataset: list of list
@@ -260,7 +258,7 @@ class GAN:
             return classification_report(np.array(true), np.array(predict), output_dict=True)
         return
 
-    def train(self, epochs, data, plotFrequency=20, predict=False, phishData = None, cleanData = None):
+    def train(self, epochs, data, plotFrequency=20, predict=False, phishData=None, cleanData=None):
         """
         Train the GAN
         :param epochs: int
@@ -271,17 +269,16 @@ class GAN:
         :return: list of 7 list (to plot training/validation accuracy/loss of generator/discriminator)
         """
 
-
         # Load the training dataset
         X_train = list(data)
 
         # Load testing datasets
-        if phishData is None or cleanData is None :
+        if phishData is None or cleanData is None:
             phisTest = list(UCI.csvToList(PHIS_PATH_TEST)[1].values())
             cleanTest = list(UCI.csvToList(CLEAN_PATH_TEST)[1].values())
         else:
             phisTest = list(phishData)
-            cleanTest=list(cleanData)
+            cleanTest = list(cleanData)
 
         # Adversarial ground truths
         valid = np.ones((self.sampleSize, 1))
@@ -371,11 +368,11 @@ class GAN:
                         bestEpoch = epoch
                 del report
 
-            del idxt, imgst, idxv, imgsv, noise, g_loss, gen_data, d_loss, d_loss_real, d_loss_fake, vd_loss_real,\
+            del idxt, imgst, idxv, imgsv, noise, g_loss, gen_data, d_loss, d_loss_real, d_loss_fake, vd_loss_real, \
                 vd_loss, vd_loss_fake, vg_loss
         del X_train
 
         if not predict:
-            self.classReport(cleanTest, phisTest,calculate=False)
+            self.classReport(cleanTest, phisTest, calculate=False)
 
         return X, accuracy, Dloss, Gloss, vaccuracy, vDloss, vGloss, bestClass, bestEpoch

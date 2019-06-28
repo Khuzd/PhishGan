@@ -11,6 +11,7 @@ from __future__ import unicode_literals
 from __future__ import print_function
 from __future__ import division
 from future import standard_library
+
 standard_library.install_aliases()
 from builtins import *
 from builtins import str
@@ -19,9 +20,11 @@ from past.builtins import basestring
 import json
 from datetime import datetime
 import re
+
 try:
     import dateutil.parser as dp
     from .time_zones import tz_data
+
     DATEUTIL = True
 except ImportError:
     DATEUTIL = False
@@ -68,6 +71,7 @@ def datetime_parse(s):
         except ValueError as e:
             pass  # Wrong format, keep trying
     return s
+
 
 def cast_date(s, dayfirst=False, yearfirst=False):
     """Convert any date string found in WHOIS to a datetime object.
@@ -150,7 +154,7 @@ class WhoisEntry(dict):
                                 # avoid duplicates
                                 values.append(value)
                 if values and attr in ('registrar', 'whois_server', 'referral_url'):
-                    values = values[-1] # ignore junk
+                    values = values[-1]  # ignore junk
                 if len(values) == 1:
                     values = values[0]
                 elif not values:
@@ -171,10 +175,8 @@ class WhoisEntry(dict):
     def __setitem__(self, name, value):
         super(WhoisEntry, self).__setitem__(name, value)
 
-
     def __getattr__(self, name):
         return self.get(name)
-
 
     def __str__(self):
         handler = lambda e: str(e)
@@ -306,6 +308,7 @@ class WhoisEntry(dict):
 class WhoisSpace(WhoisEntry):
     """Whois parser for .space domains
     """
+
     def __init__(self, domain, text):
         if 'No match for "' in text:
             raise PywhoisError(text)
@@ -316,6 +319,7 @@ class WhoisSpace(WhoisEntry):
 class WhoisCom(WhoisEntry):
     """Whois parser for .com domains
     """
+
     def __init__(self, domain, text):
         if 'No match for "' in text:
             raise PywhoisError(text)
@@ -326,6 +330,7 @@ class WhoisCom(WhoisEntry):
 class WhoisNet(WhoisEntry):
     """Whois parser for .net domains
     """
+
     def __init__(self, domain, text):
         if 'No match for "' in text:
             raise PywhoisError(text)
@@ -901,6 +906,7 @@ class WhoisDe(WhoisEntry):
         else:
             WhoisEntry.__init__(self, domain, text, self.regex)
 
+
 class WhoisAt(WhoisEntry):
     """Whois parser for .at domains
     """
@@ -923,6 +929,7 @@ class WhoisAt(WhoisEntry):
         else:
             WhoisEntry.__init__(self, domain, text, self.regex)
 
+
 class WhoisBe(WhoisEntry):
     """Whois parser for .be domains
     """
@@ -940,7 +947,6 @@ class WhoisBe(WhoisEntry):
             raise PywhoisError(text)
         else:
             WhoisEntry.__init__(self, domain, text, self.regex)
-
 
 
 class WhoisInfo(WhoisEntry):
@@ -976,6 +982,7 @@ class WhoisInfo(WhoisEntry):
 class WhoisRf(WhoisRu):
     """Whois parser for .su domains
     """
+
     def __init__(self, domain, text):
         WhoisRu.__init__(self, domain, text)
 
@@ -983,6 +990,7 @@ class WhoisRf(WhoisRu):
 class WhoisSu(WhoisRu):
     """Whois parser for .su domains
     """
+
     def __init__(self, domain, text):
         WhoisRu.__init__(self, domain, text)
 
@@ -1095,6 +1103,7 @@ class WhoisIo(WhoisEntry):
 class WhoisBiz(WhoisUs):
     """Whois parser for .biz domains
     """
+
     def __init__(self, domain, text):
         WhoisUs.__init__(self, domain, text)
 
@@ -1102,6 +1111,7 @@ class WhoisBiz(WhoisUs):
 class WhoisMobi(WhoisMe):
     """Whois parser for .mobi domains
     """
+
     def __init__(self, domain, text):
         WhoisMe.__init__(self, domain, text)
 
@@ -1238,6 +1248,7 @@ class WhoisSe(WhoisEntry):
         else:
             WhoisEntry.__init__(self, domain, text, self.regex)
 
+
 class WhoisIt(WhoisEntry):
     """Whois parser for .it domains
     """
@@ -1277,6 +1288,7 @@ class WhoisIs(WhoisEntry):
         else:
             WhoisEntry.__init__(self, domain, text, self.regex)
 
+
 class WhoisDk(WhoisEntry):
     """Whois parser for .dk domains
     """
@@ -1304,6 +1316,7 @@ class WhoisDk(WhoisEntry):
             ]
         return super(WhoisDk, self)._preprocess(attr, value)
 
+
 class WhoisAi(WhoisEntry):
     """Whois parser for .ai domains
     """
@@ -1324,6 +1337,7 @@ class WhoisAi(WhoisEntry):
             raise PywhoisError(text)
         else:
             WhoisEntry.__init__(self, domain, text, self.regex)
+
 
 class WhoisIl(WhoisEntry):
     """Whois parser for .il domains
@@ -1354,6 +1368,7 @@ class WhoisIl(WhoisEntry):
             value = value.replace(' AT ', '@')
         return super(WhoisIl, self)._preprocess(attr, value)
 
+
 class WhoisIn(WhoisEntry):
     """Whois parser for .in domains
     """
@@ -1373,6 +1388,7 @@ class WhoisIn(WhoisEntry):
             raise PywhoisError(text)
         else:
             WhoisEntry.__init__(self, domain, text, self.regex)
+
 
 class WhoisCat(WhoisEntry):
     """Whois parser for .cat domains
@@ -1604,4 +1620,3 @@ class WhoisApp(WhoisEntry):
             raise PywhoisError(text)
         else:
             WhoisEntry.__init__(self, domain, text, self.regex)
-

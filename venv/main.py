@@ -304,6 +304,7 @@ def historyTrain(args):
               newline='', encoding='utf-8') as reportFile:
         reportFile.write(str(bestReport))
 
+
 def ORMExtract(args):
     """
         Function for the ORMExtractParser
@@ -320,11 +321,11 @@ def ORMExtract(args):
 
     URLs = UCI.csvToList(args.path[0])
 
-    i=0
+    i = 0
     for url in URLs:
         print(str(i))
         i += 1
-        Base.adding(url,args.table[0], args.extraction)
+        Base.adding(url, args.table[0], args.extraction)
 
 
 if __name__ == "__main__":
@@ -448,11 +449,9 @@ if __name__ == "__main__":
     #  ORMextract Parser
     # ---------------------
     ORMExtractParser = subparsers.add_parser("ormextract",
-                                               help="Used to extract web content and store it in a database")
+                                             help="Used to extract web content and store it in a database")
 
     historyTrainParser.set_defaults(func=ORMExtract)
-
-
 
     # ---------------------
     #  Parse
