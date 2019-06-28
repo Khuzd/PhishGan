@@ -8,7 +8,7 @@ Author : Pierrick ROBIC--BUTEZ
 """
 
 import tensorflow as tf
-import phishTank as Phi
+import old.phishTank as Phi
 import importData as Uc
 import numpy as np
 
