@@ -1,3 +1,4 @@
+import logging
 import pickle
 
 from sqlalchemy import Binary
@@ -7,6 +8,8 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
 import UrlToDatabase
+
+logger = logging.getLogger('main')
 
 
 class MyBase:
@@ -46,7 +49,7 @@ class MyBase:
         try:
             if self.session.query(self.__getattribute__(table)).filter(
                     self.__getattribute__(table).url == url).count() == 0:
-                print("adding: " + url)
+                logger.info("adding: " + url)
                 website = UrlToDatabase.URL(url)
 
                 if extraction:
@@ -59,7 +62,7 @@ class MyBase:
                     self.session.add(adding)
                     self.session.commit()
         except AttributeError:
-            print("Please add table {} in the database".format(table))
+            logger.critical("Please add table {} in the database".format(table))
 
     def update_class(self):
         queryPhish = self.session.query(self.Phish).all

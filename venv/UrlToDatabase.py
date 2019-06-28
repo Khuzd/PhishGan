@@ -10,6 +10,7 @@ Author : Pierrick ROBIC--BUTEZ
 import csv
 import datetime
 import json
+import logging
 import re
 import socket
 import ssl
@@ -24,6 +25,8 @@ from bs4 import BeautifulSoup
 import googleIndexChecker
 from libs.whois import whois
 from libs.whois.parser import PywhoisError
+
+logger = logging.getLogger('main')
 
 columns = ["having_IP_Address", "URL_Length", "Shortining_Service", "having_At_Symbol", "double_slash_redirecting",
            "Prefix_Suffix", "having_Sub_Domain", "SSLfinal_State", "Domain_registeration_length", "Favicon", "port",
@@ -89,7 +92,7 @@ class URL:
                     self.whoisDomain = whois(str(self.domain))
 
                 except (PywhoisError, socket.gaierror, socks.GeneralProxyError):
-                    print("URL : " + self.domain + " not in whois database")
+                    logger.error("URL : " + self.domain + " not in whois database")
                     # time.sleep(1.5)
                 except (ConnectionResetError, socket.timeout, ConnectionAbortedError):
                     pass
@@ -107,7 +110,7 @@ class URL:
                         self.html = requests.get(self.url).content
                         self.http = ""
                     except:
-                        print("Can not get HTML content from : " + self.url)
+                        logger.error("Can not get HTML content from : " + self.url)
                         # time.sleep(1.5)
 
         ## Weights
@@ -280,9 +283,6 @@ class URL:
 
         delta = endDate - beginDate
 
-        # print (issuer)
-        # print (TRUSTED_ISSUERS)
-
         for trusted in TRUSTED_ISSUERS:
             if trusted in issuer:
                 if delta.days >= 365:
@@ -307,7 +307,7 @@ class URL:
         try:
             delta = expiration - now
         except:
-            print("error expiration domain testing")
+            logger.error("error expiration domain testing")
             return -2
 
         if delta.days > 365:
@@ -363,7 +363,7 @@ class URL:
             return
 
         except Exception as e:
-            print(e)
+            logger.error(e)
             return -2
 
     def httpTesting(self):
@@ -770,7 +770,7 @@ class URL:
                 self.pageRankWeight = -1
                 return
         except KeyError:
-            print("domain pagerank not found")
+            logger.error("domain pagerank not found")
             self.pageRankWeight = 1
             return
 
@@ -867,11 +867,7 @@ class URL:
         """
         features = []
 
-        # print(http)
-        # print(url)
-        # print(domain)
-
-        print("Testing : " + self.url)
+        logger.info("Testing : " + self.url)
 
         # testing ip adress
         self.IPtesting()
@@ -927,7 +923,7 @@ class URL:
 
         if features[-1] == -2:
             try:
-                print("port testing error")
+                logger.error("port testing error")
                 queue.put(-1)
                 return
             except:
@@ -1047,7 +1043,7 @@ def extraction(inputFile, output, begin=1):
     with open(inputFile, newline='', encoding='utf-8') as csvinfile:
 
         for row in csv.reader(csvinfile, delimiter=',', quotechar='|'):
-            print("first : " + str(count))
+            logger.info("first round: " + str(count))
             website = URL(row[0])
             if count >= begin:
                 queue = Queue()
@@ -1057,7 +1053,7 @@ def extraction(inputFile, output, begin=1):
 
                 try:
                     results = queue.get(timeout=50)
-                    print(results)
+                    logger.debug(results)
                     proc.join()
                     if results == -1:
                         notReacheable.append(results)
@@ -1069,11 +1065,11 @@ def extraction(inputFile, output, begin=1):
                                 writer = csv.writer(outcsvfile, delimiter=',', quotechar='"')
                                 writer.writerow([row[0]] + results)
                         else:
-                            print([row[0]] + results)
+                            logger.debug([row[0]] + results)
 
                 except Exception as e:
                     failledURLS.append(row[0])
-                    print(e)
+                    logger.info(e)
                 proc.terminate()
             count += 1
 
@@ -1081,7 +1077,7 @@ def extraction(inputFile, output, begin=1):
 
     count = 1
     for url in failledURLS:
-        print("second" + str(count))
+        logger.info("second round" + str(count))
         count += 1
         queue = Queue()
         website = URL(url)
@@ -1100,7 +1096,7 @@ def extraction(inputFile, output, begin=1):
                         writer = csv.writer(outcsvfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
                         writer.writerow([url] + results)
                 else:
-                    print([url] + results)
+                    logger.debug([url] + results)
         except:
             realfailledURLS.append(url)
         proc.terminate()
@@ -1112,4 +1108,4 @@ def extraction(inputFile, output, begin=1):
                 writer.writerow(fail)
     else:
         for fail in realfailledURLS:
-            print(fail)
+            logger.error("Urls failed" + str(fail))

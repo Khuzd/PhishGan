@@ -45,6 +45,10 @@ import glob
 import re
 import importData
 
+import logging
+
+logger = logging.getLogger('main')
+
 
 def graphCreation(X, YD, VYD, lr, sample, label, bestEpoch, bestAccu, YG=None, VYG=None, path="graphs", suffix=""):
     """
@@ -113,7 +117,7 @@ def multiGraph(begin_lr, end_lr, step_lr, epochs, begin_sampleSize, end_SampleSi
             sess = tf.Session(graph=tf.get_default_graph(), config=session_conf)
             K.set_session(sess)
 
-            print("sample : %f ; lr : %f" % (sample, lr))
+            logger.info("sample : %f ; lr : %f" % (sample, lr))
             gan = GAN(lr=lr, sample=sample)
             gan.dataType = dataType
             X, accuracy, Dloss, Gloss, vacc, vDloss, vGloss, bestReport, \
@@ -157,7 +161,6 @@ def reportAccuracyGraph(path):
     """
 
     for folder in os.listdir(path):
-        # print(path+"/"+folder)
         accuracies = []
         LRs = []
         for report in glob.glob(path + "/" + folder + "/" + "*.txt"):

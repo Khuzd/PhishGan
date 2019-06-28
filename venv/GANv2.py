@@ -50,6 +50,9 @@ from sklearn.metrics import classification_report
 import importData
 import pickle
 
+import logging
+logger = logging.getLogger('main')
+
 os.environ["PATH"] += os.pathsep + 'C:/Program Files (x86)/Graphviz2.38/bin'
 
 PHIS_PATH_TEST = "data/Phishtank_outtest.csv"
@@ -350,7 +353,7 @@ class GAN:
 
             # Plot the progress
             if epoch % plotFrequency == 0:
-                print("%d [D loss: %f, acc.: %.2f%%] [G loss: %f] [D vloss: %f, vacc.: %.2f%%] [G vloss: %f]" % (
+                logger.info("%d [D loss: %f, acc.: %.2f%%] [G loss: %f] [D vloss: %f, vacc.: %.2f%%] [G vloss: %f]" % (
                     epoch, d_loss[0], 100 * d_loss[1], g_loss, vd_loss[0], 100 * vd_loss[1], vg_loss))
                 accuracy.append(d_loss[1])
                 X.append(epoch)

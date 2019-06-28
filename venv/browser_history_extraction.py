@@ -7,9 +7,12 @@ Author : Pierrick ROBIC--BUTEZ
 2019
 """
 
+import logging
 import os
 import platform
 import sqlite3
+
+logger = logging.getLogger('main')
 
 
 def chromeExtraction(date):
@@ -31,7 +34,7 @@ def chromeExtraction(date):
 
     history_db = os.path.join(data_path, 'history')
 
-    print(history_db)
+    logger.debug(history_db)
 
     if os.path.isfile(history_db):
         # connection
@@ -42,6 +45,7 @@ def chromeExtraction(date):
             cursor.execute(select_statement)
         except sqlite3.OperationalError:
             print("[!] The database is locked! Please exit Chrome and run the script again.")
+            logger.warning("[!] The database is locked! Please exit Chrome and run the script again.")
             return []
 
         results = cursor.fetchall()  # tuple
@@ -55,6 +59,7 @@ def chromeExtraction(date):
 
     else:
         print("Chrome is not installed")
+        logger.info("Chrome is not installed")
         return []
 
 
@@ -90,6 +95,7 @@ def firefoxExtraction(date):
 
         except sqlite3.OperationalError:
             print("[!] The database is locked! Please exit Firefox and run the script again.")
+            logger.warning("[!] The database is locked! Please exit Chrome and run the script again.")
             return []
 
         results = cursor.fetchall()
@@ -102,6 +108,7 @@ def firefoxExtraction(date):
         return URLs
     else:
         print("Firefox is not installed")
+        logger.info("Firefox is not installed")
         return []
 
 
@@ -137,6 +144,7 @@ def operaExtraction(date):
 
         except sqlite3.OperationalError:
             print("[!] The database is locked! Please exit Opera and run the script again.")
+            logger.warning("[!] The database is locked! Please exit Chrome and run the script again.")
             return []
 
         results = cursor.fetchall()
@@ -149,4 +157,5 @@ def operaExtraction(date):
         return URLs
     else:
         print("Opera is not installed")
+        logger.info("Opera is not installed")
         return []

@@ -51,6 +51,27 @@ import decimal
 UCI_PATH = 'data/UCI_dataset.csv'
 CLEAN_PATH = 'data/Amazon_top25000outtrain.csv'
 
+import logging
+from logging.handlers import RotatingFileHandler
+
+# ---------------------
+#  Define logger
+# ---------------------
+
+logger = logging.getLogger()
+logger.setLevel(logging.DEBUG)
+
+formatter = logging.Formatter('%(asctime)s :: %(levelname)s :: %(message)s')
+file_handler = RotatingFileHandler('phishGan.log', 'a', 1000000, 1)
+file_handler.setLevel(logging.DEBUG)
+file_handler.setFormatter(formatter)
+logger.addHandler(file_handler)
+
+stream_handler = logging.StreamHandler()
+stream_handler.setLevel(logging.DEBUG)
+
+logger.addHandler(stream_handler)
+
 
 class MyParser(argparse.ArgumentParser):
     def print_help(self, file=None):
@@ -96,7 +117,7 @@ def extraction(args):
         :param args: Namespace
         :return: nothing
         """
-    print(args)
+    logger.debug(args)
     if args.URL is not None:
         queue = Queue()
         website = UrlToDatabase.URL(args.URL[0])
@@ -309,15 +330,11 @@ def ORMExtract(args):
     Base = ORMmanage.MyBase(args.database[0])
     Base.create_tables()
 
-    # if (args.table[0] not in Base.__dir__()):
-    #     print("Please add table {} in the database".format(args.table[0]))
-    #     return
-
     URLs = importData.csvToList(args.path[0])
 
     i = 0
     for url in URLs:
-        print(str(i))
+        logger.debug(str(i))
         i += 1
         Base.adding(url, args.table[0], args.extraction)
 
@@ -454,6 +471,6 @@ if __name__ == "__main__":
     #  Parse
     # ---------------------
     arg = parser.parse_args()
-    print(arg)
+    logger.debug(arg)
     arg.func(arg)
     exit(0)
