@@ -1,10 +1,12 @@
-import UrlToDatabase
-from sqlalchemy import create_engine
-from sqlalchemy import Binary
 import pickle
-from sqlalchemy.ext.declarative import declarative_base
+
+from sqlalchemy import Binary
 from sqlalchemy import Column, Integer, String
+from sqlalchemy import create_engine
+from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
+
+import UrlToDatabase
 
 
 class MyBase:

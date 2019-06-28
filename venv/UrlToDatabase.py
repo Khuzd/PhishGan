@@ -7,21 +7,23 @@ Author : Pierrick ROBIC--BUTEZ
 2019
 """
 
+import csv
+import datetime
+import json
 import re
+import socket
+import ssl
+import struct
+from multiprocessing import Process, Queue
+
+import dns.resolver
+import requests
+import socks
+from bs4 import BeautifulSoup
+
+import googleIndexChecker
 from libs.whois import whois
 from libs.whois.parser import PywhoisError
-import datetime
-import requests
-from bs4 import BeautifulSoup
-import socket
-import dns.resolver
-import json
-import struct
-import ssl
-from multiprocessing import Process, Queue
-import csv
-import googleIndexChecker
-import socks
 
 columns = ["having_IP_Address", "URL_Length", "Shortining_Service", "having_At_Symbol", "double_slash_redirecting",
            "Prefix_Suffix", "having_Sub_Domain", "SSLfinal_State", "Domain_registeration_length", "Favicon", "port",

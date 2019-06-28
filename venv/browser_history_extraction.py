@@ -8,8 +8,8 @@ Author : Pierrick ROBIC--BUTEZ
 """
 
 import os
-import sqlite3
 import platform
+import sqlite3
 
 
 def chromeExtraction(date):
