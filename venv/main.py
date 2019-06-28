@@ -350,14 +350,15 @@ if __name__ == "__main__":
     #  Graph parser
     # ---------------------
     graphParser = subparsers.add_parser("graph", help="Used to generate graphs of the accuracy and loss for a GAN")
-    graphParser.add_argument("--beginLR", required=True, nargs=1, type=float, help="First learning rate")
-    graphParser.add_argument("--endLR", required=True, nargs=1, type=float, help="Last learning rate")
-    graphParser.add_argument("--stepLR", required=True, nargs=1, type=float, help="Step of the learning rate")
-    graphParser.add_argument("--beginSample", required=True, nargs=1, type=int, help="First sample size")
-    graphParser.add_argument("--endSample", required=True, nargs=1, type=int, help="Last sample size")
-    graphParser.add_argument("--stepSample", required=True, nargs=1, type=int, help="Step of the sample size")
-    graphParser.add_argument("--epochs", required=True, nargs=1, type=int, help="Number of epoches for the training")
-    graphParser.add_argument("--pltFrequency", required=True, nargs=1, type=int,
+    graphParser.add_argument('-blr', "--beginLR", required=True, nargs=1, type=float, help="First learning rate")
+    graphParser.add_argument('-elr', "--endLR", required=True, nargs=1, type=float, help="Last learning rate")
+    graphParser.add_argument('-slr', "--stepLR", required=True, nargs=1, type=float, help="Step of the learning rate")
+    graphParser.add_argument('-bs', "--beginSample", required=True, nargs=1, type=int, help="First sample size")
+    graphParser.add_argument('-es', "--endSample", required=True, nargs=1, type=int, help="Last sample size")
+    graphParser.add_argument('-ss', "--stepSample", required=True, nargs=1, type=int, help="Step of the sample size")
+    graphParser.add_argument('-e', "--epochs", required=True, nargs=1, type=int, help="Number of epoches for the "
+                                                                                      "training")
+    graphParser.add_argument('-plt', "--pltFrequency", required=True, nargs=1, type=int,
                              help="Frequency of the plots on graphs")
     graphParser.add_argument('-d', "--dataset", required=True, nargs=1, type=str,
                              help="Dataset used to train the GAN. Can be UCI, clean or path")
@@ -421,7 +422,7 @@ if __name__ == "__main__":
     reportGraphParser = subparsers.add_parser("reportGraph",
                                               help="Used to plot graphs of accuracies from classification report")
     reportGraphParser.add_argument("-p", "--path", nargs=1, type=str, required=True,
-                                   help="path to the folder contained the folders for each sample size")
+                                   help="Path to the folder contained the folders for each sample size")
     reportGraphParser.set_defaults(func=reportGraph)
 
     # ---------------------
@@ -464,8 +465,14 @@ if __name__ == "__main__":
     # ---------------------
     ORMExtractParser = subparsers.add_parser("ormextract",
                                              help="Used to extract web content and store it in a database")
+    ORMExtractParser.add_argument("-d", "--database", required=True, nargs=1, type=str,
+                                  help="Path to the database")
+    ORMExtractParser.add_argument("-p", "--path", nargs=1, type=str, required=True,
+                                  help="Path to the csv file which contained URLs")
+    ORMExtractParser.add_argument("-t", "--table", nargs=1, type=str, required=True,
+                                  help="Name of the table where data will be stored")
 
-    historyTrainParser.set_defaults(func=ORMExtract)
+    ORMExtractParser.set_defaults(func=ORMExtract)
 
     # ---------------------
     #  Parse

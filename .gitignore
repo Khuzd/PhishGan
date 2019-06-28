@@ -20,3 +20,5 @@ venv/data/Unused/phishTank\.json
 venv/libs/whois/__pycache__/
 
 venv/DB/
+
+*.log
