@@ -1081,11 +1081,20 @@ class URL:
         self.statisticReportTEsting()
         features.append(self.statisticWeight)
 
-        try :
+        try:
             queue.put(features)
             return
         except:
             return None
+
+    def getFeatures(self):
+        return ([self.ipWeight, self.lenghtWeight, self.shorteningWeight, self.atWeight, self.doubleSlashWeight,
+                 self.dashWeight, self.subDomainWeight, self.certificateAgeWeight, self.expirationWeight,
+                 self.faviconWeight, self.portWeight, self.httpWeight, self.requestedWeight, self.anchorsWeight,
+                 self.tagWeight, self.SFHWeight, self.emailWeight, self.abnormalWeight, self.forwardWeight,
+                 self.barCustomWeight, self.rightClickWeight, self.popupWeight, self.iFrameWeight, self.domainAgeWeight,
+                 self.dnsWeight, self.trafficWeight, self.pageRankWeight, self.indexingWeight, self.linksWeight,
+                 self.statisticWeight])
 
 
 def extraction(inputFile, output, begin=1):
