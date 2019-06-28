@@ -56,17 +56,19 @@ CLEAN_PATH_TEST = "data/Amazon_top25000outtest.csv"
 
 
 class GAN:
-    def __init__(self, lr):
+    def __init__(self, lr, sample):
         """
         :param lr: float (learning rate)
         """
         self.channels = 1
         self.countData = 30
         self.data_shape = (self.countData, self.channels)
-
+        self.thresHold = None
+        self.sampleSize = sample
         self.dataType = "phish"
+        self.lr = lr
 
-        optimizer = tf.train.AdamOptimizer(learning_rate=lr)
+        optimizer = tf.train.AdamOptimizer(learning_rate=self.lr)
 
         # Build and compile the discriminator
         self.discriminator = self.build_discriminator()
