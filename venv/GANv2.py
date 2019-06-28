@@ -48,6 +48,7 @@ from keras.utils import plot_model
 from sklearn.metrics import classification_report
 
 import UCI
+import pickle
 
 os.environ["PATH"] += os.pathsep + 'C:/Program Files (x86)/Graphviz2.38/bin'
 
