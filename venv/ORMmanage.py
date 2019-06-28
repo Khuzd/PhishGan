@@ -31,34 +31,35 @@ class MyBase:
         url = Column(String)
         content = Column(Binary)
 
+    class History(Base):
+        __tablename__ = 'history'
+
+        id = Column(Integer, primary_key=True)
+        url = Column(String)
+        content = Column(Binary)
+
 
     def create_tables(self):
         MyBase.Base.metadata.create_all(self.engine)
 
-    def adding_clean(self,url, extraction):
-        website = UrlToDatabase.URL(url)
-        if extraction:
-            if website.featuresExtraction() == None:
-                adding = MyBase.Clean(url=website.url, content=pickle.dumps(website))
-                self.session.add(adding)
-                self.session.commit()
-        else:
-            adding = MyBase.Clean(url=website.url, content=pickle.dumps(website))
-            self.session.add(adding)
-            self.session.commit()
-
-    def adding_phish(self,url, extraction):
-        website = UrlToDatabase.URL(url)
-        if extraction:
-            if website.featuresExtraction() == None:
-                adding = MyBase.Phish(url=website.url, content=pickle.dumps(website))
-                self.session.add(adding)
-                self.session.commit()
-        else:
-            adding = MyBase.Clean(url=website.url, content=pickle.dumps(website))
-            self.session.add(adding)
-            self.session.commit()
-
+    def adding(self, url, table, extraction):
+        try:
+            if self.session.query(self.__getattribute__(table)).filter(
+                self.__getattribute__(table).url == url).count() == 0:
+                print("adding: " + url)
+                website = UrlToDatabase.URL(url)
+        
+                if extraction:
+                    if website.featuresExtraction() == None:
+                        adding = self.__getattribute__(table)(url=website.url, content=pickle.dumps(website))
+                        self.session.add(adding)
+                        self.session.commit()
+                else:
+                    adding = self.__getattribute__(table)(url=website.url, content=pickle.dumps(website))
+                    self.session.add(adding)
+                    self.session.commit()
+        except AttributeError:
+            print("Please add table {} in the database".format(table))
 
     def update_class(self):
         queryPhish = self.session.query(self.Phish).all
