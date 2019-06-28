@@ -159,6 +159,10 @@ class GAN:
         :param path: string
         :return: nothing
         """
+        ## Save object
+        with open(path + "/" + prefix + "object.json", "w") as json_file:
+            pickle.dump(self.__dict__, json_file, 2)
+
 
         ## Save models
         # Combined
@@ -174,6 +178,7 @@ class GAN:
         with open(path + "/" + prefix + "generator_model.json", "w") as json_file:
             json_file.write(generator_model_json)
 
+
         ## Save weights
         self.combined.save_weights(path + "/" + prefix + "combined_model.h5")
         self.discriminator.save_weights(path + "/" + prefix + "discriminator_model.h5")
@@ -188,6 +193,12 @@ class GAN:
         :param path: string
         :return: nothing
         """
+        ## Load object
+        with open(path + "/" + prefix + "object.json", "w") as json_file:
+            tmp = pickle.load(json_file)
+
+        self.__dict__.update(tmp)
+
         ## Load models
         # Combined
         json_file = open(path + "/" + prefix + "combined_model.json", 'r')
