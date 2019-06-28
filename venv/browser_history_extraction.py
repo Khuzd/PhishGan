@@ -116,7 +116,6 @@ def operaExtraction(date):
     if platform.system() == 'Windows':
         data_path = os.path.expanduser('~') + r"\AppData\Roaming\Opera Software\Opera Stable\\"
 
-
     elif platform.system() == 'Linux':
         data_path = os.path.expanduser('~') + r"/.opera/"
 

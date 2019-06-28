@@ -47,7 +47,7 @@ from keras.utils import plot_model
 
 from sklearn.metrics import classification_report
 
-import UCI
+import importData
 import pickle
 
 os.environ["PATH"] += os.pathsep + 'C:/Program Files (x86)/Graphviz2.38/bin'
@@ -229,6 +229,7 @@ class GAN:
         Classification report for the GAN after training
         :param cleanTestDataset: list of list
         :param phishTestDataset:  list of list
+        :param calculate: bool
         :return: print
         """
 
@@ -242,15 +243,15 @@ class GAN:
             prediction.append(self.discriminator.predict_on_batch(np.array(i).astype(np.int)[:].reshape(1, 30, 1)))
 
         ## Calculate the best threshold
-        self.threshold = ((sum(prediction[:len(cleanTestDataset)]) / len(cleanTestDataset)) + (
+        self.thresHold = ((sum(prediction[:len(cleanTestDataset)]) / len(cleanTestDataset)) + (
                 sum(prediction[len(cleanTestDataset):]) / len(phishTestDataset))) / 2
 
         if calculate:
             ## Generate the predict results
             for i in prediction:
-                if self.dataType == "phish" and i[0][0] > self.threshold:
+                if self.dataType == "phish" and i[0][0] > self.thresHold:
                     predict.append("phish")
-                elif self.dataType != "phish" and i[0][0] < self.threshold:
+                elif self.dataType != "phish" and i[0][0] < self.thresHold:
                     predict.append("phish")
                 else:
                     predict.append("clean")
@@ -263,9 +264,10 @@ class GAN:
         Train the GAN
         :param epochs: int
         :param data: string (path to the dataset used to train the GAN)
-        :param self.sampleSize: int
         :param plotFrequency: int
         :param predict bool (if the training include prediction on test datasets)
+        :param phishData: list of lists
+        :param cleanData: list of lists
         :return: list of 7 list (to plot training/validation accuracy/loss of generator/discriminator)
         """
 
@@ -274,8 +276,8 @@ class GAN:
 
         # Load testing datasets
         if phishData is None or cleanData is None:
-            phisTest = list(UCI.csvToList(PHIS_PATH_TEST)[1].values())
-            cleanTest = list(UCI.csvToList(CLEAN_PATH_TEST)[1].values())
+            phisTest = list(importData.csvToList(PHIS_PATH_TEST)[1].values())
+            cleanTest = list(importData.csvToList(CLEAN_PATH_TEST)[1].values())
         else:
             phisTest = list(phishData)
             cleanTest = list(cleanData)

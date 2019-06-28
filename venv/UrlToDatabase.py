@@ -145,7 +145,6 @@ class URL:
     def IPtesting(self):
         """
         test if the domain is a IP adress
-        :param domain: string
         :return: -1 or 1
         """
 
@@ -162,7 +161,6 @@ class URL:
     def leghtTesting(self):
         """
         test if url lenght is <54, between 54 and 75 or over 75
-        :param url:string
         :return: -1,0 or 1
         """
 
@@ -179,7 +177,6 @@ class URL:
     def shortenerTEsting(self):
         """
         test if the url is a short url
-        :param url: string
         :return: -1 or 1
         """
         for short in URL_SHORTENER:
@@ -193,7 +190,6 @@ class URL:
     def atSymbolTetsting(self):
         """
         test if the at symbol is in url
-        :param url: string
         :return: -1 or 1
         """
         if "@" in self.url:
@@ -205,7 +201,6 @@ class URL:
     def doubleSlashTesting(self):
         """
         test if there is double slash in url
-        :param url: string
         :return: -1 or 1
         """
         if "//" in self.url:
@@ -217,7 +212,6 @@ class URL:
     def dashTesting(self):
         """
             test if there is dash in url
-            :param url: string
             :return: -1 or 1
             """
         if "-" in self.url:
@@ -229,7 +223,6 @@ class URL:
     def subDomainTesting(self):
         """
         test if there are too many subdomains
-        :param domain:string
         :return: -1,0 or 1
         """
         if len(self.domain.split("www.")) == 2:
@@ -262,7 +255,6 @@ class URL:
     def ageCertificateTesting(self):
         """
         test if the certificate is not too young and delivered by a trusted issuer
-        :param domain: string
         :return: -1,0 or 1
         """
 
@@ -303,7 +295,6 @@ class URL:
     def expirationDomainTesting(self):
         """
         test if the valid duration of the domain is enough long
-        :param whoisResult: dict
         :return: -1 or 1
         """
 
@@ -329,8 +320,6 @@ class URL:
     def faviconTesting(self):
         """
         test if the favicon url is from the same domain as the site
-        :param html: string (html source code)
-        :param domain: string
         :return: -1 or 1
         """
 
@@ -352,7 +341,6 @@ class URL:
     def portTesting(self):
         """
         test all important ports to check if they are opened or closed
-        :param domain: string
         :return: -1 or 1 or error
         """
 
@@ -381,7 +369,6 @@ class URL:
     def httpTesting(self):
         """
         test if there is the http token into the URL
-        :param url: string
         :return: -1 or 1
         """
         if "http" in self.url.lower():
@@ -394,8 +381,6 @@ class URL:
     def requestedURL(self):
         """
         test the percentage of external objects
-        :param html: string (html source code)
-        :param domain: string
         :return: -1,0 or 1
         """
 
@@ -441,8 +426,6 @@ class URL:
     def anchorsTesting(self):
         """
         test the percentage of external links anchors
-        :param html: string (html source code)
-        :param domain: string
         :return: -1,0 or 1
         """
         soup = BeautifulSoup(self.html, features="lxml")
@@ -474,8 +457,6 @@ class URL:
     def tagsLinksTesting(self):
         """
         test the percentage of external links into meta, script and link tags
-        :param html: string (html source code)
-        :param domain: string
         :return: -1,0 or 1
         """
         totalLinks = 0
@@ -521,8 +502,6 @@ class URL:
     def SFHTesting(self):
         """
         test if the Server Form Handler of all forms is not suspicious
-        :param html: string (html source code)
-        :param domain: string
         :return: -1,0 or 1
         """
         soup = BeautifulSoup(self.html, features="lxml")
@@ -546,7 +525,6 @@ class URL:
     def emailTesting(self):
         """
         test if no user's informations are send by email
-        :param html: string (html source code)
         :return: -1 or 1
         """
         # soup = BeautifulSoup(html, features="lxml")
@@ -563,7 +541,6 @@ class URL:
     def abnormalURLTesting(self):
         """
         test if registrant name is in the url
-        :param whoisResult: dict
         :return: -1 or 1
         """
 
@@ -575,7 +552,7 @@ class URL:
                         if suborg.lower() in domain.lower():
                             self.abnormalWeight = -1
                             return
-            elif self.whoisDomain["org"] != None:
+            elif self.whoisDomain["org"] is not None:
                 for suborg in re.split(". | ", self.whoisDomain["org"]):
                     if suborg.lower() in domain.lower():
                         self.abnormalWeight = -1
@@ -588,7 +565,7 @@ class URL:
                         if suborg.lower() in domain.lower():
                             self.abnormalWeight = -1
                             return
-            elif self.whoisDomain["org1"] != None:
+            elif self.whoisDomain["org1"] is not None:
                 for suborg in re.split(". | ", self.whoisDomain["org1"]):
                     if suborg.lower() in domain.lower():
                         self.abnormalWeight = -1
@@ -600,8 +577,6 @@ class URL:
     def forwardingTesting(self):
         """
         test the number of forwarding
-        :param url: string
-        :param http: string
         :return: -1,0 or 1
         """
         countForward = len(requests.get(self.http + "://" + self.url).history)
@@ -620,7 +595,6 @@ class URL:
     def barCustomTesting(self):
         """
         Check if the status bar is not abnormally modify
-        :param html: string (html source code)
         :return: -1 or 1
         """
 
@@ -639,7 +613,6 @@ class URL:
     def rightClickTesting(self):
         """
         test if the right click is not disabled
-        :param html: string (html source code)
         :return: -1 or 1
         """
 
@@ -667,7 +640,6 @@ class URL:
     def popUpTesting(self):
         """
         testing if popup with text fields
-        :param html: string (html source code)
         :return: -1 or 1
         """
         prompt = re.findall(r"prompt\(", str(self.html)) + re.findall(r"confirm\(", str(self.html)) + re.findall(
@@ -686,8 +658,6 @@ class URL:
     def IFrameTesting(self):
         """
         testing if the site use Iframe
-        :param html: string (html source code)
-        :param domain: string
         :return: -1 or 1
         """
 
@@ -711,7 +681,6 @@ class URL:
     def domainAgeTesting(self):
         """
         testing if domain age is greater than 6 months
-        :param whoisResult: dict
         :return: -1, 0 or 1
         """
 
@@ -737,7 +706,6 @@ class URL:
     def DNSRecordTesting(self):
         """
         test if the domain is recorded in a DNS
-        :param domain: string
         :return: -1 or 1
         """
 
@@ -769,7 +737,6 @@ class URL:
     def trafficTesting(self):
         """
         collect the website rank on AWIS database and test if it is not abnormal
-        :param domain: string
         :return: -1,0 or 1
         """
         try:
@@ -790,7 +757,6 @@ class URL:
     def pageRankTesting(self):
         """
         Test the pagerank of the domain
-        :param domain: str
         :return: -1 or 1
         """
         answer = requests.get("https://openpagerank.com/api/v1.0/getPageRank?domains%5B0%5D=" + self.domain,
@@ -811,7 +777,6 @@ class URL:
     def googleIndexTesting(self):
         """
         test if url is indexed by google
-        :param url: string
         :return: -1 or 1
         """
         index = googleIndexChecker.google_search("site:" + self.url)
@@ -851,7 +816,6 @@ class URL:
     def linksPointingToTesting(self):
         """
         collect the count of all sites which linked to the url on AWIS database and test if it is not abnormal
-        :param url: string
         :return: -1,0 or 1
         """
         soup = BeautifulSoup(requests.get("https://www.alexa.com/siteinfo/" + self.url).content, features="lxml")
@@ -874,7 +838,6 @@ class URL:
     def statisticReportTEsting(self):
         """
         test if the ip address of the domain is in top 50 of www.stopbadware.org
-        :param domain:
         :return: -1 or 1
         """
         IPdomain = socket.gethostbyname(self.domain)
@@ -897,6 +860,11 @@ class URL:
         return
 
     def featuresExtraction(self, queue=None):
+        """
+        Extract all features and set the values into the attribute weights
+        :param queue: queue
+        :return: -1,-1, None or results into queue
+        """
         features = []
 
         # print(http)

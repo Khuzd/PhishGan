@@ -31,6 +31,7 @@ import json
     }
 """
 
+
 def listFeatures(path):
     """
 
@@ -45,6 +46,7 @@ def listFeatures(path):
 
     return phishTankSitesFeatures
 
+
 def jsonToDict(path):
     """
     Transform a json file into a python dictonnary
@@ -56,6 +58,7 @@ def jsonToDict(path):
         data_dict = json.load(json_data)
     return data_dict
 
+
 def extractFeatures(site):
     """
 
@@ -64,20 +67,20 @@ def extractFeatures(site):
     """
     features = []
 
-    knownTld = ["com","net","fr","uk","us","de","it","es","gouv","gov"]
+    knownTld = ["com", "net", "fr", "uk", "us", "de", "it", "es", "gouv", "gov"]
 
     try:
         domain = site["url"].split('//')[1].split('/')[0]
-        tld=""
-        if (not domain.split('.')[-1].isdigit()):
+        tld = ""
+        if not domain.split('.')[-1].isdigit():
             tld = domain.split('.')[-1]
-            domain = domain[:len(domain)-(len(tld)+1)]
+            domain = domain[:len(domain) - (len(tld) + 1)]
 
         features.append(domain)
         features.append(tld)
 
     except:
-       print("problem with parsing: " + site["url"])
+        print("problem with parsing: " + site["url"])
 
     brandname = '0'
     features.append(brandname)
@@ -90,7 +93,7 @@ def extractFeatures(site):
 
     features.append(len(site["url"]))
 
-    if (tld in knownTld):
+    if tld in knownTld:
         features.append(1)
     else:
         features.append(0)

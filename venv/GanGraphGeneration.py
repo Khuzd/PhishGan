@@ -43,7 +43,7 @@ from GANv2 import GAN
 import os
 import glob
 import re
-import UCI
+import importData
 
 
 def graphCreation(X, YD, VYD, lr, sample, label, bestEpoch, bestAccu, YG=None, VYG=None, path="graphs", suffix=""):
@@ -116,12 +116,9 @@ def multiGraph(begin_lr, end_lr, step_lr, epochs, begin_sampleSize, end_SampleSi
             print("sample : %f ; lr : %f" % (sample, lr))
             gan = GAN(lr=lr, sample=sample)
             gan.dataType = dataType
-            X, accuracy, Dloss, Gloss, vacc, vDloss, vGloss, bestReport, bestEpoch = gan.train(epochs=epochs,
-                                                                                               plotFrequency=plotFrequency,
-                                                                                               data=UCI.csvToList(
-                                                                                                   datasetPath)[
-                                                                                                   1].values(),
-                                                                                               predict=True)
+            X, accuracy, Dloss, Gloss, vacc, vDloss, vGloss, bestReport, \
+            bestEpoch = gan.train(epochs=epochs, plotFrequency=plotFrequency,
+                                  data=importData.csvToList(datasetPath)[1].values(), predict=True)
             if divide == 1:
                 graphCreation(X, Dloss, vDloss, lr, sample, "loss", bestEpoch, bestReport["accuracy"], Gloss, vGloss,
                               path=outPath)

@@ -5,6 +5,7 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 from __future__ import division
 from future import standard_library
+
 standard_library.install_aliases()
 from builtins import *
 import re
@@ -16,20 +17,19 @@ from .parser import WhoisEntry
 from .whois import NICClient
 
 
-
-def whois(url, command=False):
+def whois(Url, command=False):
     # clean domain to expose netloc
-    ip_match = re.match(r"^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$", url)
+    ip_match = re.match(r"^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$", Url)
     if ip_match:
-        domain = url
+        domain = Url
         try:
-            result = socket.gethostbyaddr(url)
+            result = socket.gethostbyaddr(Url)
         except socket.herror as e:
             pass
         else:
             domain = extract_domain(result[0])
     else:
-        domain = extract_domain(url)
+        domain = extract_domain(Url)
     if command:
         # try native whois command
         r = subprocess.Popen(['whois', domain], stdout=subprocess.PIPE)
@@ -42,7 +42,9 @@ def whois(url, command=False):
 
 
 suffixes = None
-def extract_domain(url):
+
+
+def extract_domain(Url):
     """Extract the domain from the given URL
 
     >>> print(extract_domain('http://www.google.com.au/tos.html'))
@@ -64,9 +66,9 @@ def extract_domain(url):
     >>> print(extract_domain('1-0-1-1-1-0-1-1-1-1-1-1-1-.0-0-0-0-0-0-0-0-0-0-0-0-0-10-0-0-0-0-0-0-0-0-0-0-0-0-0.info'))
     0-0-0-0-0-0-0-0-0-0-0-0-0-10-0-0-0-0-0-0-0-0-0-0-0-0-0.info
     """
-    if re.match(r'\d+\.\d+\.\d+\.\d+', url):
+    if re.match(r'\d+\.\d+\.\d+\.\d+', Url):
         # this is an IP address
-        return socket.gethostbyaddr(url)[0]
+        return socket.gethostbyaddr(Url)[0]
 
     # load known TLD suffixes
     global suffixes
@@ -74,16 +76,17 @@ def extract_domain(url):
         # downloaded from https://publicsuffix.org/list/public_suffix_list.dat
         tlds_path = os.path.join(os.getcwd(), os.path.dirname(__file__), 'data', 'public_suffix_list.dat')
         with open(tlds_path, encoding='utf-8') as tlds_fp:
-            suffixes = set(line.encode('utf-8') for line in tlds_fp.read().splitlines() if line and not line.startswith('//'))
+            suffixes = set(
+                line.encode('utf-8') for line in tlds_fp.read().splitlines() if line and not line.startswith('//'))
 
-    if not isinstance(url, str):
-        url = url.decode('utf-8')
-    url = re.sub('^.*://', '', url)
-    url = url.split('/')[0].lower()
+    if not isinstance(Url, str):
+        Url = Url.decode('utf-8')
+    Url = re.sub('^.*://', '', Url)
+    Url = Url.split('/')[0].lower()
 
     # find the longest suffix match
     domain = b''
-    for section in reversed(url.split('.')):
+    for section in reversed(Url.split('.')):
         if domain:
             domain = b'.' + domain
         domain = section.encode('utf-8') + domain

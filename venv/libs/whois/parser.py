@@ -30,7 +30,8 @@ try:
 except ImportError:
     DATEUTIL = False
 
-EMAIL_REGEX = "[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?"
+EMAIL_REGEX = "[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[" \
+              "a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])? "
 
 KNOWN_FORMATS = [
     '%d-%b-%Y', 				# 02-jan-2000
@@ -138,7 +139,7 @@ class WhoisEntry(dict):
         for attr, regex in list(self._regex.items()):
             if regex:
                 values = []
-                if ("\n" in regex):
+                if "\n" in regex:
                     for data in re.findall(regex, self.text, re.IGNORECASE | re.MULTILINE):
                         matches = data if isinstance(data, tuple) else [data]
                         for value in matches:
@@ -747,9 +748,12 @@ class WhoisEu(WhoisEntry):
         'domain_name': r'Domain: *([^\n\r]+)',
         'tech_name': r'Technical: *Name: *([^\n\r]+)',
         'tech_org': r'Technical: *Name: *[^\n\r]+\s*Organisation: *([^\n\r]+)',
-        'tech_phone': r'Technical: *Name: *[^\n\r]+\s*Organisation: *[^\n\r]+\s*Language: *[^\n\r]+\s*Phone: *([^\n\r]+)',
-        'tech_fax': r'Technical: *Name: *[^\n\r]+\s*Organisation: *[^\n\r]+\s*Language: *[^\n\r]+\s*Phone: *[^\n\r]+\s*Fax: *([^\n\r]+)',
-        'tech_email': r'Technical: *Name: *[^\n\r]+\s*Organisation: *[^\n\r]+\s*Language: *[^\n\r]+\s*Phone: *[^\n\r]+\s*Fax: *[^\n\r]+\s*Email: *([^\n\r]+)',
+        'tech_phone': r'Technical: *Name: *[^\n\r]+\s*Organisation: *[^\n\r]+\s*Language: *[^\n\r]+\s*Phone: *(['
+                      r'^\n\r]+)',
+        'tech_fax': r'Technical: *Name: *[^\n\r]+\s*Organisation: *[^\n\r]+\s*Language: *[^\n\r]+\s*Phone: *['
+                    r'^\n\r]+\s*Fax: *([^\n\r]+)',
+        'tech_email': r'Technical: *Name: *[^\n\r]+\s*Organisation: *[^\n\r]+\s*Language: *[^\n\r]+\s*Phone: *['
+                      r'^\n\r]+\s*Fax: *[^\n\r]+\s*Email: *([^\n\r]+)',
         'registrar': r'Registrar: *Name: *([^\n\r]+)',
         'name_servers': r'Name servers:\s*(.+)',  # list of name servers
     }
@@ -769,13 +773,15 @@ class WhoisEe(WhoisEntry):
         'status': r'Domain: *[\n\r]+\s*name: *[^\n\r]+\sstatus: *([^\n\r]+)',
         'registered': r'Domain: *[\n\r]+\s*name: *[^\n\r]+\sstatus: *[^\n\r]+\sregistered: *([^\n\r]+)',
         'changed': r'Domain: *[\n\r]+\s*name: *[^\n\r]+\sstatus: *[^\n\r]+\sregistered: *[^\n\r]+\schanged: *([^\n\r]+)',
-        'expire': r'Domain: *[\n\r]+\s*name: *[^\n\r]+\sstatus: *[^\n\r]+\sregistered: *[^\n\r]+\schanged: *[^\n\r]+\sexpire: *([^\n\r]+)',
+        'expire': r'Domain: *[\n\r]+\s*name: *[^\n\r]+\sstatus: *[^\n\r]+\sregistered: *[^\n\r]+\schanged: *['
+                  r'^\n\r]+\sexpire: *([^\n\r]+)',
 
-        # 'tech_name': r'Technical: *Name: *([^\n\r]+)',
-        # 'tech_org': r'Technical: *Name: *[^\n\r]+\s*Organisation: *([^\n\r]+)',
-        # 'tech_phone': r'Technical: *Name: *[^\n\r]+\s*Organisation: *[^\n\r]+\s*Language: *[^\n\r]+\s*Phone: *([^\n\r]+)',
-        # 'tech_fax': r'Technical: *Name: *[^\n\r]+\s*Organisation: *[^\n\r]+\s*Language: *[^\n\r]+\s*Phone: *[^\n\r]+\s*Fax: *([^\n\r]+)',
-        # 'tech_email': r'Technical: *Name: *[^\n\r]+\s*Organisation: *[^\n\r]+\s*Language: *[^\n\r]+\s*Phone: *[^\n\r]+\s*Fax: *[^\n\r]+\s*Email: *([^\n\r]+)',
+        # 'tech_name': r'Technical: *Name: *([^\n\r]+)', 'tech_org': r'Technical: *Name: *[^\n\r]+\s*Organisation: *(
+        # [^\n\r]+)', 'tech_phone': r'Technical: *Name: *[^\n\r]+\s*Organisation: *[^\n\r]+\s*Language: *[
+        # ^\n\r]+\s*Phone: *([^\n\r]+)', 'tech_fax': r'Technical: *Name: *[^\n\r]+\s*Organisation: *[
+        # ^\n\r]+\s*Language: *[^\n\r]+\s*Phone: *[^\n\r]+\s*Fax: *([^\n\r]+)', 'tech_email': r'Technical: *Name: *[
+        # ^\n\r]+\s*Organisation: *[^\n\r]+\s*Language: *[^\n\r]+\s*Phone: *[^\n\r]+\s*Fax: *[^\n\r]+\s*Email: *([
+        # ^\n\r]+)',
         'registrar': r'Registrar: *[\n\r]+\s*name: *([^\n\r]+)',
         'name_servers': r'nserver: *(.*)',  # list of name servers
         'org': r'name: *(.*)',
@@ -1352,7 +1358,6 @@ class WhoisIl(WhoisEntry):
         'name_servers':    'nserver: *(.+)',
         'emails':          'e-mail: *(.+)',
         'phone':           'phone: *(.+)',
-        'name_servers':    'nserver: *(.+)',
         'registrar':       'registrar name: *(.+)',
         'referral_url':    'registrar info: *(.+)',
     }

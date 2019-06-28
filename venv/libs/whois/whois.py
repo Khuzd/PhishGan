@@ -106,7 +106,8 @@ class NICClient(object):
                 import socks
             except ImportError as e:
                 print(
-                    "You need to install the Python socks module. Install PIP (https://bootstrap.pypa.io/get-pip.py) and then 'pip install PySocks'")
+                    "You need to install the Python socks module. Install PIP (https://bootstrap.pypa.io/get-pip.py) "
+                    "and then 'pip install PySocks'")
                 raise e
             s = socks.socksocket()
             s.set_proxy(socks.SOCKS5, "127.0.0.1", int(9150))

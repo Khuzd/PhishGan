@@ -42,7 +42,7 @@ import UrlToDatabase
 from multiprocessing import Process, Queue
 import csv
 from GANv2 import GAN
-import UCI
+import importData
 import browser_history_extraction
 import ORMmanage
 import pickle
@@ -163,7 +163,7 @@ def creation(args):
     else:
         dataset = args.dataset[0]
 
-    gan.train(args.epochs[0], UCI.csvToList(dataset)[1].values())
+    gan.train(args.epochs[0], importData.csvToList(dataset)[1].values())
     gan.save(args.name[0], args.location[0])
 
 
@@ -173,17 +173,17 @@ def prediction(args):
         :param args: Namespace
         :return: nothing
         """
-    gan = GAN(0.1)
+    gan = GAN(0.1, 1)
     gan.load(args.name[0], args.location[0])
 
     if args.file is not None:
-        data = UCI.csvToList(args.file[0])[1]
+        data = importData.csvToList(args.file[0])[1]
         for url in data.keys():
             results = gan.discriminator.predict_on_batch(np.array(data[url]).astype(np.int)[:].reshape(1, 30, 1))
 
             if args.verbose is True:
                 if args.output == "console" or args.output[0] == "console":
-                    if results[0] < gan.threshold:
+                    if results[0] < gan.thresHold:
                         print(str(url) + " : " + str(results[0]) + " -> phishing")
                     else:
                         print(str(url) + " : " + str(results[0]) + " -> safe")
@@ -191,14 +191,14 @@ def prediction(args):
                 else:
                     with open(args.output[0], 'a', newline='') as outcsvfile:
                         writer = csv.writer(outcsvfile, delimiter=' ', quotechar='"')
-                        if results[0] < gan.threshold:
+                        if results[0] < gan.thresHold:
                             writer.writerow([str(url) + " : " + str(results[0]) + " -> phishing"])
                         else:
                             writer.writerow([str(url) + " : " + str(results[0]) + " -> safe"])
 
             else:
                 if args.output == "console" or args.output[0] == "console":
-                    if results[0] < gan.threshold:
+                    if results[0] < gan.thresHold:
                         print(str(url) + " -> phishing")
                     else:
                         print(str(url) + " -> safe")
@@ -206,7 +206,7 @@ def prediction(args):
                 else:
                     with open(args.output[0], 'a', newline='') as outcsvfile:
                         writer = csv.writer(outcsvfile, delimiter=' ', quotechar='"')
-                        if results[0] < gan.threshold:
+                        if results[0] < gan.thresHold:
                             writer.writerow([str(url) + " -> phishing"])
                         else:
                             writer.writerow([str(url) + " -> safe"])
@@ -259,15 +259,9 @@ def historyTrain(args):
 
     random.shuffle(features)
 
-    X, accuracy, Dloss, Gloss, vacc, vDloss, vGloss, bestReport, bestEpoch = gan.train(epochs=args.epochs[0],
-                                                                                       plotFrequency=args.pltFrequency[
-                                                                                           0],
-                                                                                       data=features[
-                                                                                            :int(len(features) * 0.9)],
-                                                                                       predict=True, cleanData=features[
-                                                                                                               int(len(
-                                                                                                                   features) * 0.9):],
-                                                                                       phishData=[])
+    X, accuracy, Dloss, Gloss, vacc, vDloss, vGloss, bestReport, bestEpoch = \
+        gan.train(epochs=args.epochs[0], plotFrequency=args.pltFrequency[0], data=features[:int(len(features) * 0.9)],
+                  predict=True, cleanData=features[int(len(features) * 0.9):], phishData=[])
 
     if type(args.division) == list:
         args.division = args.division[0]
@@ -319,7 +313,7 @@ def ORMExtract(args):
     #     print("Please add table {} in the database".format(args.table[0]))
     #     return
 
-    URLs = UCI.csvToList(args.path[0])
+    URLs = importData.csvToList(args.path[0])
 
     i = 0
     for url in URLs:
@@ -418,10 +412,12 @@ if __name__ == "__main__":
     # ---------------------
     historyExtractionParser = subparsers.add_parser("historyExtract", help="Used to used to extract browsers history")
     historyExtractionParser.add_argument("-o", "--output", default="console", type=str, nargs=1,
-                                         help="Option to chose the type of ouptput : console or file. If file, the value have "
+                                         help="Option to chose the type of ouptput : console or file. If file, "
+                                              "the value have "
                                               "to be the path to a existing file")
     historyExtractionParser.add_argument("-d", "--date", type=int, default=0,
-                                         help="Used to set the date after which the URLs will be extracted from browsers history")
+                                         help="Used to set the date after which the URLs will be extracted from "
+                                              "browsers history")
     historyExtractionParser.add_argument('-n', "--name", required=True, nargs=1, type=str, help="Name of the save")
 
     historyExtractionParser.set_defaults(func=historyExtract)
@@ -434,7 +430,8 @@ if __name__ == "__main__":
     historyTrainParser.add_argument("-l", "--location", required=True, nargs=1, type=str,
                                     help="Location of the GAN save")
     historyTrainParser.add_argument("-d", "--date", type=int, default=0,
-                                    help="Used to set the date after which the URLs will be extracted from browsers history")
+                                    help="Used to set the date after which the URLs will be extracted from browsers "
+                                         "history")
     historyTrainParser.add_argument('-di', "--division", default=1, nargs=1, type=int,
                                     help="Into how many graphs the simulation is divided")
     historyTrainParser.add_argument('-e', "--epochs", required=True, nargs=1, type=int,
@@ -456,7 +453,7 @@ if __name__ == "__main__":
     # ---------------------
     #  Parse
     # ---------------------
-    args = parser.parse_args()
-    print(args)
-    args.func(args)
+    arg = parser.parse_args()
+    print(arg)
+    arg.func(arg)
     exit(0)

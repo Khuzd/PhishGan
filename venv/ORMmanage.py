@@ -50,7 +50,7 @@ class MyBase:
                 website = UrlToDatabase.URL(url)
 
                 if extraction:
-                    if website.featuresExtraction() == None:
+                    if website.featuresExtraction() is None:
                         adding = self.__getattribute__(table)(url=website.url, content=pickle.dumps(website))
                         self.session.add(adding)
                         self.session.commit()
