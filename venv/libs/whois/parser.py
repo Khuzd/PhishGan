@@ -772,9 +772,10 @@ class WhoisEe(WhoisEntry):
         'domain_name': r'Domain: *[\n\r]+\s*name: *([^\n\r]+)',
         'status': r'Domain: *[\n\r]+\s*name: *[^\n\r]+\sstatus: *([^\n\r]+)',
         'registered': r'Domain: *[\n\r]+\s*name: *[^\n\r]+\sstatus: *[^\n\r]+\sregistered: *([^\n\r]+)',
-        'changed': r'Domain: *[\n\r]+\s*name: *[^\n\r]+\sstatus: *[^\n\r]+\sregistered: *[^\n\r]+\schanged: *([^\n\r]+)',
         'expire': r'Domain: *[\n\r]+\s*name: *[^\n\r]+\sstatus: *[^\n\r]+\sregistered: *[^\n\r]+\schanged: *['
                   r'^\n\r]+\sexpire: *([^\n\r]+)',
+
+        
 
         # 'tech_name': r'Technical: *Name: *([^\n\r]+)', 'tech_org': r'Technical: *Name: *[^\n\r]+\s*Organisation: *(
         # [^\n\r]+)', 'tech_phone': r'Technical: *Name: *[^\n\r]+\s*Organisation: *[^\n\r]+\s*Language: *[
@@ -785,6 +786,7 @@ class WhoisEe(WhoisEntry):
         'registrar': r'Registrar: *[\n\r]+\s*name: *([^\n\r]+)',
         'name_servers': r'nserver: *(.*)',  # list of name servers
         'org': r'name: *(.*)',
+        'changed': r'Domain: *[\n\r]+\s*name: *[^\n\r]+\sstatus: *[^\n\r]+\sregistered: *[^\n\r]+\schanged: *([^\n\r]+)'
     }
 
     def __init__(self, domain, text):
