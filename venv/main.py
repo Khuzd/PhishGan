@@ -44,6 +44,9 @@ import csv
 from GANv2 import GAN
 import UCI
 import browser_history_extraction
+import ORMmanage
+import pickle
+import decimal
 
 UCI_PATH = 'data/UCI_dataset.csv'
 CLEAN_PATH = 'data/Amazon_top25000outtrain.csv'
@@ -151,7 +154,7 @@ def creation(args):
                                   device_count={"CPU": 1})
     sess = tf.Session(graph=tf.get_default_graph(), config=session_conf)
     K.set_session(sess)
-    gan = GAN(lr=args.lr[0])
+    gan = GAN(lr=args.lr[0], sample=args.size[0])
 
     if args.dataset[0] == "UCI":
         dataset = UCI_PATH
@@ -160,7 +163,7 @@ def creation(args):
     else:
         dataset = args.dataset[0]
 
-    gan.train(args.epochs[0], dataset, args.size[0])
+    gan.train(args.epochs[0], UCI.csvToList(dataset)[1].values())
     gan.save(args.name[0], args.location[0])
 
 
@@ -180,7 +183,7 @@ def prediction(args):
 
             if args.verbose is True:
                 if args.output == "console" or args.output[0] == "console":
-                    if results[0] < args.threshold[0]:
+                    if results[0] < gan.threshold:
                         print(str(url) + " : " + str(results[0]) + " -> phishing")
                     else:
                         print(str(url) + " : " + str(results[0]) + " -> safe")
@@ -188,14 +191,14 @@ def prediction(args):
                 else:
                     with open(args.output[0], 'a', newline='') as outcsvfile:
                         writer = csv.writer(outcsvfile, delimiter=' ', quotechar='"')
-                        if results[0] < args.threshold[0]:
+                        if results[0] < gan.threshold:
                             writer.writerow([str(url) + " : " + str(results[0]) + " -> phishing"])
                         else:
                             writer.writerow([str(url) + " : " + str(results[0]) + " -> safe"])
 
             else:
                 if args.output == "console" or args.output[0] == "console":
-                    if results[0] < args.threshold[0]:
+                    if results[0] < gan.threshold:
                         print(str(url) + " -> phishing")
                     else:
                         print(str(url) + " -> safe")
@@ -203,7 +206,7 @@ def prediction(args):
                 else:
                     with open(args.output[0], 'a', newline='') as outcsvfile:
                         writer = csv.writer(outcsvfile, delimiter=' ', quotechar='"')
-                        if results[0] < args.threshold[0]:
+                        if results[0] < gan.threshold:
                             writer.writerow([str(url) + " -> phishing"])
                         else:
                             writer.writerow([str(url) + " -> safe"])
@@ -211,35 +214,129 @@ def prediction(args):
 
 def reportGraph(args):
     """
-            Function for the reportGraphParser
-            :param args: Namespace
-            :return: nothing
-            """
+        Function for the reportGraphParser
+        :param args: Namespace
+        :return: nothing
+        """
     GanGraphGeneration.reportAccuracyGraph(args.path[0])
+
 
 def historyExtract(args):
     """
-            Function for the historyExtractionParser
-            :param args: Namespace
-            :return: nothing
-            """
+        Function for the historyExtractionParser
+        :param args: Namespace
+        :return: nothing
+        """
     URLs = browser_history_extraction.chromeExtraction(args.date)
     URLs += browser_history_extraction.firefoxExtraction(args.date)
     URLs += browser_history_extraction.operaExtraction(args.date)
     if args.output == "console" or args.output[0] == "console":
         print(URLs)
 
-    else :
+    else:
         for url in URLs:
             with open(args.output[0], 'a', newline='') as outcsvfile:
                 writer = csv.writer(outcsvfile, delimiter=' ', quotechar='"')
                 writer.writerow([url])
 
 
+def historyTrain(args):
+    """
+        Function for the historyTrainParser
+        :param args: Namespace
+        :return: nothing
+        """
+    gan = GAN(0.1, 1)
+    gan.load(args.name[0], args.location[0])
+
+    Base = ORMmanage.MyBase("DB/database.db")
+
+    features = []
+
+    for website in Base.session.query(Base.History).all():
+        url = pickle.loads(website.content)
+        features.append(url.getFeatures())
+
+    random.shuffle(features)
+
+    X, accuracy, Dloss, Gloss, vacc, vDloss, vGloss, bestReport, bestEpoch = gan.train(epochs=args.epochs[0],
+                                                                                       plotFrequency=args.pltFrequency[
+                                                                                           0],
+                                                                                       data=features[
+                                                                                            :int(len(features) * 0.9)],
+                                                                                       predict=True, cleanData=features[
+                                                                                                               int(len(
+                                                                                                                   features) * 0.9):],
+                                                                                       phishData=[])
+
+    if type(args.division) == list:
+        args.division = args.division[0]
+
+    if args.division == 1:
+        GanGraphGeneration.graphCreation(X, Dloss, vDloss, gan.lr, gan.sampleSize, "loss", bestEpoch,
+                                         bestReport["accuracy"], Gloss, vGloss,
+                                         path=args.output)
+        GanGraphGeneration.graphCreation(X, accuracy, vacc, gan.lr, gan.sampleSize, "accuracy", bestEpoch,
+                                         bestReport["accuracy"],
+                                         path=args.output)
+    else:
+        for i in range(args.division):
+            lenght = len(X)
+            GanGraphGeneration.graphCreation(X[i * (lenght // args.division):(i + 1) * (lenght // args.division)],
+                                             Dloss[i * (lenght // args.division):(i + 1) * (lenght // args.division)],
+                                             vDloss[i * (lenght // args.division):(i + 1) * (lenght // args.division)],
+                                             gan.lr, gan.sampleSize, "loss",
+                                             bestEpoch, bestReport["accuracy"],
+                                             Gloss[i * (lenght // args.division):(i + 1) * (lenght // args.division)],
+                                             vGloss[i * (lenght // args.division):(i + 1) * (lenght // args.division)],
+                                             path=args.output,
+                                             suffix="part" + str(i))
+            GanGraphGeneration.graphCreation(X[i * (lenght // args.division):(i + 1) * (lenght // args.division)],
+                                             accuracy[
+                                             i * (lenght // args.division):(i + 1) * (lenght // args.division)],
+                                             vacc[i * (lenght // args.division):(i + 1) * (lenght // args.division)],
+                                             gan.lr, gan.sampleSize, "accuracy",
+                                             bestEpoch, bestReport["accuracy"],
+                                             path=args.output, suffix="part" + str(i))
+
+    with open(args.output + "/" + str(gan.sampleSize) + "/" + "Report_" + str(
+            decimal.Decimal(gan.lr).quantize(decimal.Decimal('.0001'), rounding=decimal.ROUND_DOWN)) + ".txt", "w",
+              newline='', encoding='utf-8') as reportFile:
+        reportFile.write(str(bestReport))
+
+def ORMExtract(args):
+    """
+        Function for the ORMExtractParser
+        :param args: Namespace
+        :return: nothing
+        """
+
+    Base = ORMmanage.MyBase(args.database[0])
+    Base.create_tables()
+
+    # if (args.table[0] not in Base.__dir__()):
+    #     print("Please add table {} in the database".format(args.table[0]))
+    #     return
+
+    URLs = UCI.csvToList(args.path[0])
+
+    i=0
+    for url in URLs:
+        print(str(i))
+        i += 1
+        Base.adding(url,args.table[0], args.extraction)
+
+
 if __name__ == "__main__":
+    # ---------------------
+    #  Main parser
+    # ---------------------
     parser = MyParser(description="Gan interaction program")
     subparsers = parser.add_subparsers(help='commands')
 
+    # ---------------------
+    #  Graph parser
+    # ---------------------
     graphParser = subparsers.add_parser("graph", help="Used to generate graphs of the accuracy and loss for a GAN")
     graphParser.add_argument("--beginLR", required=True, nargs=1, type=float, help="First learning rate")
     graphParser.add_argument("--endLR", required=True, nargs=1, type=float, help="Last learning rate")
@@ -253,13 +350,16 @@ if __name__ == "__main__":
     graphParser.add_argument('-d', "--dataset", required=True, nargs=1, type=str,
                              help="Dataset used to train the GAN. Can be UCI, clean or path")
     graphParser.add_argument('-o', "--output", default="graphs", nargs=1, type=str,
-                             help="Dataset used to train the GAN. Can be UCI, clean or path")
+                             help="Output path where graphs will be stored")
     graphParser.add_argument('-di', "--division", default=1, nargs=1, type=int,
                              help="Into how many graphs the simulation is divided")
     graphParser.add_argument('-t', "--type", required=True, choices=["phish", "clean"], nargs=1, type=str,
-                             help="Into how many graphs the simulation is divided")
+                             help="Data type. Could be phish or clean")
     graphParser.set_defaults(func=graph)
 
+    # ---------------------
+    #  Extract parser
+    # ---------------------
     extractParser = subparsers.add_parser("extract", help="Used to extract features from an URL or a list of URLs")
     typeInputExtract = extractParser.add_mutually_exclusive_group(required=True)
     typeInputExtract.add_argument("-u", "--URL", nargs=1, type=str, help="One URL to extract features from it")
@@ -274,6 +374,9 @@ if __name__ == "__main__":
                                     "to be the path to a existing file")
     extractParser.set_defaults(func=extraction)
 
+    # ---------------------
+    #  Creation parser
+    # ---------------------
     creationParser = subparsers.add_parser("create", help="Used to create a GAN model and save it")
     creationParser.add_argument("-e", "--epochs", required=True, nargs=1, type=int,
                                 help="Number of epoches for the training")
@@ -286,6 +389,9 @@ if __name__ == "__main__":
                                 help="Dataset used to train the GAN. Can be UCI, clean or path")
     creationParser.set_defaults(func=creation)
 
+    # ---------------------
+    #  Predict parser
+    # ---------------------
     predictParser = subparsers.add_parser("predict", help="Used to predict phisihing comportement of an URL")
     predictParser.add_argument("-f", "--file", nargs=1, type=str, required=True,
                                help="File which contains URL(s) to extract features from it. Format : one URL per line")
@@ -295,25 +401,62 @@ if __name__ == "__main__":
     predictParser.add_argument("-o", "--output", default="console", type=str, nargs=1,
                                help="Option to chose the type of ouptput : console or file. If file, the value have "
                                     "to be the path to a existing file")
-    predictParser.add_argument('-t', "--threshold", required=True, nargs=1, type=int,
-                               help="Threshold for the probability of phishing/non-phishing")
     predictParser.set_defaults(func=prediction)
 
+    # ---------------------
+    #  Report parser
+    # ---------------------
     reportGraphParser = subparsers.add_parser("reportGraph",
                                               help="Used to plot graphs of accuracies from classification report")
     reportGraphParser.add_argument("-p", "--path", nargs=1, type=str, required=True,
                                    help="path to the folder contained the folders for each sample size")
     reportGraphParser.set_defaults(func=reportGraph)
 
-
-    historyExtractionParser = subparsers.add_parser("history", help="Used to used to extract browsers history")
+    # ---------------------
+    #  HistoryExtraction parser
+    # ---------------------
+    historyExtractionParser = subparsers.add_parser("historyExtract", help="Used to used to extract browsers history")
     historyExtractionParser.add_argument("-o", "--output", default="console", type=str, nargs=1,
-                               help="Option to chose the type of ouptput : console or file. If file, the value have "
-                                    "to be the path to a existing file")
-    historyExtractionParser.add_argument("-d","--date",type=int,default=0,help="Used to set the date after which the URLs will be extracted from browsers history")
+                                         help="Option to chose the type of ouptput : console or file. If file, the value have "
+                                              "to be the path to a existing file")
+    historyExtractionParser.add_argument("-d", "--date", type=int, default=0,
+                                         help="Used to set the date after which the URLs will be extracted from browsers history")
+    historyExtractionParser.add_argument('-n', "--name", required=True, nargs=1, type=str, help="Name of the save")
+
     historyExtractionParser.set_defaults(func=historyExtract)
 
+    # ---------------------
+    #  HistoryTrain parser
+    # ---------------------
+    historyTrainParser = subparsers.add_parser("historyTrain",
+                                               help="Used to train the GAN to improve him with your history browser")
+    historyTrainParser.add_argument("-l", "--location", required=True, nargs=1, type=str,
+                                    help="Location of the GAN save")
+    historyTrainParser.add_argument("-d", "--date", type=int, default=0,
+                                    help="Used to set the date after which the URLs will be extracted from browsers history")
+    historyTrainParser.add_argument('-di', "--division", default=1, nargs=1, type=int,
+                                    help="Into how many graphs the simulation is divided")
+    historyTrainParser.add_argument('-e', "--epochs", required=True, nargs=1, type=int,
+                                    help="Number of epoches for the training")
+    historyTrainParser.add_argument('-o', "--output", default="graphs", nargs=1, type=str,
+                                    help="Output path where graphs will be stored")
+    historyTrainParser.add_argument('-plt', "--pltFrequency", required=True, nargs=1, type=int,
+                                    help="Frequency of the plots on graphs")
+    historyTrainParser.set_defaults(func=historyTrain)
 
+    # ---------------------
+    #  ORMextract Parser
+    # ---------------------
+    ORMExtractParser = subparsers.add_parser("ormextract",
+                                               help="Used to extract web content and store it in a database")
+
+    historyTrainParser.set_defaults(func=ORMExtract)
+
+
+
+    # ---------------------
+    #  Parse
+    # ---------------------
     args = parser.parse_args()
     print(args)
     args.func(args)
