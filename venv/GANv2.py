@@ -225,7 +225,7 @@ class GAN:
 
         del json_file, loaded_model_json
 
-    def classReport(self, cleanTestDataset, phishTestDataset):
+    def classReport(self, cleanTestDataset, phishTestDataset, calculate = True):
         """
         Classification report for the GAN after training
         :param cleanTestDataset: list of list
@@ -243,41 +243,48 @@ class GAN:
             prediction.append(self.discriminator.predict_on_batch(np.array(i).astype(np.int)[:].reshape(1, 30, 1)))
 
         ## Calculate the best threshold
-        threshold = ((sum(prediction[:len(cleanTestDataset)]) / len(cleanTestDataset)) + (
+        self.threshold = ((sum(prediction[:len(cleanTestDataset)]) / len(cleanTestDataset)) + (
                 sum(prediction[len(cleanTestDataset):]) / len(phishTestDataset))) / 2
 
-        ## Generate the predict results
-        for i in prediction:
-            if self.dataType == "phish" and i[0][0] > threshold:
-                predict.append("phish")
-            elif self.dataType != "phish" and i[0][0] < threshold:
-                predict.append("phish")
-            else:
-                predict.append("clean")
+        if calculate:
+            ## Generate the predict results
+            for i in prediction:
+                if self.dataType == "phish" and i[0][0] > self.threshold:
+                    predict.append("phish")
+                elif self.dataType != "phish" and i[0][0] < self.threshold:
+                    predict.append("phish")
+                else:
+                    predict.append("clean")
 
-        return classification_report(np.array(true), np.array(predict), output_dict=True)
+            return classification_report(np.array(true), np.array(predict), output_dict=True)
+        return
 
-    def train(self, epochs, path, batch_size=128, plotFrequency=20, predict=False):
+    def train(self, epochs, data, plotFrequency=20, predict=False, phishData = None, cleanData = None):
         """
         Train the GAN
         :param epochs: int
-        :param path: string (path to the dataset used to train the GAN)
-        :param batch_size: int
+        :param data: string (path to the dataset used to train the GAN)
+        :param self.sampleSize: int
         :param plotFrequency: int
         :param predict bool (if the training include prediction on test datasets)
         :return: list of 7 list (to plot training/validation accuracy/loss of generator/discriminator)
         """
 
+
         # Load the training dataset
-        X_train = list(UCI.csvToList(path)[1].values())
+        X_train = list(data)
 
         # Load testing datasets
-        phisTest = list(UCI.csvToList(PHIS_PATH_TEST)[1].values())
-        cleanTest = list(UCI.csvToList(CLEAN_PATH_TEST)[1].values())
+        if phishData is None or cleanData is None :
+            phisTest = list(UCI.csvToList(PHIS_PATH_TEST)[1].values())
+            cleanTest = list(UCI.csvToList(CLEAN_PATH_TEST)[1].values())
+        else:
+            phisTest = list(phishData)
+            cleanTest=list(cleanData)
 
         # Adversarial ground truths
-        valid = np.ones((batch_size, 1))
-        fake = np.zeros((batch_size, 1))
+        valid = np.ones((self.sampleSize, 1))
+        fake = np.zeros((self.sampleSize, 1))
 
         # Initialize list for the return values
         accuracy = []
@@ -294,51 +301,51 @@ class GAN:
 
             ## Select a random batch of images
             # for training
-            idxt = np.random.randint(1, int(len(X_train) * 0.9), batch_size)
+            idxt = np.random.randint(1, int(len(X_train) * 0.9), self.sampleSize)
             imgst = np.array(X_train)[idxt]
 
             # for validation
-            idxv = np.random.randint(int(len(X_train) * 0.9), len(X_train), batch_size)
+            idxv = np.random.randint(int(len(X_train) * 0.9), len(X_train), self.sampleSize)
             imgsv = np.array(X_train)[idxv]
 
             #### Training
 
-            noise = np.random.normal(0, 1, (batch_size, self.countData))
+            noise = np.random.normal(0, 1, (self.sampleSize, self.countData))
             # Generate a batch of new data for training
             gen_data = self.generator.predict(noise)
 
             # ---------------------
             #  Train Discriminator
             # ---------------------
-            d_loss_real = self.discriminator.train_on_batch(imgst.reshape(batch_size, self.countData, 1), valid)
+            d_loss_real = self.discriminator.train_on_batch(imgst.reshape(self.sampleSize, self.countData, 1), valid)
             d_loss_fake = self.discriminator.train_on_batch(gen_data, fake)
             d_loss = 0.5 * np.add(d_loss_real, d_loss_fake)
 
             # ---------------------
             #  Train Generator
             # ---------------------
-            noise = np.random.normal(0, 1, (batch_size, self.countData))
+            noise = np.random.normal(0, 1, (self.sampleSize, self.countData))
 
             # Train the generator (to have the discriminator label samples as valid)
             g_loss = self.combined.train_on_batch(noise, valid)
 
             #### Validation
 
-            noise = np.random.normal(0, 1, (batch_size, self.countData))
+            noise = np.random.normal(0, 1, (self.sampleSize, self.countData))
             # Generate a batch of new data for validation
             gen_data = self.generator.predict(noise)
 
             # ---------------------
             #  Validate Discriminator
             # ---------------------
-            vd_loss_real = self.discriminator.test_on_batch(imgsv.reshape(batch_size, self.countData, 1), valid)
+            vd_loss_real = self.discriminator.test_on_batch(imgsv.reshape(self.sampleSize, self.countData, 1), valid)
             vd_loss_fake = self.discriminator.test_on_batch(gen_data, fake)
             vd_loss = 0.5 * np.add(vd_loss_real, vd_loss_fake)
 
             # ---------------------
             #  Validate Generator
             # ---------------------
-            noise = np.random.normal(0, 1, (batch_size, self.countData))
+            noise = np.random.normal(0, 1, (self.sampleSize, self.countData))
             vg_loss = self.combined.test_on_batch(noise, valid)
 
             # Plot the progress
@@ -366,5 +373,8 @@ class GAN:
             del idxt, imgst, idxv, imgsv, noise, g_loss, gen_data, d_loss, d_loss_real, d_loss_fake, vd_loss_real,\
                 vd_loss, vd_loss_fake, vg_loss
         del X_train
+
+        if not predict:
+            self.classReport(cleanTest, phisTest,calculate=False)
 
         return X, accuracy, Dloss, Gloss, vaccuracy, vDloss, vGloss, bestClass, bestEpoch
