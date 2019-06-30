@@ -479,7 +479,6 @@ if __name__ == "__main__":
                                   help="Name of the table where data will be stored")
     ORMExtractParser.add_argument("-e", "--extraction", action="store_true", help="Verbose option")
 
-
     ORMExtractParser.set_defaults(func=ORMExtract)
 
     # ---------------------

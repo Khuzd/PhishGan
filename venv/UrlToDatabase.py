@@ -1039,6 +1039,10 @@ class URL:
             return None
 
     def getFeatures(self):
+        """
+        Get all features
+        :return: list
+        """
         return ([self.ipWeight, self.lenghtWeight, self.shorteningWeight, self.atWeight, self.doubleSlashWeight,
                  self.dashWeight, self.subDomainWeight, self.certificateAgeWeight, self.expirationWeight,
                  self.faviconWeight, self.portWeight, self.httpWeight, self.requestedWeight, self.anchorsWeight,
@@ -1046,6 +1050,47 @@ class URL:
                  self.barCustomWeight, self.rightClickWeight, self.popupWeight, self.iFrameWeight, self.domainAgeWeight,
                  self.dnsWeight, self.trafficWeight, self.pageRankWeight, self.indexingWeight, self.linksWeight,
                  self.statisticWeight])
+
+    def setFeatures(self, features):
+        """
+        Set the features from a list
+        :param features: list
+        :return: nothing
+        """
+        if type(features) is not list or len(features) != 30:
+            logger.error("Bad argument for features setter")
+            return
+        self.ipWeight = features[0]
+        self.lenghtWeight = features[1]
+        self.shorteningWeight = features[2]
+        self.atWeight = features[3]
+        self.doubleSlashWeight = features[4]
+        self.dashWeight = features[5]
+        self.subDomainWeight = features[6]
+        self.certificateAgeWeight = features[7]
+        self.expirationWeight = features[8]
+        self.faviconWeight = features[9]
+        self.portWeight = features[10]
+        self.httpWeight = features[11]
+        self.requestedWeight = features[12]
+        self.anchorsWeight = features[13]
+        self.tagWeight = features[14]
+        self.SFHWeight = features[15]
+        self.emailWeight = features[16]
+        self.abnormalWeight = features[17]
+        self.forwardWeight = features[18]
+        self.barCustomWeight = features[19]
+        self.rightClickWeight = features[20]
+        self.popupWeight = features[21]
+        self.iFrameWeight = features[22]
+        self.domainAgeWeight = features[23]
+        self.dnsWeight = features[24]
+        self.trafficWeight = features[25]
+        self.pageRankWeight = features[26]
+        self.indexingWeight = features[27]
+        self.linksWeight = features[28]
+        self.statisticWeight = features[29]
+        return
 
 
 def extraction(inputFile, output, begin=1):
