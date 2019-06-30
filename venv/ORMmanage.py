@@ -22,7 +22,7 @@ class MyBase:
         self.session = self.Session()
 
     class Clean(Base):
-        __tablename__ = 'cleanTest'
+        __tablename__ = 'clean'
 
         id = Column(Integer, primary_key=True)
         url = Column(String)

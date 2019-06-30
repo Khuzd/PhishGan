@@ -47,6 +47,8 @@ import browser_history_extraction
 import ORMmanage
 import pickle
 import decimal
+from stem import Signal
+from stem.control import Controller
 
 UCI_PATH = 'data/UCI_dataset.csv'
 CLEAN_PATH = 'data/Amazon_top25000outtrain.csv'
@@ -330,13 +332,17 @@ def ORMExtract(args):
     Base = ORMmanage.MyBase(args.database[0])
     Base.create_tables()
 
-    URLs = importData.csvToList(args.path[0])
+    URLs = importData.csvToList(args.path[0])[1].keys()
 
-    i = 0
+    i = 1
     for url in URLs:
         logger.debug(str(i))
         i += 1
         Base.adding(url, args.table[0], args.extraction)
+        if i % 50 == 0:
+            with Controller.from_port(port=9051) as controller:
+                controller.authenticate()
+                controller.signal(Signal.NEWNYM)
 
 
 if __name__ == "__main__":
@@ -471,6 +477,8 @@ if __name__ == "__main__":
                                   help="Path to the csv file which contained URLs")
     ORMExtractParser.add_argument("-t", "--table", nargs=1, type=str, required=True,
                                   help="Name of the table where data will be stored")
+    ORMExtractParser.add_argument("-e", "--extraction", action="store_true", help="Verbose option")
+
 
     ORMExtractParser.set_defaults(func=ORMExtract)
 
