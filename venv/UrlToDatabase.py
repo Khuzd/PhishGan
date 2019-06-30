@@ -21,6 +21,7 @@ import dns.resolver
 import requests
 import socks
 from bs4 import BeautifulSoup
+from func_timeout import func_timeout, FunctionTimedOut
 
 import googleIndexChecker
 from libs.whois import whois
@@ -89,7 +90,7 @@ class URL:
             while retry:  # to retry if whois database kick us
                 try:
                     retry = False
-                    self.whoisDomain = whois(str(self.domain))
+                    self.whoisDomain = func_timeout(30, whois, kwargs={'Url': str(self.domain)})
 
                 except (PywhoisError, socket.gaierror, socks.GeneralProxyError):
                     logger.error("URL : " + self.domain + " not in whois database")
@@ -97,18 +98,31 @@ class URL:
                 except (ConnectionResetError, socket.timeout, ConnectionAbortedError):
                     pass
 
+                except FunctionTimedOut:
+                    logger.error("Whois timeout")
+
             try:
-                self.html = requests.get("https://" + self.url, ).content
+                self.html = func_timeout(30, requests.get, kwargs={'url': "https://" + self.url}).content
                 self.http = "https"
+
+            except FunctionTimedOut:
+                logger.error("Get timeout")
 
             except:
                 try:
-                    self.html = requests.get("http://" + self.url).content
+                    self.html = func_timeout(30, requests.get, kwargs={'url': "http://" + self.url}).content
                     self.http = "http"
+                except FunctionTimedOut:
+                    logger.error("Get timeout")
+
                 except:
                     try:
-                        self.html = requests.get(self.url).content
+                        self.html = func_timeout(30, requests.get, kwargs={'url': self.url}).content
                         self.http = ""
+
+                    except FunctionTimedOut:
+                        logger.error("Get timeout")
+
                     except:
                         logger.error("Can not get HTML content from : " + self.url)
                         # time.sleep(1.5)
