@@ -135,7 +135,48 @@ If you need any help for this functionality:
 python main.py predict -h
 ```
 
+### History web browsers URL extraction
+You can extract URLs from your personal web history.
+It supports Chrome, Firefox and Opera on Windows, MacOS and Linux.
 
+Example:
+```
+python main.py historyExtract [-h] [-o OUTPUT] [-d DATE] -n NAME
+```
+
+If you need any help for this functionality: 
+```
+python main.py historyExtract -h
+```
+
+### History web browsers URL used to train a GAN
+You can use your personal web browser history to train an already existed GAN model.
+It supports Chrome, Firefox and Opera on Windows, MacOS and Linux.
+It will use the URL already stored into a sqlite3 database, which can be created with the ormextract option.
+
+Example:
+```
+python main.py main.py historyTrain [-h] -l LOCATION [-d DATE] [-di DIVISION] -e EPOCHS [-o OUTPUT] -plt PLTFREQUENCY
+```
+
+If you need any help for this functionality: 
+```
+python main.py historyTrain -h
+```
+
+### Adding URL to a sqlite3 database
+You can add URLs to a sqlite3 database.
+That permit you to reuse all data in the future without needing to extract it again.
+
+Example:
+```
+python main.py ormextract [-h] -d DATABASE -p PATH -t TABLE [-e]
+```
+
+If you need any help for this functionality: 
+```
+python main.py ormextract -h
+```
 
 ## Built With
 
