@@ -231,17 +231,17 @@ def prediction(args):
             if args.verbose is True:
                 if args.output == "console" or args.output[0] == "console":
                     if results[0] < gan.thresHold:
-                        print(str(url) + " : " + str(results[0]) + " -> phishing")
+                        print(str(url) + " : " + str(results[0][0]) + " -> phishing")
                     else:
-                        print(str(url) + " : " + str(results[0]) + " -> safe")
+                        print(str(url) + " : " + str(results[0][0]) + " -> safe")
 
                 else:
                     with open(args.output[0], 'a', newline='') as outcsvfile:
                         writer = csv.writer(outcsvfile, delimiter=' ', quotechar='"')
                         if results[0] < gan.thresHold:
-                            writer.writerow([str(url) + " : " + str(results[0]) + " -> phishing"])
+                            writer.writerow([str(url) + " : {} -> phishing".format(results[0][0])])
                         else:
-                            writer.writerow([str(url) + " : " + str(results[0]) + " -> safe"])
+                            writer.writerow([str(url) + " : {} -> safe".format(results[0][0])])
 
             else:
                 if args.output == "console" or args.output[0] == "console":
