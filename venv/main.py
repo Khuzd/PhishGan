@@ -55,7 +55,7 @@ from stem import Signal
 from stem.control import Controller
 import logging
 from logging.handlers import RotatingFileHandler
-from func_timeout import func_timeout, FunctionTimedOut
+from func_timeout import func_timeout
 
 ## Default datasets
 UCI_PATH = 'data/UCI_dataset.csv'
@@ -133,7 +133,7 @@ def extraction(args):
     if args.URL is not None:
         website = UrlToDatabase.URL(args.URL[0])
         try:
-            results = func_timeout(50,website.featuresExtraction)
+            results = func_timeout(50, website.featuresExtraction)
         except Exception as e:
             results = " fail " + str(e)
 
@@ -156,7 +156,7 @@ def extraction(args):
         for url in args.list:
             website = UrlToDatabase.URL(url)
             try:
-                results = func_timeout(50,website.featuresExtraction)
+                results = func_timeout(50, website.featuresExtraction)
             except Exception as e:
                 results = " fail " + str(e)
             if args.output == "console" or args.output[0] == "console":

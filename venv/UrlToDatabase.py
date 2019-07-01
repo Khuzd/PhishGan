@@ -15,6 +15,7 @@ import re
 import socket
 import ssl
 import struct
+
 import dns.resolver
 import requests
 import socks
@@ -1141,7 +1142,7 @@ def extraction(inputFile, output, begin=1):
 
         # Extract features
         try:
-            results = func_timeout(90,website.featuresExtraction)
+            results = func_timeout(90, website.featuresExtraction)
             if results == -1:
                 notReacheable.append(results)
             else:
