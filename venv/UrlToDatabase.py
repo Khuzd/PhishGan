@@ -881,6 +881,7 @@ class URL:
             IPdomain = socket.gethostbyname(self.domain)
         except socket.gaierror:
             self.statisticWeight = -1
+            return
 
         jsonDictIP = json.loads(
             requests.post("https://www.stopbadware.org/sites/all/themes/sbw/clearinghouse.php",
