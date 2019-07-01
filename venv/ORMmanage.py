@@ -79,7 +79,7 @@ class MyBase:
                 website = UrlToDatabase.URL(url)
 
                 # Extract feature if asked
-                if extraction:
+                if extraction and website.html is not None:
                     if type(website.featuresExtraction()) is list:
                         adding = self.__getattribute__(table)(url=website.url, content=pickle.dumps(website))
                         self.session.add(adding)

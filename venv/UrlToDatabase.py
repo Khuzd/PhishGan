@@ -327,25 +327,28 @@ class URL:
         test if the valid duration of the domain is enough long
         :return: -1 or 1
         """
+        if self.whoisDomain is not None:
+            now = datetime.datetime.now()
 
-        now = datetime.datetime.now()
+            expiration = self.whoisDomain.expiration_date
+            if type(expiration) == list:
+                expiration = expiration[0]
 
-        expiration = self.whoisDomain.expiration_date
-        if type(expiration) == list:
-            expiration = expiration[0]
+            try:
+                delta = expiration - now
+            except:
+                logger.error("error expiration domain testing")
+                self.expirationWeight = 0
+                return
 
-        try:
-            delta = expiration - now
-        except:
-            logger.error("error expiration domain testing")
-            return -2
-
-        if delta.days > 365:
-            self.expirationWeight = -1
-            return
+            if delta.days > 365:
+                self.expirationWeight = -1
+                return
+            else:
+                self.expirationWeight = 1
+                return
         else:
             self.expirationWeight = 1
-            return
 
     def faviconTesting(self):
         """
@@ -573,33 +576,33 @@ class URL:
         test if registrant name is in the url
         :return: -1 or 1
         """
-
-        domain = self.whoisDomain.domain.split(".")[0]
-        if "org" in self.whoisDomain:
-            if type(self.whoisDomain["org"]) == list:
-                for org in self.whoisDomain["org"]:
-                    for suborg in re.split(". | ", org):
+        if self.whoisDomain is not None:
+            domain = self.whoisDomain.domain.split(".")[0]
+            if "org" in self.whoisDomain:
+                if type(self.whoisDomain["org"]) == list:
+                    for org in self.whoisDomain["org"]:
+                        for suborg in re.split(". | ", org):
+                            if suborg.lower() in domain.lower():
+                                self.abnormalWeight = -1
+                                return
+                elif self.whoisDomain["org"] is not None:
+                    for suborg in re.split(". | ", self.whoisDomain["org"]):
                         if suborg.lower() in domain.lower():
                             self.abnormalWeight = -1
                             return
-            elif self.whoisDomain["org"] is not None:
-                for suborg in re.split(". | ", self.whoisDomain["org"]):
-                    if suborg.lower() in domain.lower():
-                        self.abnormalWeight = -1
-                        return
 
-        if "org1" in self.whoisDomain:
-            if type(self.whoisDomain["org1"]) == list:
-                for org in self.whoisDomain["org1"]:
-                    for suborg in re.split(". | ", org):
+            if "org1" in self.whoisDomain:
+                if type(self.whoisDomain["org1"]) == list:
+                    for org in self.whoisDomain["org1"]:
+                        for suborg in re.split(". | ", org):
+                            if suborg.lower() in domain.lower():
+                                self.abnormalWeight = -1
+                                return
+                elif self.whoisDomain["org1"] is not None:
+                    for suborg in re.split(". | ", self.whoisDomain["org1"]):
                         if suborg.lower() in domain.lower():
                             self.abnormalWeight = -1
                             return
-            elif self.whoisDomain["org1"] is not None:
-                for suborg in re.split(". | ", self.whoisDomain["org1"]):
-                    if suborg.lower() in domain.lower():
-                        self.abnormalWeight = -1
-                        return
 
         self.abnormalWeight = 1
         return
@@ -713,25 +716,27 @@ class URL:
         testing if domain age is greater than 6 months
         :return: -1, 0 or 1
         """
+        if self.whoisDomain is not None:
+            now = datetime.datetime.now()
 
-        now = datetime.datetime.now()
+            creation = self.whoisDomain.creation_date
 
-        creation = self.whoisDomain.creation_date
+            if type(creation) == list:
+                creation = creation[0]
+            try:
+                delta = now - creation
+            except:
+                self.domainAgeWeight = 0
+                return
 
-        if type(creation) == list:
-            creation = creation[0]
-        try:
-            delta = now - creation
-        except:
-            self.domainAgeWeight = 0
-            return
-
-        if delta.days > 365 / 2:
-            self.domainAgeWeight = -1
-            return
+            if delta.days > 365 / 2:
+                self.domainAgeWeight = -1
+                return
+            else:
+                self.domainAgeWeight = 1
+                return
         else:
             self.domainAgeWeight = 1
-            return
 
     def DNSRecordTesting(self):
         """
