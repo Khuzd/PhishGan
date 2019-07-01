@@ -244,6 +244,9 @@ class GAN:
         self.combined.load_weights(path + "/" + prefix + "combined_model.h5")
         self.discriminator.load_weights(path + "/" + prefix + "discriminator_model.h5")
         self.generator.load_weights(path + "/" + prefix + "generator_model.h5")
+        
+        ## Load optimizer
+        self.optimizer = tf.train.AdamOptimizer(learning_rate=self.lr)
 
         del json_file, loaded_model_json
 
