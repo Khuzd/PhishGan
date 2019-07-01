@@ -7,7 +7,9 @@ Author : Pierrick ROBIC--BUTEZ
 2019
 """
 
-from __future__ import print_function, division
+# ---------------------
+#  Define different seeds to permit repeatability
+# ---------------------
 
 seed_value = 42
 
@@ -47,31 +49,43 @@ from keras.utils import plot_model
 
 from sklearn.metrics import classification_report
 
-import UCI
+import importData
+import pickle
+import logging
+import json
 
-os.environ["PATH"] += os.pathsep + 'C:/Program Files (x86)/Graphviz2.38/bin'
+# Import logger
+logger = logging.getLogger('main')
 
+# os.environ["PATH"] += os.pathsep + 'C:/Program Files (x86)/Graphviz2.38/bin'
+
+# Default datasets path
 PHIS_PATH_TEST = "data/Phishtank_outtest.csv"
 CLEAN_PATH_TEST = "data/Amazon_top25000outtest.csv"
 
 
 class GAN:
-    def __init__(self, lr):
+    def __init__(self, lr, sample):
         """
         :param lr: float (learning rate)
+        :param sample: int
         """
+        # ---------------------
+        #  Define attributes
+        # ---------------------
         self.channels = 1
         self.countData = 30
         self.data_shape = (self.countData, self.channels)
-
+        self.thresHold = None
+        self.sampleSize = sample
         self.dataType = "phish"
-
-        optimizer = tf.train.AdamOptimizer(learning_rate=lr)
+        self.lr = lr
+        self.optimizer = tf.train.AdamOptimizer(learning_rate=self.lr)
 
         # Build and compile the discriminator
         self.discriminator = self.build_discriminator()
         self.discriminator.compile(loss='binary_crossentropy',
-                                   optimizer=optimizer,
+                                   optimizer=self.optimizer,
                                    metrics=['accuracy'])
 
         # Build the generator
@@ -87,8 +101,10 @@ class GAN:
         # The combined model  (stacked generator and discriminator)
         # Trains the generator to fool the discriminator
         self.combined = Model(z, validity)
-        self.combined.compile(loss='binary_crossentropy', optimizer=optimizer)
-        del validity, img, z, optimizer
+        self.combined.compile(loss='binary_crossentropy', optimizer=self.optimizer)
+        del validity, img, z, self.optimizer
+
+        return
 
     def build_generator(self, plot=False):
         """
@@ -96,7 +112,9 @@ class GAN:
         :param plot: int
         :return: Model or nothing if plot == True
         """
-
+        # ---------------------
+        #  Define model of generator
+        # ---------------------
         model = Sequential()
         model.add(Dense(50, input_dim=self.countData))
         model.add(LeakyReLU(alpha=0.2))
@@ -127,7 +145,9 @@ class GAN:
         Create the discriminator and plot the neural network configuration if plot == True
         :return: Model or nothing if plot == True
         """
-
+        # ---------------------
+        #  Define model of discriminator
+        # ---------------------
         model = Sequential()
         model.add(Flatten(input_shape=self.data_shape))
         model.add(Dense(50))
@@ -158,6 +178,7 @@ class GAN:
         :return: nothing
         """
 
+
         ## Save models
         # Combined
         combined_model_json = self.combined.to_json()
@@ -177,6 +198,15 @@ class GAN:
         self.discriminator.save_weights(path + "/" + prefix + "discriminator_model.h5")
         self.generator.save_weights(path + "/" + prefix + "generator_model.h5")
 
+        ## Save object
+        with open(path + "/" + prefix + "object.json", "w") as json_file:
+            tmp = self.__dict__
+            tmp["generator"] = None
+            tmp["discriminator"] = None
+            tmp["combined"] = None
+            print(tmp)
+            json_file.write(json.dumps(tmp))
+
         del generator_model_json, discriminator_model_json, combined_model_json
 
     def load(self, prefix, path):
@@ -186,6 +216,11 @@ class GAN:
         :param path: string
         :return: nothing
         """
+        ## Load object
+        with open(path + "/" + prefix + "object.json", "r") as json_file:
+            tmp = json.loads(json_file.read())
+        self.__dict__.update(tmp)
+
         ## Load models
         # Combined
         json_file = open(path + "/" + prefix + "combined_model.json", 'r')
@@ -210,13 +245,17 @@ class GAN:
         self.discriminator.load_weights(path + "/" + prefix + "discriminator_model.h5")
         self.generator.load_weights(path + "/" + prefix + "generator_model.h5")
 
+        ## Load optimizer
+        self.optimizer = tf.train.AdamOptimizer(learning_rate=self.lr)
+
         del json_file, loaded_model_json
 
-    def classReport(self, cleanTestDataset, phishTestDataset):
+    def classReport(self, cleanTestDataset, phishTestDataset, calculate=True):
         """
         Classification report for the GAN after training
         :param cleanTestDataset: list of list
         :param phishTestDataset:  list of list
+        :param calculate: bool
         :return: print
         """
 
@@ -230,41 +269,48 @@ class GAN:
             prediction.append(self.discriminator.predict_on_batch(np.array(i).astype(np.int)[:].reshape(1, 30, 1)))
 
         ## Calculate the best threshold
-        threshold = ((sum(prediction[:len(cleanTestDataset)]) / len(cleanTestDataset)) + (
-                sum(prediction[len(cleanTestDataset):]) / len(phishTestDataset))) / 2
+        self.thresHold = float(((sum(prediction[:len(cleanTestDataset)]) / len(cleanTestDataset)) + (
+                sum(prediction[len(cleanTestDataset):]) / len(phishTestDataset))) / 2)
 
-        ## Generate the predict results
-        for i in prediction:
-            if self.dataType == "phish" and i[0][0] > threshold:
-                predict.append("phish")
-            elif self.dataType != "phish" and i[0][0] < threshold:
-                predict.append("phish")
-            else:
-                predict.append("clean")
+        if calculate:
+            ## Generate the predict results
+            for i in prediction:
+                if self.dataType == "phish" and i[0][0] > self.thresHold:
+                    predict.append("phish")
+                elif self.dataType != "phish" and i[0][0] < self.thresHold:
+                    predict.append("phish")
+                else:
+                    predict.append("clean")
 
-        return classification_report(np.array(true), np.array(predict), output_dict=True)
+            return classification_report(np.array(true), np.array(predict), output_dict=True)
+        return
 
-    def train(self, epochs, path, batch_size=128, plotFrequency=20, predict=False):
+    def train(self, epochs, data, plotFrequency=20, predict=False, phishData=None, cleanData=None):
         """
         Train the GAN
         :param epochs: int
-        :param path: string (path to the dataset used to train the GAN)
-        :param batch_size: int
+        :param data: string (path to the dataset used to train the GAN)
         :param plotFrequency: int
         :param predict bool (if the training include prediction on test datasets)
+        :param phishData: list of lists
+        :param cleanData: list of lists
         :return: list of 7 list (to plot training/validation accuracy/loss of generator/discriminator)
         """
 
         # Load the training dataset
-        X_train = list(UCI.csvToList(path)[1].values())
+        X_train = list(data)
 
         # Load testing datasets
-        phisTest = list(UCI.csvToList(PHIS_PATH_TEST)[1].values())
-        cleanTest = list(UCI.csvToList(CLEAN_PATH_TEST)[1].values())
+        if phishData is None or cleanData is None:
+            phisTest = list(importData.csvToList(PHIS_PATH_TEST)[1].values())
+            cleanTest = list(importData.csvToList(CLEAN_PATH_TEST)[1].values())
+        else:
+            phisTest = list(phishData)
+            cleanTest = list(cleanData)
 
         # Adversarial ground truths
-        valid = np.ones((batch_size, 1))
-        fake = np.zeros((batch_size, 1))
+        valid = np.ones((self.sampleSize, 1))
+        fake = np.zeros((self.sampleSize, 1))
 
         # Initialize list for the return values
         accuracy = []
@@ -281,56 +327,56 @@ class GAN:
 
             ## Select a random batch of images
             # for training
-            idxt = np.random.randint(1, int(len(X_train) * 0.9), batch_size)
+            idxt = np.random.randint(1, int(len(X_train) * 0.9), self.sampleSize)
             imgst = np.array(X_train)[idxt]
 
             # for validation
-            idxv = np.random.randint(int(len(X_train) * 0.9), len(X_train), batch_size)
+            idxv = np.random.randint(int(len(X_train) * 0.9), len(X_train), self.sampleSize)
             imgsv = np.array(X_train)[idxv]
 
             #### Training
 
-            noise = np.random.normal(0, 1, (batch_size, self.countData))
+            noise = np.random.normal(0, 1, (self.sampleSize, self.countData))
             # Generate a batch of new data for training
             gen_data = self.generator.predict(noise)
 
             # ---------------------
             #  Train Discriminator
             # ---------------------
-            d_loss_real = self.discriminator.train_on_batch(imgst.reshape(batch_size, self.countData, 1), valid)
+            d_loss_real = self.discriminator.train_on_batch(imgst.reshape(self.sampleSize, self.countData, 1), valid)
             d_loss_fake = self.discriminator.train_on_batch(gen_data, fake)
             d_loss = 0.5 * np.add(d_loss_real, d_loss_fake)
 
             # ---------------------
             #  Train Generator
             # ---------------------
-            noise = np.random.normal(0, 1, (batch_size, self.countData))
+            noise = np.random.normal(0, 1, (self.sampleSize, self.countData))
 
             # Train the generator (to have the discriminator label samples as valid)
             g_loss = self.combined.train_on_batch(noise, valid)
 
             #### Validation
 
-            noise = np.random.normal(0, 1, (batch_size, self.countData))
+            noise = np.random.normal(0, 1, (self.sampleSize, self.countData))
             # Generate a batch of new data for validation
             gen_data = self.generator.predict(noise)
 
             # ---------------------
             #  Validate Discriminator
             # ---------------------
-            vd_loss_real = self.discriminator.test_on_batch(imgsv.reshape(batch_size, self.countData, 1), valid)
+            vd_loss_real = self.discriminator.test_on_batch(imgsv.reshape(self.sampleSize, self.countData, 1), valid)
             vd_loss_fake = self.discriminator.test_on_batch(gen_data, fake)
             vd_loss = 0.5 * np.add(vd_loss_real, vd_loss_fake)
 
             # ---------------------
             #  Validate Generator
             # ---------------------
-            noise = np.random.normal(0, 1, (batch_size, self.countData))
+            noise = np.random.normal(0, 1, (self.sampleSize, self.countData))
             vg_loss = self.combined.test_on_batch(noise, valid)
 
             # Plot the progress
             if epoch % plotFrequency == 0:
-                print("%d [D loss: %f, acc.: %.2f%%] [G loss: %f] [D vloss: %f, vacc.: %.2f%%] [G vloss: %f]" % (
+                logger.info("%d [D loss: %f, acc.: %.2f%%] [G loss: %f] [D vloss: %f, vacc.: %.2f%%] [G vloss: %f]" % (
                     epoch, d_loss[0], 100 * d_loss[1], g_loss, vd_loss[0], 100 * vd_loss[1], vg_loss))
                 accuracy.append(d_loss[1])
                 X.append(epoch)
@@ -350,8 +396,11 @@ class GAN:
                         bestEpoch = epoch
                 del report
 
-            del idxt, imgst, idxv, imgsv, noise, g_loss, gen_data, d_loss, d_loss_real, d_loss_fake, vd_loss_real,\
+            del idxt, imgst, idxv, imgsv, noise, g_loss, gen_data, d_loss, d_loss_real, d_loss_fake, vd_loss_real, \
                 vd_loss, vd_loss_fake, vg_loss
         del X_train
+
+        if not predict:
+            self.classReport(cleanTest, phisTest, calculate=False)
 
         return X, accuracy, Dloss, Gloss, vaccuracy, vDloss, vGloss, bestClass, bestEpoch

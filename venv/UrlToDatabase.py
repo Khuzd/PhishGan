@@ -7,18 +7,31 @@ Author : Pierrick ROBIC--BUTEZ
 2019
 """
 
-import re
-import whois
-import datetime
-import requests
-from bs4 import BeautifulSoup
-import socket
-import dns.resolver
-import json
-import struct
-import ssl
-from multiprocessing import Process, Queue
 import csv
+import datetime
+import json
+import logging
+import re
+import socket
+import ssl
+import struct
+
+import dns.resolver
+import requests
+import socks
+from bs4 import BeautifulSoup
+from func_timeout import func_timeout, FunctionTimedOut
+
+import googleIndexChecker
+from libs.whois import whois
+from libs.whois.parser import PywhoisError
+
+# Import logger
+logger = logging.getLogger('main')
+
+# ---------------------
+#  Set constants
+# ---------------------
 
 columns = ["having_IP_Address", "URL_Length", "Shortining_Service", "having_At_Symbol", "double_slash_redirecting",
            "Prefix_Suffix", "having_Sub_Domain", "SSLfinal_State", "Domain_registeration_length", "Favicon", "port",
@@ -57,889 +70,1098 @@ TRUSTED_ISSUERS = ["geotrust", "godaddy", "network solutions", "thawte", "comodo
                    "rapidssl", "digicert"]
 
 
-def IPtesting(domain):
-    """
-    test if the domain is a IP adress
-    :param domain: string
-    :return: -1 or 1
-    """
-
-    if (re.match(r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}", str(domain))) is not None:
-        return 1
-    elif (re.match(r"0x..\.0x..\.0x..\.0x..", str(domain))) is not None:
-        return 1
-    else:
-        return -1
-
-
-def leghtTesting(url):
-    """
-    test if url lenght is <54, between 54 and 75 or over 75
-    :param url:string
-    :return: -1,0 or 1
-    """
-
-    if len(url) < 54:
-        return -1
-    elif 54 < len(url) < 75:
-        return 0
-    else:
-        return 1
-
-
-def shortenerTEsting(url):
-    """
-    test if the url is a short url
-    :param url: string
-    :return: -1 or 1
-    """
-    for short in URL_SHORTENER:
-        if short.lower() in url:
-            return 1
-
-    return -1
-
-
-def atSymbolTetsting(url):
-    """
-    test if the at symbol is in url
-    :param url: string
-    :return: -1 or 1
-    """
-    if "@" in url:
-        return 1
-    return -1
-
-
-def doubleSlashTesting(url):
-    """
-    test if there is double slash in url
-    :param url: string
-    :return: -1 or 1
-    """
-    if "//" in url:
-        return 1
-    return -1
-
-
-def dashTesting(url):
-    """
-        test if there is dash in url
-        :param url: string
-        :return: -1 or 1
-        """
-    if "-" in url:
-        return 1
-    return -1
-
-
-def subDomainTesting(domain):
-    """
-    test if there are too many subdomains
-    :param domain:string
-    :return: -1,0 or 1
-    """
-    if len(domain.split("www.")) == 2:
-        domain = domain.split("www.")[1]
-
-    for tld in CCTLD:
-        if re.match(("(.)*" + tld + "$"), str(domain)):
-            domain = domain[:len(domain) - len(tld)]
-            if domain.count('.') <= 1:
-                return -1
-            elif domain.count('.') == 2:
-                return 0
-            else:
-                return 1
-    if domain.count('.') <= 1:
-        return -1
-    elif domain.count('.') == 2:
-        return 0
-    else:
-        return 1
-
-
-def ageCertificateTesting(domain):
-    """
-    test if the certificate is not too young and delivered by a trusted issuer
-    :param domain: string
-    :return: -1,0 or 1
-    """
-
-    ctx = ssl.create_default_context()
-    s = ctx.wrap_socket(socket.socket(), server_hostname=domain)
-    try:
-        s.connect((domain, 443))
-        cert = s.getpeercert()
-    except:
-
-        ctx = ssl.create_default_context()
-        s = ctx.wrap_socket(socket.socket(), server_hostname=domain)
-        try:
-            s.connect((domain, 443))
-            cert = s.getpeercert()
-        except:
-            return 1
-
-    issuer = dict(x[0] for x in cert['issuer'])["organizationName"].lower()
-    beginDate = datetime.datetime.strptime(cert["notBefore"].split(' GMT')[0], '%b  %d %H:%M:%S %Y')
-    endDate = datetime.datetime.strptime(cert["notAfter"].split(' GMT')[0], '%b  %d %H:%M:%S %Y')
-
-    delta = endDate - beginDate
-
-    # print (issuer)
-    # print (TRUSTED_ISSUERS)
-
-    for trusted in TRUSTED_ISSUERS:
-        if trusted in issuer:
-            if delta.days >= 365:
-                return -1
-
-    return 0
-
-
-def expirationDomainTesting(whoisResult):
-    """
-    test if the valid duration of the domain is enough long
-    :param whoisResult:string
-    :return: -1 or 1
-    """
-
-    now = datetime.datetime.now()
-
-    expiration = whoisResult.expiration_date
-    if type(expiration) == list:
-        expiration = expiration[0]
-
-    try:
-        delta = expiration - now
-    except:
-        return -2
-
-    if delta.days > 365:
-        return -1
-    else:
-        return 1
-
-
-def faviconTesting(html, domain):
-    """
-    test if the favicon url is from the same domain as the site
-    :param html: string (html source code)
-    :param domain: string
-    :return: -1 or 1
-    """
-
-    soup = BeautifulSoup(html, features="lxml")
-    head = soup.find("head")
-    favicon = None
-    if head is not None:
-        favicon = head.find("link", {"rel": "icon"})
-
-    if favicon is not None:
-        linkFavicon = favicon.get("href")
-        if domain not in linkFavicon:
-            return 1
-
-    return -1
-
-
-def portTesting(domain):
-    """
-    test all important ports to check if they are opened or closed
-    :param domain: string
-    :return: -1 or 1 or error
-    """
-
-    try:
-        remoteServerIP = socket.gethostbyname(domain)
-
-        for port in PORTS_TO_SCAN:
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            sock.settimeout(0.3)
-            result = sock.connect_ex((remoteServerIP, port[0]))
-            sock.close()
-
-            if result == 0 and port[1] is False:
-                return 1
-            elif result != 0 and port[1] is True:
-                return 1
-        return -1
-
-    except Exception as e:
-        print(e)
-        return -2
-
-
-def httpTesting(url):
-    """
-    test if there is the http token into the URL
-    :param url: string
-    :return: -1 or 1
-    """
-    if "http" in url:
-        return 1
-
-    return -1
-
-
-def requestedURL(html, domain):
-    """
-    test the percentage of external objects
-    :param html: string (html source code)
-    :param domain: string
-    :return: -1,0 or 1
-    """
-
-    totalLinks = 0
-    externalLinks = 0
-
-    m = []
-
-    soup = BeautifulSoup(html, features="lxml")
-
-    for p in soup.find_all("img"):
-        if p.has_attr("src") and "http" in p.get("src"):
-            m.append(p.get('src'))
-
-    for p in soup.find_all("video"):
-        for q in p.find_all("source"):
-            if q.has_attr("src") and "http" in q.get("src"):
-                m.append(q.get('src'))
-
-    for p in soup.find_all("audio"):
-        for q in p.find_all("source"):
-            if q.has_attr("src") and "http" in q.get("src"):
-                m.append(q.get('src'))
-
-    for link in m:
-        if domain not in link:
-            externalLinks += 1
-        totalLinks += 1
-
-    if totalLinks != 0:
-        percentage = externalLinks / totalLinks
-        if percentage >= 0.61:
-            return 1
-        elif percentage >= 0.22:
-            return 0
-
-    return -1
-
-
-def anchorsTesting(html, domain):
-    """
-    test the percentage of external links anchors
-    :param html: string (html source code)
-    :param domain: string
-    :return: -1,0 or 1
-    """
-    soup = BeautifulSoup(html, features="lxml")
-
-    tags = soup.findAll("a", href=True)
-    anchors = []
-    for tag in tags:
-        anchors.append(tag.get("href"))
-
-    totalLink = len(anchors)
-    externalLinks = 0
-
-    for anchor in anchors:
-        if 'http' in anchor and domain not in anchor:
-            externalLinks += 1
-
-    if externalLinks == 0 or externalLinks / totalLink < 0.31:
-        return -1
-
-    elif externalLinks / totalLink <= 0.67:
-        return 0
-
-    return 1
-
-
-def tagsLinksTesting(html, domain):
-    """
-    test the percentage of external links into meta, script and link tags
-    :param html: string (html source code)
-    :param domain: string
-    :return: -1,0 or 1
-    """
-    totalLinks = 0
-    externalLinks = 0
-
-    m = []
-
-    soup = BeautifulSoup(html, features="lxml")
-
-    meta = soup.find_all("meta")
-    links = soup.find_all("link")
-    scripts = soup.find_all("script")
-
-    for tag in meta:
-        for link in re.findall(re.compile("\"http.*?\""), str(tag)):
-            m.append(link)
-
-    for tag in links:
-        if tag.has_attr("href") and "http" in tag.get("href"):
-            m.append(tag.get("href"))
-
-    for tag in scripts:
-        if tag.has_attr("href") and "http" in tag.get("href"):
-            m.append(tag.get("href"))
-
-    for link in m:
-        if domain not in link:
-            externalLinks += 1
-        totalLinks += 1
-
-    if totalLinks != 0:
-        percentage = externalLinks / totalLinks
-        if percentage >= 0.81:
-            return 1
-        elif percentage >= 0.17:
-            return 0
-
-    return -1
-
-
-def SFHTesting(html, domain):
-    """
-    test if the Server Form Handler of all forms is not suspicious
-    :param html: string (html source code)
-    :param domain: string
-    :return: -1,0 or 1
-    """
-    soup = BeautifulSoup(html, features="lxml")
-
-    for form in soup.find_all("form"):
-        if str(form.get("action")) == "":
-            return 1
-
-        elif str(form.get("action")) == "about:blank":
-            return 1
-
-        elif domain not in str(form.get("action")):
-            return 0
-    return -1
-
-
-def emailTesting(html):
-    """
-    test if no user's informations are send by email
-    :param html: string (html source code)
-    :return: -1 or 1
-    """
-    soup = BeautifulSoup(html, features="lxml")
-
-    for form in soup.find_all("form"):
-        if re.match(r"mail\(.*?\)", str(form)):
-            return 1
-        elif re.match(r"mailto:", str(form)):
-            return 1
-    return -1
-
-
-def abnormalURLTesting(url):
-    """
-    test if the domain name from WHOIS is in the RUL
-    :param url: string
-    :return: -1 or 1
-    """
-    try:
-        whoisURL = whois.whois(url)["domain_name"]
-        if type(whoisURL) == list:
-            whoisURL = whoisURL[0]
-
-        if whoisURL is not None and whoisURL.lower() not in url:
-            return 1
-        return -1
-    except socket.gaierror:
-        return 1
-
-
-def forwardingTesting(url, http):
-    """
-    test the number of forwarding
-    :param url: string
-    :param http: string
-    :return: -1,0 or 1
-    """
-    countForward = len(requests.get(http + "://" + url).history)
-
-    if countForward <= 1:
-        return -1
-
-    if countForward < 4:
-        return 0
-
-    return 1
-
-
-def barCustomTesting(html):
-    """
-    Check if the status bar is not abnormally modify
-    :param html: string (html source code)
-    :return: -1 or 1
-    """
-
-    soup = BeautifulSoup(html, features="lxml")
-
-    for tag in soup.find_all(onmouseover=True):
-        if "window.status" in str(tag):
-            return 1
-
-    return -1
-
-
-def rightClickTesting(html):
-    """
-    test if the right click is not disabled
-    :param html: string (html source code)
-    :return: -1 or 1
-    """
-    if re.match(r"\"contextmenu\".*?preventdefaut", str(html)) is not None:
-        return 1
-    return -1
-
-
-def popUpTesting(html):
-    """
-    testing if popup with text fields
-    :param html: string (html source code)
-    :return: -1 or 1
-    """
-    if re.match(r"prompt\(.+?\);", str(html)):
-        return 1
-    return -1
-
-
-def IFrameTesting(html):
-    """
-    testing if the site use Iframe
-    :param html: string (html source code)
-    :return: -1 or 1
-    """
-
-    soup = BeautifulSoup(html, features="lxml")
-    if "iframe" in str(soup):
-        return 1
-
-    else:
-        return -1
-
-
-def domainAgeTesting(whoisResult):
-    """
-    testing if domain age is greater than 6 months
-    :param whoisResult: string
-    :return: -1 or 1
-    """
-
-    now = datetime.datetime.now()
-
-    creation = whoisResult.creation_date
-
-    if type(creation) == list:
-        creation = creation[0]
-    try:
-        delta = now - creation
-    except:
-        return -2
-
-    if delta.days > 365 / 2:
-        return -1
-    else:
-        return 1
-
-
-def DNSRecordTesting(domain):
-    """
-    test if the domain is recorded in a DNS
-    :param domain: string
-    :return: -1 or 1
-    """
-
-    if len(domain.split("www.")) == 2:
-        domain = domain.split("www.")[1]
-
-    try:
-        empty = True
-        resolver = dns.resolver.Resolver()
-        answer = resolver.query(domain, "NS")
-        i = 0
-        while empty and i < len(answer):
-            if answer[i].target != "":
-                empty = False
-            i += 1
-    except:
-        return 1
-
-    if not empty:
-        return -1
-
-    return 1
-
-
-def trafficTesting(domain):
-    """
-    collect the website rank on AWIS database and test if it is not abnormal
-    :param domain: string
-    :return: -1,0 or 1
-    """
-    try:
-        soup = BeautifulSoup(requests.get("https://www.alexa.com/siteinfo/" + domain).content, features="lxml")
-        tag = soup.find(id="card_rank").find("", {"class": "rank-global"}).find("", {"class": "big data"})
-        rank = int("".join(re.findall('\d+', str(tag))))
-    except AttributeError:
-        return 1
-
-    if rank > 100000:
-        return 0
-
-    return -1
-
-
-def pageRankTesting(domain):
-    """
-    Test the pagerank of the domain
-    :param domain: str
-    :return: -1 or 1
-    """
-    answer = requests.get("https://openpagerank.com/api/v1.0/getPageRank?domains%5B0%5D=" + domain,
-                          headers={"API-OPR": "cswc0oc4wo0gs0ssgk044044wosc0ggwgoksocg8"})
-
-    try:
-        if answer.json()["response"][0]['page_rank_decimal'] <= 2:
-            return 1
-        else:
-            return -1
-    except KeyError:
-        print("domain pagerank not found")
-        return 1
-
-
-def googleIndexTesting(url):
-    """
-    test if url is indexed by google
-    :param url: string
-    :return: -1 or 1
-    """
-    # index = googleIndexChecker.google_search("site:" + url)
-    # if index:
-    #     return -1
-    # return 1
-    # html = requests.get('https://www.google.com/search?q=site:'+url, headers=headers, proxies=proxies).content
-    # soup=BeautifulSoup(html, features="lxml")
-    # try:
-    #     if soup.find(id="resultStats").contents != []:
-    #         #print(soup.findAll(id="resultStats").text)
-    #         return -1
-    # except AttributeError:
-    #     print("google fail")
-    #     time.sleep(20)
-    #     try :
-    #         if soup.find(id="resultStats").contents != []:
-    #             # print(soup.findAll(id="resultStats").text)
-    #             return -1
-    #     except:
-    #         return -2
-    #
-    # return 1
-    try:
-        soup = BeautifulSoup(requests.get("https://www.ecosia.org/search?q=site%3A" + url, stream=False).content,
-                             features="lxml")
-        results = re.findall('\d+', soup.find("", {"class": "card-title card-title-result-count"}).text)
-        if len(results) == 1 and results[0] == '0':
-            return 1
-        return -1
-    except Exception as e:
-        print(e)
-        pass
-
-
-def linksPointingToTesting(url):
-    """
-    collect the count of all sites which linked to the url on AWIS database and test if it is not abnormal
-    :param url: string
-    :return: -1,0 or 1
-    """
-    soup = BeautifulSoup(requests.get("https://www.alexa.com/siteinfo/" + url).content, features="lxml")
-    try:
-        countLinks = int(
-            "".join(soup.find("", {"class": "linksin"}).find("", {"class": "big data"}).get_text().split(",")))
-    except AttributeError:
-        return 1
-    if countLinks == 0:
-        return 1
-    elif countLinks <= 2:
-        return 0
-
-    return -1
-
-
-def statisticReportTEsting(domain):
-    """
-    test if the ip address of the domain is in top 50 of www.stopbadware.org
-    :param domain:
-    :return: -1 or 1
-    """
-    IPdomain = socket.gethostbyname(domain)
-
-    jsonDictIP = json.loads(
-        requests.post("https://www.stopbadware.org/sites/all/themes/sbw/clearinghouse.php", data={'q': 'tops'}).text)
-
-    IPList = []
-
-    for site in jsonDictIP['top_ip']:
-        IPList.append(socket.inet_ntoa(struct.pack('!L', int(site['ip_addr']))))
-
-    for ip in IPList:
-        if ip == IPdomain:
-            return 1
-
-    return -1
-
-
-def UrlToDatabase(url, queue):
-    """
-    analyse the url to create a list of 30 features which can be used for GAN implementation. Refer to documentation
-    for all criteria
-    :param url: string
-    :param queue: queue
-    :return: list
-    """
-
-    features = []
-
-    if len(url.split("http://")) == 2:
-        http = "http"
-        url = url.split("http://")[1]
-
-    elif len(url.split("https://")) == 2:
-        http = "https"
-        url = url.split("https://")[1]
-
-    domain = url.split("/")[0]
-
-    retry = True
-    while retry:  # to retry if whois database kick us
-        try:
-            whoisDomain = whois.whois(str(domain))
-            retry = False
-        except (whois.parser.PywhoisError, socket.gaierror):
-            print("URL : " + domain + " not in whois database")
-            # time.sleep(1.5)
-            queue.put(-1)
-            return
-        except (ConnectionResetError, socket.timeout):
-            pass
-
-    try:
-        html = requests.get("https://" + url, ).content
-        http = "https"
-
-    except:
-        try:
-            html = requests.get("http://" + url).content
-            http = "http"
-        except:
+class URL:
+    def __init__(self, url, manualInit=False):
+        # ---------------------
+        #  Define attributes
+        # ---------------------
+        self.http = None
+        self.url = url
+        self.domain = None
+        self.whoisDomain = None
+        self.html = None
+
+        # ---------------------
+        #  Calculate attributes
+        # ---------------------
+
+        # http, url and domain attributes
+        if not manualInit:
+
+            if len(url.split("http://")) == 2:
+                self.http = "http"
+                self.url = url.split("http://")[1]
+
+            elif len(url.split("https://")) == 2:
+                self.http = "https"
+                self.url = url.split("https://")[1]
+
+            self.domain = self.url.split("/")[0]
+
+            # whoisDomain attribute
+            retry = True
+            while retry:  # to retry if whois database kick us
+                try:
+                    retry = False
+                    self.whoisDomain = func_timeout(30, whois, kwargs={'Url': str(self.domain)})
+
+                except (PywhoisError, socket.gaierror, socks.GeneralProxyError):
+                    logger.error("URL : " + self.domain + " not in whois database")
+                    # time.sleep(1.5)
+                except (ConnectionResetError, socket.timeout, ConnectionAbortedError):
+                    pass
+
+                except FunctionTimedOut:
+                    logger.error("Whois timeout")
+
+            # html and http attributes
             try:
-                html = requests.get(url).content
-                http = ""
+                self.html = func_timeout(30, requests.get, kwargs={'url': "https://" + self.url}).content
+                self.http = "https"
+
+            except FunctionTimedOut:
+                logger.error("Get timeout")
+
             except:
-                print("Can not get HTML content from : " + url)
-                # time.sleep(1.5)
-                queue.put(-1)
-                return
+                try:
+                    self.html = func_timeout(30, requests.get, kwargs={'url': "http://" + self.url}).content
+                    self.http = "http"
+                except FunctionTimedOut:
+                    logger.error("Get timeout")
 
-    # print(http)
-    # print(url)
-    # print(domain)
+                except:
+                    try:
+                        self.html = func_timeout(30, requests.get, kwargs={'url': self.url}).content
+                        self.http = ""
 
-    print("Testing : " + url)
+                    except FunctionTimedOut:
+                        logger.error("Get timeout")
 
-    # testing ip adress
-    features.append(IPtesting(domain))
+                    except:
+                        logger.error("Can not get HTML content from : " + self.url)
+                        # time.sleep(1.5)
 
-    # testing lenght of the url
-    features.append(leghtTesting(url))
+        ## Weights
+        self.ipWeight = "error"
+        self.lenghtWeight = "error"
+        self.shorteningWeight = "error"
+        self.atWeight = "error"
+        self.doubleSlashWeight = "error"
+        self.dashWeight = "error"
+        self.subDomainWeight = "error"
+        self.certificateAgeWeight = "error"
+        self.expirationWeight = "error"
+        self.faviconWeight = "error"
+        self.portWeight = "error"
+        self.httpWeight = "error"
+        self.requestedWeight = "error"
+        self.anchorsWeight = "error"
+        self.tagWeight = "error"
+        self.SFHWeight = "error"
+        self.emailWeight = "error"
+        self.abnormalWeight = "error"
+        self.forwardWeight = "error"
+        self.barCustomWeight = "error"
+        self.rightClickWeight = "error"
+        self.popupWeight = "error"
+        self.iFrameWeight = "error"
+        self.domainAgeWeight = "error"
+        self.dnsWeight = "error"
+        self.trafficWeight = "error"
+        self.pageRankWeight = "error"
+        self.indexingWeight = "error"
+        self.linksWeight = "error"
+        self.statisticWeight = "error"
 
-    # testing shortener url
-    features.append(shortenerTEsting(url))
-
-    # testing at symbol
-    features.append(atSymbolTetsting(url))
-
-    # testing double slash
-    features.append(doubleSlashTesting(url))
-
-    # testing dash
-    features.append(dashTesting(url))
-
-    # testing subdomain count
-    features.append(subDomainTesting(domain))
-
-    # testing age of the domain certificate
-    if http == "https":
-        features.append(ageCertificateTesting(domain))
-    else:
-        features.append(1)
-
-    # testing expiration date of domain
-    features.append(expirationDomainTesting(whoisDomain))
-    if features[-1] == -2:
-        return -1
-    # testing favicon href
-    features.append(faviconTesting(html, domain))
-
-    # testing ports
-    features.append(portTesting(domain))
-
-    if features[-1] == -2:
-        print("port testing error")
-        queue.put(-1)
         return
 
-    # testing http token
-    features.append(httpTesting(url))
+    def IPtesting(self):
+        """
+        test if the domain is a IP adress
+        :return: -1 or 1
+        """
 
-    # testing request URL
-    features.append(requestedURL(html, domain))
+        if (re.match(r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}", str(self.domain))) is not None:
+            self.ipWeight = 1
+            return
+        elif (re.match(r"0x..\.0x..\.0x..\.0x..", str(self.domain))) is not None:
+            self.ipWeight = 1
+            return
+        else:
+            self.ipWeight = -1
+            return
 
-    # testing anchors
-    features.append(anchorsTesting(html, domain))
+    def leghtTesting(self):
+        """
+        test if url lenght is <54, between 54 and 75 or over 75
+        :return: -1,0 or 1
+        """
 
-    # testing tags links
-    features.append(tagsLinksTesting(html, domain))
+        if len(self.url) < 54:
+            self.lenghtWeight = -1
+            return
+        elif 54 < len(self.url) < 75:
+            self.lenghtWeight = 0
+            return
+        else:
+            self.lenghtWeight = 1
+            return
 
-    # testing SFH
-    features.append(SFHTesting(html, domain))
+    def shortenerTEsting(self):
+        """
+        test if the url is a short url
+        :return: -1 or 1
+        """
+        for short in URL_SHORTENER:
+            if short.lower() in self.url.lower():
+                self.shorteningWeight = 1
+                return
 
-    # testing email
-    features.append(emailTesting(html))
+        self.shorteningWeight = -1
+        return
 
-    # testing abnormal url
-    features.append(abnormalURLTesting(url))
+    def atSymbolTetsting(self):
+        """
+        test if the at symbol is in url
+        :return: -1 or 1
+        """
+        if "@" in self.url:
+            self.atWeight = 1
+            return
+        self.atWeight = -1
+        return
 
-    # testing forwarding
-    features.append(forwardingTesting(url, http))
+    def doubleSlashTesting(self):
+        """
+        test if there is double slash in url
+        :return: -1 or 1
+        """
+        if "//" in self.url:
+            self.doubleSlashWeight = 1
+            return
+        self.doubleSlashWeight = -1
+        return
 
-    # testing abnormal status bar
-    features.append(barCustomTesting(html))
+    def dashTesting(self):
+        """
+            test if there is dash in url
+            :return: -1 or 1
+            """
+        if "-" in self.url:
+            self.dashWeight = 1
+            return
+        self.dashWeight = -1
+        return
 
-    # testing right click disabling
-    features.append(rightClickTesting(html))
+    def subDomainTesting(self):
+        """
+        test if there are too many subdomains
+        :return: -1,0 or 1
+        """
+        if len(self.domain.split("www.")) == 2:
+            domain = self.domain.split("www.")[1]
+        else:
+            domain = self.domain
 
-    # testing popup
-    features.append(popUpTesting(html))
+        for tld in CCTLD:
+            if re.match(("(.)*" + tld + "$"), str(domain)):
+                domain = domain[:len(domain) - len(tld)]
+                if domain.count('.') <= 1:
+                    self.subDomainWeight = -1
+                    return
+                elif domain.count('.') == 2:
+                    self.subDomainWeight = 0
+                    return
+                else:
+                    self.subDomainWeight = 1
+                    return
+        if domain.count('.') <= 1:
+            self.subDomainWeight = -1
+            return
+        elif domain.count('.') == 2:
+            self.subDomainWeight = 0
+            return
+        else:
+            self.subDomainWeight = 1
+            return
 
-    # testing IFrame
-    features.append(IFrameTesting(html))
+    def ageCertificateTesting(self):
+        """
+        test if the certificate is not too young and delivered by a trusted issuer
+        :return: -1,0 or 1
+        """
 
-    # testing domain age
-    features.append(domainAgeTesting(whoisDomain))
-    if features[-1] == -2:
-        return -1
+        ctx = ssl.create_default_context()
+        s = ctx.wrap_socket(socket.socket(), server_hostname=self.domain)
+        try:
+            s.connect((self.domain, 443))
+            cert = s.getpeercert()
+        except:
 
-    # testing DNS record
-    features.append(DNSRecordTesting(domain))
+            ctx = ssl.create_default_context()
+            s = ctx.wrap_socket(socket.socket(), server_hostname=self.domain)
+            try:
+                s.connect((self.domain, 443))
+                cert = s.getpeercert()
+            except:
+                self.certificateAgeWeight = 1
+                return
 
-    # testing traffic
-    features.append(trafficTesting(domain))
+        issuer = dict(x[0] for x in cert['issuer'])["organizationName"].lower()
+        beginDate = datetime.datetime.strptime(cert["notBefore"].split(' GMT')[0], '%b  %d %H:%M:%S %Y')
+        endDate = datetime.datetime.strptime(cert["notAfter"].split(' GMT')[0], '%b  %d %H:%M:%S %Y')
 
-    # testing page rank
-    features.append(pageRankTesting(domain))
+        delta = endDate - beginDate
 
-    # features.append(googleIndexTesting(url))
-    features.append(-1)
-    if features[-1] == -2:
-        return -2
+        for trusted in TRUSTED_ISSUERS:
+            if trusted in issuer:
+                if delta.days >= 365:
+                    self.certificateAgeWeight = -1
+                    return
 
-    features.append(linksPointingToTesting(url))
+        self.certificateAgeWeight = 0
+        return
 
-    features.append(statisticReportTEsting(domain))
+    def expirationDomainTesting(self):
+        """
+        test if the valid duration of the domain is enough long
+        :return: -1 or 1
+        """
 
-    queue.put(features)
-    return
+        now = datetime.datetime.now()
 
+        expiration = self.whoisDomain.expiration_date
+        if type(expiration) == list:
+            expiration = expiration[0]
 
-if __name__ == "__main__":
-    # execute only if run as a script
-    pass
+        try:
+            delta = expiration - now
+        except:
+            logger.error("error expiration domain testing")
+            return -2
+
+        if delta.days > 365:
+            self.expirationWeight = -1
+            return
+        else:
+            self.expirationWeight = 1
+            return
+
+    def faviconTesting(self):
+        """
+        test if the favicon url is from the same domain as the site
+        :return: -1 or 1
+        """
+
+        soup = BeautifulSoup(self.html, features="lxml")
+        head = soup.find("head")
+        favicon = None
+        if head is not None:
+            favicon = head.find("link", {"rel": "icon"})
+
+        if favicon is not None:
+            linkFavicon = favicon.get("href")
+            if self.domain not in linkFavicon:
+                self.faviconWeight = 1
+                return
+
+        self.faviconWeight = -1
+        return
+
+    def portTesting(self):
+        """
+        test all important ports to check if they are opened or closed
+        :return: -1 or 1 or error
+        """
+
+        try:
+            remoteServerIP = socket.gethostbyname(self.domain)
+
+            for port in PORTS_TO_SCAN:
+                sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                sock.settimeout(0.3)
+                result = sock.connect_ex((remoteServerIP, port[0]))
+                sock.close()
+
+                if result == 0 and port[1] is False:
+                    self.portWeight = 1
+                    return
+                elif result != 0 and port[1] is True:
+                    self.portWeight = 1
+                    return
+            self.portWeight = -1
+            return
+
+        except Exception as e:
+            logger.error(e)
+            return -2
+
+    def httpTesting(self):
+        """
+        test if there is the http token into the URL
+        :return: -1 or 1
+        """
+        if "http" in self.url.lower():
+            self.httpWeight = 1
+            return
+
+        self.httpWeight = -1
+        return
+
+    def requestedURL(self):
+        """
+        test the percentage of external objects
+        :return: -1,0 or 1
+        """
+
+        totalLinks = 0
+        externalLinks = 0
+
+        m = []
+
+        soup = BeautifulSoup(self.html, features="lxml")
+
+        for p in soup.find_all("img"):
+            if p.has_attr("src") and "http" in p.get("src"):
+                m.append(p.get('src'))
+
+        for p in soup.find_all("video"):
+            for q in p.find_all("source"):
+                if q.has_attr("src") and "http" in q.get("src"):
+                    m.append(q.get('src'))
+
+        for p in soup.find_all("audio"):
+            for q in p.find_all("source"):
+                if q.has_attr("src") and "http" in q.get("src"):
+                    m.append(q.get('src'))
+
+        for link in m:
+            if self.domain not in link:
+                if "http" in link or "www" in link:
+                    externalLinks += 1
+            totalLinks += 1
+
+        if totalLinks != 0:
+            percentage = externalLinks / totalLinks
+            if percentage >= 0.61:
+                self.requestedWeight = 1
+                return
+            elif percentage >= 0.22:
+                self.requestedWeight = 0
+                return
+
+        self.requestedWeight = -1
+        return
+
+    def anchorsTesting(self):
+        """
+        test the percentage of external links anchors
+        :return: -1,0 or 1
+        """
+        soup = BeautifulSoup(self.html, features="lxml")
+
+        tags = soup.findAll("a", href=True)
+        anchors = []
+        for tag in tags:
+            anchors.append(tag.get("href"))
+
+        totalLink = len(anchors)
+        externalLinks = 0
+
+        for anchor in anchors:
+            if self.domain not in anchor:
+                if "www" in anchor or "http" in anchor:
+                    externalLinks += 1
+
+        if externalLinks == 0 or externalLinks / totalLink < 0.31:
+            self.anchorsWeight = -1
+            return
+
+        elif externalLinks / totalLink <= 0.67:
+            self.anchorsWeight = 0
+            return
+
+        self.anchorsWeight = 1
+        return
+
+    def tagsLinksTesting(self):
+        """
+        test the percentage of external links into meta, script and link tags
+        :return: -1,0 or 1
+        """
+        totalLinks = 0
+        externalLinks = 0
+
+        m = []
+
+        soup = BeautifulSoup(self.html, features="lxml")
+
+        meta = soup.find_all("meta")
+        links = soup.find_all("link")
+        scripts = soup.find_all("script")
+
+        for tag in meta:
+            for link in re.findall(re.compile("\"http.*?\""), str(tag)):
+                m.append(link)
+
+        for tag in links:
+            if tag.has_attr("href") and "http" in tag.get("href"):
+                m.append(tag.get("href"))
+
+        for tag in scripts:
+            if tag.has_attr("href") and "http" in tag.get("href"):
+                m.append(tag.get("href"))
+
+        for link in m:
+            if self.domain not in link:
+                externalLinks += 1
+            totalLinks += 1
+
+        if totalLinks != 0:
+            percentage = externalLinks / totalLinks
+            if percentage >= 0.81:
+                self.tagWeight = 1
+                return
+            elif percentage >= 0.17:
+                self.tagWeight = 0
+                return
+
+        self.tagWeight = -1
+        return
+
+    def SFHTesting(self):
+        """
+        test if the Server Form Handler of all forms is not suspicious
+        :return: -1,0 or 1
+        """
+        soup = BeautifulSoup(self.html, features="lxml")
+
+        for form in soup.find_all("form"):
+            if str(form.get("action")) == "":
+                self.SFHWeight = 1
+                return
+
+            elif str(form.get("action")) == "about:blank":
+                self.SFHWeight = 1
+                return
+
+            elif self.domain not in str(form.get("action")) or "http" in str(form.get("action")) or "www" in str(
+                    form.get("action")):
+                self.SFHWeight = 0
+                return
+        self.SFHWeight = -1
+        return
+
+    def emailTesting(self):
+        """
+        test if no user's informations are send by email
+        :return: -1 or 1
+        """
+        # soup = BeautifulSoup(html, features="lxml")
+
+        if "mail(" in str(self.html).lower():
+            self.emailWeight = 1
+            return
+        elif "mailto:" in str(self.html).lower():
+            self.emailWeight = 1
+            return
+        self.emailWeight = -1
+        return
+
+    def abnormalURLTesting(self):
+        """
+        test if registrant name is in the url
+        :return: -1 or 1
+        """
+
+        domain = self.whoisDomain.domain.split(".")[0]
+        if "org" in self.whoisDomain:
+            if type(self.whoisDomain["org"]) == list:
+                for org in self.whoisDomain["org"]:
+                    for suborg in re.split(". | ", org):
+                        if suborg.lower() in domain.lower():
+                            self.abnormalWeight = -1
+                            return
+            elif self.whoisDomain["org"] is not None:
+                for suborg in re.split(". | ", self.whoisDomain["org"]):
+                    if suborg.lower() in domain.lower():
+                        self.abnormalWeight = -1
+                        return
+
+        if "org1" in self.whoisDomain:
+            if type(self.whoisDomain["org1"]) == list:
+                for org in self.whoisDomain["org1"]:
+                    for suborg in re.split(". | ", org):
+                        if suborg.lower() in domain.lower():
+                            self.abnormalWeight = -1
+                            return
+            elif self.whoisDomain["org1"] is not None:
+                for suborg in re.split(". | ", self.whoisDomain["org1"]):
+                    if suborg.lower() in domain.lower():
+                        self.abnormalWeight = -1
+                        return
+
+        self.abnormalWeight = 1
+        return
+
+    def forwardingTesting(self):
+        """
+        test the number of forwarding
+        :return: -1,0 or 1
+        """
+        countForward = len(requests.get(self.http + "://" + self.url).history)
+
+        if countForward <= 1:
+            self.forwardWeight = -1
+            return
+
+        if countForward < 4:
+            self.forwardWeight = 0
+            return
+
+        self.forwardWeight = 1
+        return
+
+    def barCustomTesting(self):
+        """
+        Check if the status bar is not abnormally modify
+        :return: -1 or 1
+        """
+
+        soup = BeautifulSoup(self.html, features="lxml")
+
+        for tag in soup.find_all(onmouseover=True):
+            if "window.status" in str(tag).lower():
+                self.barCustomWeight = 1
+                return
+            else:
+                self.barCustomWeight = 0
+                return
+        self.barCustomWeight = -1
+        return
+
+    def rightClickTesting(self):
+        """
+        test if the right click is not disabled
+        :return: -1 or 1
+        """
+
+        if "contextmenu" in str(self.html).lower():
+            self.rightClickWeight = 1
+            return
+        # if re.findall(r"addEventListener\(.{1,2}?contextmenu", str(html)) != []:
+        #     return 1
+        #
+        # if re.findall(r"addEvent\(.{1,2}?contextmenu", str(html)) != []:
+        #     return 1
+        #
+        # if re.findall(r"oncontextmenu", str(html)) != []:
+        #     return 1
+
+        # if re.findall(r"onmousedown", str(html)) != []:
+        #     return 1
+        #
+        # if re.findall(r"MOUSEDOWN", str(html)) != []:
+        #     return 1
+
+        self.rightClickWeight = -1
+        return
+
+    def popUpTesting(self):
+        """
+        testing if popup with text fields
+        :return: -1 or 1
+        """
+        prompt = re.findall(r"prompt\(", str(self.html)) + re.findall(r"confirm\(", str(self.html)) + re.findall(
+            r"alert\(", str(self.html))
+        if prompt != []:
+            if len(prompt) > 4:
+                self.popupWeight = 1
+                return
+            if len(prompt) > 2:
+                self.popupWeight = 0
+                return
+
+        self.popupWeight = -1
+        return
+
+    def IFrameTesting(self):
+        """
+        testing if the site use Iframe
+        :return: -1 or 1
+        """
+
+        soup = BeautifulSoup(self.html, features="lxml")
+
+        for frame in soup.find_all("iframe"):
+            if frame.get("src") is not None and self.domain not in frame.get("src"):
+                if "www" in frame.get("src") or "http" in frame.get("src"):
+                    self.iFrameWeight = 1
+                    return
+
+        self.iFrameWeight = -1
+        return
+
+        # if "iframe" in str(soup):
+        #     return 1
+        #
+        # else:
+        #     return -1
+
+    def domainAgeTesting(self):
+        """
+        testing if domain age is greater than 6 months
+        :return: -1, 0 or 1
+        """
+
+        now = datetime.datetime.now()
+
+        creation = self.whoisDomain.creation_date
+
+        if type(creation) == list:
+            creation = creation[0]
+        try:
+            delta = now - creation
+        except:
+            self.domainAgeWeight = 0
+            return
+
+        if delta.days > 365 / 2:
+            self.domainAgeWeight = -1
+            return
+        else:
+            self.domainAgeWeight = 1
+            return
+
+    def DNSRecordTesting(self):
+        """
+        test if the domain is recorded in a DNS
+        :return: -1 or 1
+        """
+
+        if len(self.domain.split("www.")) == 2:
+            domain = self.domain.split("www.")[1]
+        else:
+            domain = self.domain
+
+        try:
+            empty = True
+            resolver = dns.resolver.Resolver()
+            answer = resolver.query(domain, "NS")
+            i = 0
+            while empty and i < len(answer):
+                if answer[i].target != "":
+                    empty = False
+                i += 1
+        except:
+            self.dnsWeight = 1
+            return
+
+        if not empty:
+            self.dnsWeight = -1
+            return
+
+        self.dnsWeight = 1
+        return
+
+    def trafficTesting(self):
+        """
+        collect the website rank on AWIS database and test if it is not abnormal
+        :return: -1,0 or 1
+        """
+        try:
+            soup = BeautifulSoup(requests.get("https://www.alexa.com/siteinfo/" + self.domain).content, features="lxml")
+            tag = soup.find(id="card_rank").find("", {"class": "rank-global"}).find("", {"class": "big data"})
+            rank = int("".join(re.findall('\d+', str(tag))))
+        except AttributeError:
+            self.trafficWeight = 1
+            return
+
+        if rank > 100000:
+            self.trafficWeight = 0
+            return
+
+        self.trafficWeight = -1
+        return
+
+    def pageRankTesting(self):
+        """
+        Test the pagerank of the domain
+        :return: -1 or 1
+        """
+        answer = requests.get("https://openpagerank.com/api/v1.0/getPageRank?domains%5B0%5D=" + self.domain,
+                              headers={"API-OPR": "cswc0oc4wo0gs0ssgk044044wosc0ggwgoksocg8"})
+
+        try:
+            if answer.json()["response"][0]['page_rank_decimal'] <= 2:
+                self.pageRankWeight = 1
+                return
+            else:
+                self.pageRankWeight = -1
+                return
+        except KeyError:
+            logger.error("domain pagerank not found")
+            self.pageRankWeight = 1
+            return
+
+    def googleIndexTesting(self):
+        """
+        test if url is indexed by google
+        :return: -1 or 1
+        """
+        index = googleIndexChecker.google_search("site:" + self.url)
+        if index:
+            self.indexingWeight = -1
+            return
+        self.indexingWeight = 1
+        return
+        # html = requests.get('https://www.google.com/search?q=site:'+url, headers=headers, proxies=proxies).content
+        # soup=BeautifulSoup(html, features="lxml")
+        # try:
+        #     if soup.find(id="resultStats").contents != []:
+        #         #print(soup.findAll(id="resultStats").text)
+        #         return -1
+        # except AttributeError:
+        #     print("google fail")
+        #     time.sleep(20)
+        #     try :
+        #         if soup.find(id="resultStats").contents != []:
+        #             # print(soup.findAll(id="resultStats").text)
+        #             return -1
+        #     except:
+        #         return -2
+        #
+        # return 1
+        # try:
+        #     soup = BeautifulSoup(requests.get("https://www.ecosia.org/search?q=site%3A" + url, stream=False).content,
+        #                          features="lxml")
+        #     results = re.findall('\d+', soup.find("", {"class": "card-title card-title-result-count"}).text)
+        #     if len(results) == 1 and results[0] == '0':
+        #         return 1
+        #     return -1
+        # except Exception as e:
+        #     print(e)
+        #     pass
+
+    def linksPointingToTesting(self):
+        """
+        collect the count of all sites which linked to the url on AWIS database and test if it is not abnormal
+        :return: -1,0 or 1
+        """
+        soup = BeautifulSoup(requests.get("https://www.alexa.com/siteinfo/" + self.url).content, features="lxml")
+        try:
+            countLinks = int(
+                "".join(soup.find("", {"class": "linksin"}).find("", {"class": "big data"}).get_text().split(",")))
+        except AttributeError:
+            self.linksWeight = 1
+            return
+        if countLinks == 0:
+            self.linksWeight = 1
+            return
+        elif countLinks <= 2:
+            self.linksWeight = 0
+            return
+
+        self.linksWeight = -1
+        return
+
+    def statisticReportTEsting(self):
+        """
+        test if the ip address of the domain is in top 50 of www.stopbadware.org
+        :return: -1 or 1
+        """
+        IPdomain = socket.gethostbyname(self.domain)
+
+        jsonDictIP = json.loads(
+            requests.post("https://www.stopbadware.org/sites/all/themes/sbw/clearinghouse.php",
+                          data={'q': 'tops'}).text)
+
+        IPList = []
+
+        for site in jsonDictIP['top_ip']:
+            IPList.append(socket.inet_ntoa(struct.pack('!L', int(site['ip_addr']))))
+
+        for ip in IPList:
+            if ip == IPdomain:
+                self.statisticWeight = 1
+                return
+
+        self.statisticWeight = -1
+        return
+
+    def featuresExtraction(self):
+        """
+        Extract all features and set the values into the attribute weights
+        :param queue: queue
+        :return: -1,-1, None or results into queue
+        """
+        features = []
+
+        logger.info("Testing : " + self.url)
+
+        # testing ip adress
+        self.IPtesting()
+        features.append(self.ipWeight)
+
+        # testing lenght of the url
+        self.leghtTesting()
+        features.append(self.lenghtWeight)
+
+        # testing shortener url
+        self.shortenerTEsting()
+        features.append(self.shorteningWeight)
+
+        # testing at symbol
+        self.atSymbolTetsting()
+        features.append(self.atWeight)
+
+        # testing double slash
+        self.doubleSlashTesting()
+        features.append(self.doubleSlashWeight)
+
+        # testing dash
+        self.dashTesting()
+        features.append(self.dashWeight)
+
+        # testing subdomain count
+        self.subDomainTesting()
+        features.append(self.subDomainWeight)
+
+        # testing age of the domain certificate
+        if self.http == "https":
+            self.ageCertificateTesting()
+            features.append(self.certificateAgeWeight)
+        else:
+            features.append(1)
+
+        # testing expiration date of domain
+        self.expirationDomainTesting()
+        features.append(self.expirationWeight)
+        if features[-1] == -2:
+            return -1
+        # testing favicon href
+        self.faviconTesting()
+        features.append(self.faviconWeight)
+
+        # testing ports
+        self.portTesting()
+        features.append(self.portWeight)
+
+        if features[-1] == -2:
+            logger.error("port testing error")
+            return -1
+
+        # testing http token
+        self.httpTesting()
+        features.append(self.httpWeight)
+
+        # testing request URL
+        self.requestedURL()
+        features.append(self.requestedWeight)
+
+        # testing anchors
+        self.anchorsTesting()
+        features.append(self.anchorsWeight)
+
+        # testing tags links
+        self.tagsLinksTesting()
+        features.append(self.tagWeight)
+
+        # testing SFH
+        self.SFHTesting()
+        features.append(self.SFHWeight)
+
+        # testing email
+        self.emailTesting()
+        features.append(self.emailWeight)
+
+        # testing abnormal url
+        self.abnormalURLTesting()
+        features.append(self.abnormalWeight)
+
+        # testing forwarding
+        self.forwardingTesting()
+        features.append(self.forwardWeight)
+
+        # testing abnormal status bar
+        self.barCustomTesting()
+        features.append(self.barCustomWeight)
+
+        # testing right click disabling
+        self.rightClickTesting()
+        features.append(self.rightClickWeight)
+
+        # testing popup
+        self.popUpTesting()
+        features.append(self.popupWeight)
+
+        # testing IFrame
+        self.IFrameTesting()
+        features.append(self.iFrameWeight)
+
+        # testing domain age
+        self.domainAgeTesting()
+        features.append(self.domainAgeWeight)
+        if features[-1] == -2:
+            return -1
+
+        # testing DNS record
+        self.DNSRecordTesting()
+        features.append(self.dnsWeight)
+
+        # testing traffic
+        self.trafficTesting()
+        features.append(self.trafficWeight)
+
+        # testing page rank
+        self.pageRankTesting()
+        features.append(self.pageRankWeight)
+
+        # testo google indexing
+        self.googleIndexTesting()
+        features.append(self.indexingWeight)
+
+        if features[-1] == -2:
+            return -2
+
+        # testing links pointing to the webpage
+        self.linksPointingToTesting()
+        features.append(self.linksWeight)
+
+        # testing statistics
+        self.statisticReportTEsting()
+        features.append(self.statisticWeight)
+
+        return features
+
+    def getFeatures(self):
+        """
+        Get all features
+        :return: list
+        """
+        return ([self.ipWeight, self.lenghtWeight, self.shorteningWeight, self.atWeight, self.doubleSlashWeight,
+                 self.dashWeight, self.subDomainWeight, self.certificateAgeWeight, self.expirationWeight,
+                 self.faviconWeight, self.portWeight, self.httpWeight, self.requestedWeight, self.anchorsWeight,
+                 self.tagWeight, self.SFHWeight, self.emailWeight, self.abnormalWeight, self.forwardWeight,
+                 self.barCustomWeight, self.rightClickWeight, self.popupWeight, self.iFrameWeight, self.domainAgeWeight,
+                 self.dnsWeight, self.trafficWeight, self.pageRankWeight, self.indexingWeight, self.linksWeight,
+                 self.statisticWeight])
+
+    def setFeatures(self, features):
+        """
+        Set the features from a list
+        :param features: list
+        :return: nothing
+        """
+        if type(features) is not list or len(features) != 30:
+            logger.error("Bad argument for features setter")
+            return
+        self.ipWeight = features[0]
+        self.lenghtWeight = features[1]
+        self.shorteningWeight = features[2]
+        self.atWeight = features[3]
+        self.doubleSlashWeight = features[4]
+        self.dashWeight = features[5]
+        self.subDomainWeight = features[6]
+        self.certificateAgeWeight = features[7]
+        self.expirationWeight = features[8]
+        self.faviconWeight = features[9]
+        self.portWeight = features[10]
+        self.httpWeight = features[11]
+        self.requestedWeight = features[12]
+        self.anchorsWeight = features[13]
+        self.tagWeight = features[14]
+        self.SFHWeight = features[15]
+        self.emailWeight = features[16]
+        self.abnormalWeight = features[17]
+        self.forwardWeight = features[18]
+        self.barCustomWeight = features[19]
+        self.rightClickWeight = features[20]
+        self.popupWeight = features[21]
+        self.iFrameWeight = features[22]
+        self.domainAgeWeight = features[23]
+        self.dnsWeight = features[24]
+        self.trafficWeight = features[25]
+        self.pageRankWeight = features[26]
+        self.indexingWeight = features[27]
+        self.linksWeight = features[28]
+        self.statisticWeight = features[29]
+        return
 
 
 def extraction(inputFile, output, begin=1):
+    """
+    Used to extract features from a csv file
+    :param inputFile: str (path)
+    :param output: str
+    :param begin: int
+    :return: nothing
+    """
     failledURLS = []
     notReacheable = []
 
+    # First try with all URLs
     count = 1
     begin = begin
     with open(inputFile, newline='', encoding='utf-8') as csvinfile:
-
+        # Load URLs from csv file
         for row in csv.reader(csvinfile, delimiter=',', quotechar='|'):
-            print("first : " + str(count))
-
+            logger.info("first round: " + str(count))
+            website = URL(row[0])
             if count >= begin:
-                queue = Queue()
-                proc = Process(target=UrlToDatabase,
-                               args=(row[0],
-                                     queue,))  # creation of a process calling longfunction with the specified arguments
-                proc.start()
-
                 try:
-                    results = queue.get(timeout=50)
-                    print(results)
-                    proc.join()
+                    # Extract features
+                    results = func_timeout(50, website.featuresExtraction)
+                    logger.debug(results)
                     if results == -1:
                         notReacheable.append(results)
                     elif results == -2:
                         failledURLS.append(row[0])
                     else:
+                        # Write results in the right place
                         if output != "console":
-                            with open(output, 'a') as outcsvfile:
+                            with open(output, 'a', newline='') as outcsvfile:
                                 writer = csv.writer(outcsvfile, delimiter=',', quotechar='"')
                                 writer.writerow([row[0]] + results)
                         else:
-                            print([row[0]] + results)
+                            logger.debug([row[0]] + results)
 
                 except Exception as e:
                     failledURLS.append(row[0])
-                    print(e)
-                proc.terminate()
+                    logger.info(e)
             count += 1
 
     realfailledURLS = []
 
+    # Second try with URLs which failed due to timeout
     count = 1
     for url in failledURLS:
-        print("second" + str(count))
+        logger.info("second round" + str(count))
         count += 1
-        queue = Queue()
-        proc = Process(target=UrlToDatabase,
-                       args=(url, queue,))  # creation of a process calling longfunction with the specified arguments
-        proc.start()
+        website = URL(url)
 
+        # Extract features
         try:
-            results = queue.get(timeout=90)
-            proc.join()
+            results = func_timeout(90, website.featuresExtraction)
             if results == -1:
                 notReacheable.append(results)
             else:
+                # Write results in the right place
                 if output != "console":
-                    with open(output, 'a') as outcsvfile:
+                    with open(output, 'a', newline='') as outcsvfile:
                         writer = csv.writer(outcsvfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
                         writer.writerow([url] + results)
                 else:
-                    print([url] + results)
+                    logger.debug([url] + results)
         except:
             realfailledURLS.append(url)
-        proc.terminate()
 
+    # Write failed URLs in the right place
     if output != "console":
-        with open(output, 'a') as outcsvfile:
+        with open(output, 'a', newline='') as outcsvfile:
             writer = csv.writer(outcsvfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
             for fail in realfailledURLS:
                 writer.writerow(fail)
     else:
         for fail in realfailledURLS:
-            print(fail)
+            logger.error("Urls failed" + str(fail))

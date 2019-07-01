@@ -16,3 +16,11 @@ venv/__pycache__/
 geckodriver\.log
 
 venv/data/Unused/phishTank\.json
+
+venv/libs/whois/__pycache__/
+
+venv/DB/
+
+*.log
+
+venv/api_keys/
