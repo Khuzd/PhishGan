@@ -15,8 +15,6 @@ import re
 import socket
 import ssl
 import struct
-from multiprocessing import Process, Queue
-
 import dns.resolver
 import requests
 import socks
@@ -890,7 +888,7 @@ class URL:
         self.statisticWeight = -1
         return
 
-    def featuresExtraction(self, queue=None):
+    def featuresExtraction(self):
         """
         Extract all features and set the values into the attribute weights
         :param queue: queue
@@ -939,11 +937,7 @@ class URL:
         self.expirationDomainTesting()
         features.append(self.expirationWeight)
         if features[-1] == -2:
-            try:
-                queue.put(-1)
-                return
-            except:
-                return -1
+            return -1
         # testing favicon href
         self.faviconTesting()
         features.append(self.faviconWeight)
@@ -953,12 +947,8 @@ class URL:
         features.append(self.portWeight)
 
         if features[-1] == -2:
-            try:
-                logger.error("port testing error")
-                queue.put(-1)
-                return
-            except:
-                return -1
+            logger.error("port testing error")
+            return -1
 
         # testing http token
         self.httpTesting()
@@ -1011,11 +1001,7 @@ class URL:
         # testing domain age
         self.domainAgeTesting()
         features.append(self.domainAgeWeight)
-        try:
-            if features[-1] == -2:
-                queue.put(-1)
-                return
-        except:
+        if features[-1] == -2:
             return -1
 
         # testing DNS record
@@ -1035,11 +1021,7 @@ class URL:
         features.append(self.indexingWeight)
 
         if features[-1] == -2:
-            try:
-                queue.put(-2)
-                return
-            except:
-                return -1
+            return -2
 
         # testing links pointing to the webpage
         self.linksPointingToTesting()
@@ -1049,11 +1031,7 @@ class URL:
         self.statisticReportTEsting()
         features.append(self.statisticWeight)
 
-        try:
-            queue.put(features)
-            return
-        except:
-            return None
+        return features
 
     def getFeatures(self):
         """
@@ -1130,16 +1108,10 @@ def extraction(inputFile, output, begin=1):
             logger.info("first round: " + str(count))
             website = URL(row[0])
             if count >= begin:
-                queue = Queue()
-                proc = Process(target=website.featuresExtraction,
-                               args=(queue,))  # creation of a process calling longfunction with the specified arguments
-                proc.start()
-
                 try:
                     # Extract features
-                    results = queue.get(timeout=50)
+                    results = func_timeout(50, website.featuresExtraction)
                     logger.debug(results)
-                    proc.join()
                     if results == -1:
                         notReacheable.append(results)
                     elif results == -2:
@@ -1156,7 +1128,6 @@ def extraction(inputFile, output, begin=1):
                 except Exception as e:
                     failledURLS.append(row[0])
                     logger.info(e)
-                proc.terminate()
             count += 1
 
     realfailledURLS = []
@@ -1166,16 +1137,11 @@ def extraction(inputFile, output, begin=1):
     for url in failledURLS:
         logger.info("second round" + str(count))
         count += 1
-        queue = Queue()
         website = URL(url)
-        proc = Process(target=website.featuresExtraction,
-                       args=(queue,))  # creation of a process calling longfunction with the specified arguments
-        proc.start()
 
         # Extract features
         try:
-            results = queue.get(timeout=90)
-            proc.join()
+            results = func_timeout(90,website.featuresExtraction)
             if results == -1:
                 notReacheable.append(results)
             else:
@@ -1188,7 +1154,6 @@ def extraction(inputFile, output, begin=1):
                     logger.debug([url] + results)
         except:
             realfailledURLS.append(url)
-        proc.terminate()
 
     # Write failed URLs in the right place
     if output != "console":

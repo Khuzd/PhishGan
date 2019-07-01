@@ -44,7 +44,6 @@ K.set_session(sess)
 import argparse
 import GanGraphGeneration
 import UrlToDatabase
-from multiprocessing import Process, Queue
 import csv
 from GANv2 import GAN
 import importData
@@ -56,6 +55,7 @@ from stem import Signal
 from stem.control import Controller
 import logging
 from logging.handlers import RotatingFileHandler
+from func_timeout import func_timeout, FunctionTimedOut
 
 ## Default datasets
 UCI_PATH = 'data/UCI_dataset.csv'
@@ -131,14 +131,9 @@ def extraction(args):
     #  Case of features extraction for only one URL
     # ---------------------
     if args.URL is not None:
-        queue = Queue()
         website = UrlToDatabase.URL(args.URL[0])
-        proc = Process(target=website.featuresExtraction,
-                       args=(queue,))
-        proc.start()
         try:
-            results = queue.get(timeout=50)
-            proc.join()
+            results = func_timeout(50,website.featuresExtraction)
         except Exception as e:
             results = " fail " + str(e)
 
@@ -148,7 +143,6 @@ def extraction(args):
             with open(args.output[0], 'a', newline='') as outcsvfile:
                 writer = csv.writer(outcsvfile, delimiter=' ', quotechar='"')
                 writer.writerow([args.URL[0]] + [str(results)])
-        proc.terminate()
     # ---------------------
     #  Case of features extraction for one file
     # ---------------------
@@ -160,14 +154,9 @@ def extraction(args):
     # ---------------------
     elif args.list is not None:
         for url in args.list:
-            queue = Queue()
             website = UrlToDatabase.URL(url)
-            proc = Process(target=website.featuresExtraction,
-                           args=(queue,))
-            proc.start()
             try:
-                results = queue.get(timeout=50)
-                proc.join()
+                results = func_timeout(50,website.featuresExtraction)
             except Exception as e:
                 results = " fail " + str(e)
             if args.output == "console" or args.output[0] == "console":
@@ -176,7 +165,6 @@ def extraction(args):
                 with open(args.output[0], 'a', newline='') as outcsvfile:
                     writer = csv.writer(outcsvfile, delimiter=' ', quotechar='"')
                     writer.writerow([str(url)] + [str(results)])
-            proc.terminate()
     return
 
 
