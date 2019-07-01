@@ -52,6 +52,7 @@ from sklearn.metrics import classification_report
 import importData
 import pickle
 import logging
+import json
 
 # Import logger
 logger = logging.getLogger('main')
@@ -178,7 +179,7 @@ class GAN:
         """
         ## Save object
         with open(path + "/" + prefix + "object.json", "w") as json_file:
-            pickle.dump(self.__dict__, json_file, 2)
+            json_file.write(json.dumps(self.__dir__()))
 
         ## Save models
         # Combined
@@ -209,9 +210,8 @@ class GAN:
         :return: nothing
         """
         ## Load object
-        with open(path + "/" + prefix + "object.json", "w") as json_file:
-            tmp = pickle.load(json_file)
-
+        with open(path + "/" + prefix + "object.json", "r") as json_file:
+            tmp = json.loads(json_file.read())
         self.__dict__.update(tmp)
 
         ## Load models
