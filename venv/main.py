@@ -6,6 +6,11 @@ University of Gloucestershire
 Author : Pierrick ROBIC--BUTEZ
 2019
 """
+
+# ---------------------
+#  Define different seeds to permit repeatability
+# ---------------------
+
 seed_value = 42
 
 # 1. Set the `PYTHONHASHSEED` environment variable at a fixed value
@@ -49,12 +54,12 @@ import pickle
 import decimal
 from stem import Signal
 from stem.control import Controller
-
-UCI_PATH = 'data/UCI_dataset.csv'
-CLEAN_PATH = 'data/Amazon_top25000outtrain.csv'
-
 import logging
 from logging.handlers import RotatingFileHandler
+
+## Default datasets
+UCI_PATH = 'data/UCI_dataset.csv'
+CLEAN_PATH = 'data/Amazon_top25000outtrain.csv'
 
 # ---------------------
 #  Define logger
@@ -70,20 +75,21 @@ file_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
 
 stream_handler = logging.StreamHandler()
-stream_handler.setLevel(logging.DEBUG)
+stream_handler.setLevel(logging.WARNING)
 
 logger.addHandler(stream_handler)
 
 
 class MyParser(argparse.ArgumentParser):
     def print_help(self, file=None):
+        """
+        Redefine print help function to print the help of all subparsers when main -h
+        """
         self._print_message(self.format_help(), file)
 
         subparsers_actions = [
             action for action in self._actions
             if isinstance(action, argparse._SubParsersAction)]
-        # there will probably only be one subparser_action,
-        # but better save than sorry
         for subparsers_action in subparsers_actions:
             # get all subparsers and print help
             for choice, subparser in subparsers_action.choices.items():
@@ -98,7 +104,7 @@ def graph(args):
     :param args: Namespace
     :return: nothing
     """
-
+    # Load dataset
     if args.dataset[0] == "UCI":
         dataset = UCI_PATH
     elif args.dataset[0] == "clean":
@@ -106,11 +112,13 @@ def graph(args):
     else:
         dataset = args.dataset[0]
 
+    # Generate graph(s)
     if type(args.division) == list:
         args.division = args.division[0]
     GanGraphGeneration.multiGraph(args.beginLR[0], args.endLR[0], args.stepLR[0], args.epochs[0], args.beginSample[0],
                                   args.endSample[0], args.stepSample[0], args.pltFrequency[0], dataset,
                                   outPath=''.join(args.output), divide=args.division, dataType=args.type[0])
+    return
 
 
 def extraction(args):
@@ -119,7 +127,9 @@ def extraction(args):
         :param args: Namespace
         :return: nothing
         """
-    logger.debug(args)
+    # ---------------------
+    #  Case of features extraction for only one URL
+    # ---------------------
     if args.URL is not None:
         queue = Queue()
         website = UrlToDatabase.URL(args.URL[0])
@@ -139,10 +149,15 @@ def extraction(args):
                 writer = csv.writer(outcsvfile, delimiter=' ', quotechar='"')
                 writer.writerow([args.URL[0]] + [str(results)])
         proc.terminate()
-
+    # ---------------------
+    #  Case of features extraction for one file
+    # ---------------------
     elif args.file is not None:
         UrlToDatabase.extraction(args.file[0], args.output[0], args.begin[0])
 
+    # ---------------------
+    #  Case of features extraction for a list of URLs
+    # ---------------------
     elif args.list is not None:
         for url in args.list:
             queue = Queue()
@@ -162,6 +177,7 @@ def extraction(args):
                     writer = csv.writer(outcsvfile, delimiter=' ', quotechar='"')
                     writer.writerow([str(url)] + [str(results)])
             proc.terminate()
+    return
 
 
 def creation(args):
@@ -170,6 +186,9 @@ def creation(args):
         :param args: Namespace
         :return: nothing
         """
+    # ---------------------
+    #  Set different seeds
+    # ---------------------
     random.seed(seed_value)
     np.random.seed(seed_value)
     tf.set_random_seed(seed_value)
@@ -179,6 +198,7 @@ def creation(args):
     K.set_session(sess)
     gan = GAN(lr=args.lr[0], sample=args.size[0])
 
+    # Load dataset
     if args.dataset[0] == "UCI":
         dataset = UCI_PATH
     elif args.dataset[0] == "clean":
@@ -186,8 +206,10 @@ def creation(args):
     else:
         dataset = args.dataset[0]
 
+    # Train then save
     gan.train(args.epochs[0], importData.csvToList(dataset)[1].values())
     gan.save(args.name[0], args.location[0])
+    return
 
 
 def prediction(args):
@@ -196,14 +218,18 @@ def prediction(args):
         :param args: Namespace
         :return: nothing
         """
+    # Load GAN model
     gan = GAN(0.1, 1)
     gan.load(args.name[0], args.location[0])
 
     if args.file is not None:
+        # Load data
         data = importData.csvToList(args.file[0])[1]
         for url in data.keys():
+            # Make a prediction
             results = gan.discriminator.predict_on_batch(np.array(data[url]).astype(np.int)[:].reshape(1, 30, 1))
 
+            # Write results in the right place
             if args.verbose is True:
                 if args.output == "console" or args.output[0] == "console":
                     if results[0] < gan.thresHold:
@@ -233,6 +259,7 @@ def prediction(args):
                             writer.writerow([str(url) + " -> phishing"])
                         else:
                             writer.writerow([str(url) + " -> safe"])
+    return
 
 
 def reportGraph(args):
@@ -242,6 +269,7 @@ def reportGraph(args):
         :return: nothing
         """
     GanGraphGeneration.reportAccuracyGraph(args.path[0])
+    return
 
 
 def historyExtract(args):
@@ -250,9 +278,16 @@ def historyExtract(args):
         :param args: Namespace
         :return: nothing
         """
+    # ---------------------
+    #  Extract URLs from history browsers
+    # ---------------------
     URLs = browser_history_extraction.chromeExtraction(args.date)
     URLs += browser_history_extraction.firefoxExtraction(args.date)
     URLs += browser_history_extraction.operaExtraction(args.date)
+
+    # ---------------------
+    #  Write results in the right place
+    # ---------------------
     if args.output == "console" or args.output[0] == "console":
         print(URLs)
 
@@ -269,23 +304,26 @@ def historyTrain(args):
         :param args: Namespace
         :return: nothing
         """
+    # Load GAN model
     gan = GAN(0.1, 1)
     gan.load(args.name[0], args.location[0])
 
+    # Load database and extract features
     Base = ORMmanage.MyBase("DB/database.db")
-
     features = []
-
     for website in Base.session.query(Base.History).all():
         url = pickle.loads(website.content)
         features.append(url.getFeatures())
-
     random.shuffle(features)
 
+    # Train the GAN with history
     X, accuracy, Dloss, Gloss, vacc, vDloss, vGloss, bestReport, bestEpoch = \
         gan.train(epochs=args.epochs[0], plotFrequency=args.pltFrequency[0], data=features[:int(len(features) * 0.9)],
                   predict=True, cleanData=features[int(len(features) * 0.9):], phishData=[])
 
+    # ---------------------
+    #  Plot graphs
+    # ---------------------
     if type(args.division) == list:
         args.division = args.division[0]
 
@@ -316,10 +354,13 @@ def historyTrain(args):
                                              bestEpoch, bestReport["accuracy"],
                                              path=args.output, suffix="part" + str(i))
 
+    # Save classification report
     with open(args.output + "/" + str(gan.sampleSize) + "/" + "Report_" + str(
             decimal.Decimal(gan.lr).quantize(decimal.Decimal('.0001'), rounding=decimal.ROUND_DOWN)) + ".txt", "w",
               newline='', encoding='utf-8') as reportFile:
         reportFile.write(str(bestReport))
+
+    return
 
 
 def ORMExtract(args):
@@ -328,12 +369,14 @@ def ORMExtract(args):
         :param args: Namespace
         :return: nothing
         """
-
+    # Load database
     Base = ORMmanage.MyBase(args.database[0])
     Base.create_tables()
 
+    # Load data
     URLs = importData.csvToList(args.path[0])[1].keys()
 
+    # Add data to database
     i = 1
     for url in URLs:
         logger.debug(str(i))

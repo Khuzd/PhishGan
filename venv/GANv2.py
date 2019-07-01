@@ -7,7 +7,9 @@ Author : Pierrick ROBIC--BUTEZ
 2019
 """
 
-from __future__ import print_function, division
+# ---------------------
+#  Define different seeds to permit repeatability
+# ---------------------
 
 seed_value = 42
 
@@ -49,12 +51,14 @@ from sklearn.metrics import classification_report
 
 import importData
 import pickle
-
 import logging
+
+# Import logger
 logger = logging.getLogger('main')
 
-os.environ["PATH"] += os.pathsep + 'C:/Program Files (x86)/Graphviz2.38/bin'
+# os.environ["PATH"] += os.pathsep + 'C:/Program Files (x86)/Graphviz2.38/bin'
 
+# Default datasets path
 PHIS_PATH_TEST = "data/Phishtank_outtest.csv"
 CLEAN_PATH_TEST = "data/Amazon_top25000outtest.csv"
 
@@ -63,7 +67,11 @@ class GAN:
     def __init__(self, lr, sample):
         """
         :param lr: float (learning rate)
+        :param sample: int
         """
+        # ---------------------
+        #  Define attributes
+        # ---------------------
         self.channels = 1
         self.countData = 30
         self.data_shape = (self.countData, self.channels)
@@ -71,13 +79,12 @@ class GAN:
         self.sampleSize = sample
         self.dataType = "phish"
         self.lr = lr
-
-        optimizer = tf.train.AdamOptimizer(learning_rate=self.lr)
+        self.optimizer = tf.train.AdamOptimizer(learning_rate=self.lr)
 
         # Build and compile the discriminator
         self.discriminator = self.build_discriminator()
         self.discriminator.compile(loss='binary_crossentropy',
-                                   optimizer=optimizer,
+                                   optimizer=self.optimizer,
                                    metrics=['accuracy'])
 
         # Build the generator
@@ -93,8 +100,10 @@ class GAN:
         # The combined model  (stacked generator and discriminator)
         # Trains the generator to fool the discriminator
         self.combined = Model(z, validity)
-        self.combined.compile(loss='binary_crossentropy', optimizer=optimizer)
-        del validity, img, z, optimizer
+        self.combined.compile(loss='binary_crossentropy', optimizer=self.optimizer)
+        del validity, img, z, self.optimizer
+
+        return
 
     def build_generator(self, plot=False):
         """
@@ -102,7 +111,9 @@ class GAN:
         :param plot: int
         :return: Model or nothing if plot == True
         """
-
+        # ---------------------
+        #  Define model of generator
+        # ---------------------
         model = Sequential()
         model.add(Dense(50, input_dim=self.countData))
         model.add(LeakyReLU(alpha=0.2))
@@ -133,7 +144,9 @@ class GAN:
         Create the discriminator and plot the neural network configuration if plot == True
         :return: Model or nothing if plot == True
         """
-
+        # ---------------------
+        #  Define model of discriminator
+        # ---------------------
         model = Sequential()
         model.add(Flatten(input_shape=self.data_shape))
         model.add(Dense(50))

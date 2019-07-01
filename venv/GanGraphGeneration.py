@@ -6,7 +6,9 @@ University of Gloucestershire
 Author : Pierrick ROBIC--BUTEZ
 2019
 """
-
+# ---------------------
+#  Define different seeds to permit repeatability
+# ---------------------
 seed_value = 42
 
 # 1. Set the `PYTHONHASHSEED` environment variable at a fixed value
@@ -44,9 +46,9 @@ import os
 import glob
 import re
 import importData
-
 import logging
 
+# Import logger
 logger = logging.getLogger('main')
 
 
@@ -66,22 +68,31 @@ def graphCreation(X, YD, VYD, lr, sample, label, bestEpoch, bestAccu, YG=None, V
     :param path string
     :param suffix: str
     """
-
+    # Plot discriminator
     plt.plot(X, YD, label="Training Discriminator")
     plt.plot(X, VYD, label="Validation Discriminator")
+
+    # Plot generator
     if YG:
         plt.plot(X, YG, label="Trainig Generator")
         plt.plot(X, VYG, label="Validation Generator")
 
+    # All captions
     plt.title(
         label + " with a sample size of " + str(sample) + " and learning rate of " + str(lr) + "\n best Epoch: " + str(
             bestEpoch) + " - best accuracy: " + str(bestAccu))
     plt.xlabel("epochs")
     plt.ylabel(label)
     plt.legend()
+
+    # Save
     plt.savefig(path + "/" + str(sample) + "/" + str(label) + str(
         decimal.Decimal(lr).quantize(decimal.Decimal('.0001'), rounding=decimal.ROUND_DOWN)) + suffix + ".png")
+
+    # Clean
     plt.clf()
+
+    return
 
 
 def multiGraph(begin_lr, end_lr, step_lr, epochs, begin_sampleSize, end_SampleSize, step_sampleSize, plotFrequency,
@@ -108,7 +119,11 @@ def multiGraph(begin_lr, end_lr, step_lr, epochs, begin_sampleSize, end_SampleSi
             os.mkdir(outPath + "/" + str(sample))
         except FileExistsError:
             pass
+        except FileNotFoundError:
+            logger.critical("The path to the directory {} is unreachable".format(outPath))
+
         for lr in np.arange(begin_lr, end_lr, step_lr):
+            # Set seeds
             random.seed(seed_value)
             np.random.seed(seed_value)
             tf.set_random_seed(seed_value)
@@ -118,11 +133,19 @@ def multiGraph(begin_lr, end_lr, step_lr, epochs, begin_sampleSize, end_SampleSi
             K.set_session(sess)
 
             logger.info("sample : %f ; lr : %f" % (sample, lr))
+
+            # Create GAN
             gan = GAN(lr=lr, sample=sample)
             gan.dataType = dataType
+
+            # Train
             X, accuracy, Dloss, Gloss, vacc, vDloss, vGloss, bestReport, \
             bestEpoch = gan.train(epochs=epochs, plotFrequency=plotFrequency,
                                   data=importData.csvToList(datasetPath)[1].values(), predict=True)
+
+            # ---------------------
+            #  Plot graph(s)
+            # ---------------------
             if divide == 1:
                 graphCreation(X, Dloss, vDloss, lr, sample, "loss", bestEpoch, bestReport["accuracy"], Gloss, vGloss,
                               path=outPath)
@@ -144,6 +167,7 @@ def multiGraph(begin_lr, end_lr, step_lr, epochs, begin_sampleSize, end_SampleSi
                                   bestEpoch, bestReport["accuracy"],
                                   path=outPath, suffix="part" + str(i))
 
+            # Save classification report
             with open(outPath + "/" + str(sample) + "/" + "Report_" + str(
                     decimal.Decimal(lr).quantize(decimal.Decimal('.0001'), rounding=decimal.ROUND_DOWN)) + ".txt", "w",
                       newline='', encoding='utf-8') as reportFile:
@@ -152,6 +176,8 @@ def multiGraph(begin_lr, end_lr, step_lr, epochs, begin_sampleSize, end_SampleSi
             del gan, sess, session_conf, X, accuracy, Dloss, Gloss, vacc, vDloss, vGloss, bestReport, bestEpoch
             K.clear_session()
 
+    return
+
 
 def reportAccuracyGraph(path):
     """
@@ -159,20 +185,27 @@ def reportAccuracyGraph(path):
     :param path: str (path to the folder contained the folders for each sample size)
     :return: nothing
     """
+    try:
+        for folder in os.listdir(path):
+            accuracies = []
+            LRs = []
 
-    for folder in os.listdir(path):
-        accuracies = []
-        LRs = []
-        for report in glob.glob(path + "/" + folder + "/" + "*.txt"):
-            file = open(report)
-            content = file.read()
-            file.close()
-            accuracies.append(float(re.findall("\d+\.\d+", re.findall(r"}, 'accuracy': 0.\d*?,", content)[0])[0]))
-            LRs.append(float(re.findall(r"\d+\.\d+", report)[0]))
+            # Load data from classification reports
+            for report in glob.glob(path + "/" + folder + "/" + "*.txt"):
+                file = open(report)
+                content = file.read()
+                file.close()
+                accuracies.append(float(re.findall("\d+\.\d+", re.findall(r"}, 'accuracy': 0.\d*?,", content)[0])[0]))
+                LRs.append(float(re.findall(r"\d+\.\d+", report)[0]))
 
+            # Plot
             plt.plot(LRs, accuracies)
             plt.title("Accuracies for a sample size of " + str(folder))
             plt.xlabel("Learning rate")
             plt.ylabel("Accuracy")
             plt.savefig(path + "/" + folder + "accuracyGraph.png")
             plt.clf()
+
+    except FileNotFoundError:
+        logger.critical("The path to the directory {} is unreachable".format(path))
+    return

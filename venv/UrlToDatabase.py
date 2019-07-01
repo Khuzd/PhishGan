@@ -27,7 +27,12 @@ import googleIndexChecker
 from libs.whois import whois
 from libs.whois.parser import PywhoisError
 
+# Import logger
 logger = logging.getLogger('main')
+
+# ---------------------
+#  Set constants
+# ---------------------
 
 columns = ["having_IP_Address", "URL_Length", "Shortining_Service", "having_At_Symbol", "double_slash_redirecting",
            "Prefix_Suffix", "having_Sub_Domain", "SSLfinal_State", "Domain_registeration_length", "Favicon", "port",
@@ -68,12 +73,20 @@ TRUSTED_ISSUERS = ["geotrust", "godaddy", "network solutions", "thawte", "comodo
 
 class URL:
     def __init__(self, url, manualInit=False):
+        # ---------------------
+        #  Define attributes
+        # ---------------------
         self.http = None
         self.url = url
         self.domain = None
         self.whoisDomain = None
         self.html = None
 
+        # ---------------------
+        #  Calculate attributes
+        # ---------------------
+
+        # http, url and domain attributes
         if not manualInit:
 
             if len(url.split("http://")) == 2:
@@ -86,6 +99,7 @@ class URL:
 
             self.domain = self.url.split("/")[0]
 
+            # whoisDomain attribute
             retry = True
             while retry:  # to retry if whois database kick us
                 try:
@@ -101,6 +115,7 @@ class URL:
                 except FunctionTimedOut:
                     logger.error("Whois timeout")
 
+            # html and http attributes
             try:
                 self.html = func_timeout(30, requests.get, kwargs={'url': "https://" + self.url}).content
                 self.http = "https"
@@ -158,6 +173,8 @@ class URL:
         self.indexingWeight = "error"
         self.linksWeight = "error"
         self.statisticWeight = "error"
+
+        return
 
     def IPtesting(self):
         """
@@ -1094,13 +1111,21 @@ class URL:
 
 
 def extraction(inputFile, output, begin=1):
+    """
+    Used to extract features from a csv file
+    :param inputFile: str (path)
+    :param output: str
+    :param begin: int
+    :return: nothing
+    """
     failledURLS = []
     notReacheable = []
 
+    # First try with all URLs
     count = 1
     begin = begin
     with open(inputFile, newline='', encoding='utf-8') as csvinfile:
-
+        # Load URLs from csv file
         for row in csv.reader(csvinfile, delimiter=',', quotechar='|'):
             logger.info("first round: " + str(count))
             website = URL(row[0])
@@ -1111,6 +1136,7 @@ def extraction(inputFile, output, begin=1):
                 proc.start()
 
                 try:
+                    # Extract features
                     results = queue.get(timeout=50)
                     logger.debug(results)
                     proc.join()
@@ -1119,6 +1145,7 @@ def extraction(inputFile, output, begin=1):
                     elif results == -2:
                         failledURLS.append(row[0])
                     else:
+                        # Write results in the right place
                         if output != "console":
                             with open(output, 'a', newline='') as outcsvfile:
                                 writer = csv.writer(outcsvfile, delimiter=',', quotechar='"')
@@ -1134,6 +1161,7 @@ def extraction(inputFile, output, begin=1):
 
     realfailledURLS = []
 
+    # Second try with URLs which failed due to timeout
     count = 1
     for url in failledURLS:
         logger.info("second round" + str(count))
@@ -1144,12 +1172,14 @@ def extraction(inputFile, output, begin=1):
                        args=(queue,))  # creation of a process calling longfunction with the specified arguments
         proc.start()
 
+        # Extract features
         try:
             results = queue.get(timeout=90)
             proc.join()
             if results == -1:
                 notReacheable.append(results)
             else:
+                # Write results in the right place
                 if output != "console":
                     with open(output, 'a', newline='') as outcsvfile:
                         writer = csv.writer(outcsvfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
@@ -1160,6 +1190,7 @@ def extraction(inputFile, output, begin=1):
             realfailledURLS.append(url)
         proc.terminate()
 
+    # Write failed URLs in the right place
     if output != "console":
         with open(output, 'a', newline='') as outcsvfile:
             writer = csv.writer(outcsvfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)

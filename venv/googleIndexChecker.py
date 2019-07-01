@@ -16,6 +16,11 @@ my_cse_id = "014847826172846365912:woel7dy4mym"
 
 
 def google_search(search_term):
+    """
+    Used to check if a research on Google give some results with Google api
+    :param search_term: str
+    :return: bool
+    """
     service = build("customsearch", "v1", developerKey=my_api_key)
     res = service.cse().list(q=search_term, cx=my_cse_id, num=10).execute()
 

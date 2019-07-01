@@ -12,6 +12,7 @@ import os
 import platform
 import sqlite3
 
+# Import logger
 logger = logging.getLogger('main')
 
 
@@ -30,12 +31,16 @@ def chromeExtraction(date):
     elif platform.system() == 'Darwin':
         data_path = os.path.expanduser('~') + r"/Library/Caches/Google/Chrome/Default/"
     else:
+        logger.critical("Unrecognised operating system")
         return
 
     history_db = os.path.join(data_path, 'history')
 
     logger.debug(history_db)
 
+    # ---------------------
+    #  Load history
+    # ---------------------
     if os.path.isfile(history_db):
         # connection
         c = sqlite3.connect(history_db)
@@ -80,11 +85,15 @@ def firefoxExtraction(date):
         data_path = os.path.expanduser('~') + r"/Library/Application Support/Firefox/Profiles/"
 
     else:
+        logger.critical("Unrecognised operating system")
         return
 
     files = os.listdir(data_path)
     history_db = os.path.join(data_path + files[0], 'places.sqlite')
 
+    # ---------------------
+    #  Load history
+    # ---------------------
     if os.path.isfile(history_db):
         c = sqlite3.connect(history_db)
         cursor = c.cursor()
@@ -130,10 +139,14 @@ def operaExtraction(date):
         data_path = os.path.expanduser('~') + r"/Library/Opera/"
 
     else:
+        logger.critical("Unrecognised operating system")
         return
 
     history_db = os.path.join(data_path, 'History')
 
+    # ---------------------
+    #  Load history
+    # ---------------------
     if os.path.isfile(history_db):
         c = sqlite3.connect(history_db)
         cursor = c.cursor()

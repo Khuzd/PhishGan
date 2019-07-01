@@ -12,7 +12,7 @@ import csv
 
 def csvToList(path):
     """
-
+    Used to import data from csv file
     :param path: path to the UCI csv file
     :return: (title of features list, list of features for all sites)
     """
