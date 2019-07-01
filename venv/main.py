@@ -104,6 +104,14 @@ def graph(args):
     :param args: Namespace
     :return: nothing
     """
+
+    # Test validity of data the user gave to the program
+    if args.beginLR > args.endLR:
+        logger.critical("Can't work because {}>{}".format(str(args.beginLR), str(args.endLR)))
+
+    if args.beginSample > args.endSample:
+        logger.critical("Can't work because {}>{}".format(str(args.beginSample), str(args.endSample)))
+
     # Load dataset
     if args.dataset[0] == "UCI":
         dataset = UCI_PATH
