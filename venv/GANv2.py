@@ -50,7 +50,6 @@ from keras.utils import plot_model
 from sklearn.metrics import classification_report
 
 import importData
-import pickle
 import logging
 import json
 
@@ -177,7 +176,6 @@ class GAN:
         :param path: string
         :return: nothing
         """
-
 
         ## Save models
         # Combined
