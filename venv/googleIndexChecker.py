@@ -11,8 +11,8 @@ from googleapiclient.discovery import build
 
 # api obtained on this URL : https://developers.google.com/api-client-library/python/guide/aaa_apikeys
 # cse create on this URL : http://www.google.com/cse/
-my_api_key = "AIzaSyCo3NlIoPHGg41cVlmMvAwmW7H-TFUFbzE"
-my_cse_id = "014847826172846365912:woel7dy4mym"
+my_api_key = open("api_keys/google_api_key.txt").read()
+my_cse_id = open("api_keys/google_cse_id.txt").read()
 
 
 def google_search(search_term):
