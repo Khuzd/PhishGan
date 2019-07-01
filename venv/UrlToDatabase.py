@@ -96,6 +96,8 @@ class URL:
                 self.http = "https"
                 self.url = url.split("https://")[1]
 
+            self.domain = self.url.split("/")[0].split(":")[0]
+
             # whoisDomain attribute
             retry = True
             while retry:  # to retry if whois database kick us
@@ -138,10 +140,8 @@ class URL:
                     except:
                         logger.error("Can not get HTML content from : " + self.url)
                         # time.sleep(1.5)
-        if self.whoisDomain != None:
-            self.domain = self.whois.domain
-        else:
-            self.domain = self.url.split("/")[0].split(":")[0]
+        if self.whoisDomain != None and self.whoisDomain.domain !=:
+            self.domain = self.whoisDomain.domain
 
         ## Weights
         self.ipWeight = "error"
@@ -877,7 +877,10 @@ class URL:
         test if the ip address of the domain is in top 50 of www.stopbadware.org
         :return: -1 or 1
         """
-        IPdomain = socket.gethostbyname(self.domain)
+        try:
+            IPdomain = socket.gethostbyname(self.domain)
+        except socket.gaierror:
+            self.statisticWeight = -1
 
         jsonDictIP = json.loads(
             requests.post("https://www.stopbadware.org/sites/all/themes/sbw/clearinghouse.php",
