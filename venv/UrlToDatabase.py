@@ -96,8 +96,6 @@ class URL:
                 self.http = "https"
                 self.url = url.split("https://")[1]
 
-            self.domain = self.url.split("/")[0].split(":")[0]
-
             # whoisDomain attribute
             retry = True
             while retry:  # to retry if whois database kick us
@@ -140,6 +138,10 @@ class URL:
                     except:
                         logger.error("Can not get HTML content from : " + self.url)
                         # time.sleep(1.5)
+        if self.whoisDomain != None:
+            self.domain = self.whois.domain
+        else:
+            self.domain = self.url.split("/")[0].split(":")[0]
 
         ## Weights
         self.ipWeight = "error"
@@ -804,7 +806,7 @@ class URL:
             else:
                 self.pageRankWeight = -1
                 return
-        except KeyError:
+        except (KeyError, TypeError):
             logger.error("domain pagerank not found")
             self.pageRankWeight = 1
             return
