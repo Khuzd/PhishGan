@@ -517,5 +517,8 @@ if __name__ == "__main__":
     # ---------------------
     arg = parser.parse_args()
     logger.debug(arg)
-    arg.func(arg)
+    try:
+        arg.func(arg)
+    except AttributeError:
+        parser.print_help()
     exit(0)
