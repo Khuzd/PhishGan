@@ -104,6 +104,14 @@ def graph(args):
     :param args: Namespace
     :return: nothing
     """
+
+    # Test validity of data the user gave to the program
+    if args.beginLR > args.endLR:
+        logger.critical("Can't work because {}>{}".format(str(args.beginLR), str(args.endLR)))
+
+    if args.beginSample > args.endSample:
+        logger.critical("Can't work because {}>{}".format(str(args.beginSample), str(args.endSample)))
+
     # Load dataset
     if args.dataset[0] == "UCI":
         dataset = UCI_PATH
@@ -141,13 +149,15 @@ def extraction(args):
             print(str(args.URL[0]) + " " + str(results))
         else:
             with open(args.output[0], 'a', newline='') as outcsvfile:
-                writer = csv.writer(outcsvfile, delimiter=' ', quotechar='"')
-                writer.writerow([args.URL[0]] + [str(results)])
+                writer = csv.writer(outcsvfile, delimiter=',', quotechar='"')
+                writer.writerow([args.URL[0]] + results)
     # ---------------------
     #  Case of features extraction for one file
     # ---------------------
     elif args.file is not None:
-        UrlToDatabase.extraction(args.file[0], args.output[0], args.begin[0])
+        if type(args.begin) is list:
+            args.begin = args.begin[0]
+        UrlToDatabase.extraction(args.file[0], args.output[0], args.begin)
 
     # ---------------------
     #  Case of features extraction for a list of URLs
@@ -163,8 +173,8 @@ def extraction(args):
                 print(str(url) + str(results))
             else:
                 with open(args.output[0], 'a', newline='') as outcsvfile:
-                    writer = csv.writer(outcsvfile, delimiter=' ', quotechar='"')
-                    writer.writerow([str(url)] + [str(results)])
+                    writer = csv.writer(outcsvfile, delimiter=',', quotechar='"')
+                    writer.writerow([str(url)] + results)
     return
 
 
@@ -221,17 +231,17 @@ def prediction(args):
             if args.verbose is True:
                 if args.output == "console" or args.output[0] == "console":
                     if results[0] < gan.thresHold:
-                        print(str(url) + " : " + str(results[0]) + " -> phishing")
+                        print(str(url) + " : " + str(results[0][0]) + " -> phishing")
                     else:
-                        print(str(url) + " : " + str(results[0]) + " -> safe")
+                        print(str(url) + " : " + str(results[0][0]) + " -> safe")
 
                 else:
                     with open(args.output[0], 'a', newline='') as outcsvfile:
                         writer = csv.writer(outcsvfile, delimiter=' ', quotechar='"')
                         if results[0] < gan.thresHold:
-                            writer.writerow([str(url) + " : " + str(results[0]) + " -> phishing"])
+                            writer.writerow([str(url) + " : {} -> phishing".format(results[0][0])])
                         else:
-                            writer.writerow([str(url) + " : " + str(results[0]) + " -> safe"])
+                            writer.writerow([str(url) + " : {} -> safe".format(results[0][0])])
 
             else:
                 if args.output == "console" or args.output[0] == "console":
@@ -517,5 +527,8 @@ if __name__ == "__main__":
     # ---------------------
     arg = parser.parse_args()
     logger.debug(arg)
-    arg.func(arg)
+    try:
+        arg.func(arg)
+    except AttributeError:
+        parser.print_help()
     exit(0)

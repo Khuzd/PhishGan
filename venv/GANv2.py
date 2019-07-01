@@ -52,6 +52,7 @@ from sklearn.metrics import classification_report
 import importData
 import pickle
 import logging
+import json
 
 # Import logger
 logger = logging.getLogger('main')
@@ -176,9 +177,7 @@ class GAN:
         :param path: string
         :return: nothing
         """
-        ## Save object
-        with open(path + "/" + prefix + "object.json", "w") as json_file:
-            pickle.dump(self.__dict__, json_file, 2)
+
 
         ## Save models
         # Combined
@@ -199,6 +198,15 @@ class GAN:
         self.discriminator.save_weights(path + "/" + prefix + "discriminator_model.h5")
         self.generator.save_weights(path + "/" + prefix + "generator_model.h5")
 
+        ## Save object
+        with open(path + "/" + prefix + "object.json", "w") as json_file:
+            tmp = self.__dict__
+            tmp["generator"] = None
+            tmp["discriminator"] = None
+            tmp["combined"] = None
+            print(tmp)
+            json_file.write(json.dumps(tmp))
+
         del generator_model_json, discriminator_model_json, combined_model_json
 
     def load(self, prefix, path):
@@ -209,9 +217,8 @@ class GAN:
         :return: nothing
         """
         ## Load object
-        with open(path + "/" + prefix + "object.json", "w") as json_file:
-            tmp = pickle.load(json_file)
-
+        with open(path + "/" + prefix + "object.json", "r") as json_file:
+            tmp = json.loads(json_file.read())
         self.__dict__.update(tmp)
 
         ## Load models
@@ -238,6 +245,9 @@ class GAN:
         self.discriminator.load_weights(path + "/" + prefix + "discriminator_model.h5")
         self.generator.load_weights(path + "/" + prefix + "generator_model.h5")
 
+        ## Load optimizer
+        self.optimizer = tf.train.AdamOptimizer(learning_rate=self.lr)
+
         del json_file, loaded_model_json
 
     def classReport(self, cleanTestDataset, phishTestDataset, calculate=True):
@@ -259,8 +269,8 @@ class GAN:
             prediction.append(self.discriminator.predict_on_batch(np.array(i).astype(np.int)[:].reshape(1, 30, 1)))
 
         ## Calculate the best threshold
-        self.thresHold = ((sum(prediction[:len(cleanTestDataset)]) / len(cleanTestDataset)) + (
-                sum(prediction[len(cleanTestDataset):]) / len(phishTestDataset))) / 2
+        self.thresHold = float(((sum(prediction[:len(cleanTestDataset)]) / len(cleanTestDataset)) + (
+                sum(prediction[len(cleanTestDataset):]) / len(phishTestDataset))) / 2)
 
         if calculate:
             ## Generate the predict results
