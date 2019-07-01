@@ -21,7 +21,7 @@ def google_search(search_term):
     :param search_term: str
     :return: bool
     """
-    service = build("customsearch", "v1", developerKey=my_api_key)
+    service = build("customsearch", "v1", developerKey=my_api_key, cache_discovery=False)
     res = service.cse().list(q=search_term, cx=my_cse_id, num=10).execute()
 
     return 'items' in res
