@@ -155,7 +155,9 @@ def extraction(args):
     #  Case of features extraction for one file
     # ---------------------
     elif args.file is not None:
-        UrlToDatabase.extraction(args.file[0], args.output[0], args.begin[0])
+        if type(args.begin) is list:
+            args.begin = args.begin[0]
+        UrlToDatabase.extraction(args.file[0], args.output[0], args.begin)
 
     # ---------------------
     #  Case of features extraction for a list of URLs
