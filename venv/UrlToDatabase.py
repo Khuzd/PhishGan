@@ -96,7 +96,7 @@ class URL:
                 self.http = "https"
                 self.url = url.split("https://")[1]
 
-            self.domain = self.url.split("/")[0]
+            self.domain = self.url.split("/")[0].split(":")[0]
 
             # whoisDomain attribute
             retry = True
