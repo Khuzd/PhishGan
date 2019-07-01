@@ -149,8 +149,8 @@ def extraction(args):
             print(str(args.URL[0]) + " " + str(results))
         else:
             with open(args.output[0], 'a', newline='') as outcsvfile:
-                writer = csv.writer(outcsvfile, delimiter=' ', quotechar='"')
-                writer.writerow([args.URL[0]] + [str(results)])
+                writer = csv.writer(outcsvfile, delimiter=',', quotechar='"')
+                writer.writerow([args.URL[0]] + results)
     # ---------------------
     #  Case of features extraction for one file
     # ---------------------
@@ -171,8 +171,8 @@ def extraction(args):
                 print(str(url) + str(results))
             else:
                 with open(args.output[0], 'a', newline='') as outcsvfile:
-                    writer = csv.writer(outcsvfile, delimiter=' ', quotechar='"')
-                    writer.writerow([str(url)] + [str(results)])
+                    writer = csv.writer(outcsvfile, delimiter=',', quotechar='"')
+                    writer.writerow([str(url)] + results)
     return
 
 
