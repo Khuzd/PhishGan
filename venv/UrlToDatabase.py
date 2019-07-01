@@ -43,7 +43,7 @@ URL_SHORTENER = ["shrinkee.com", "goo.gl", "7.ly", "adf.ly", "admy.link", "al.ly
                  "ity.im", "url.ie", "is.gd", "linkmoji.co", "sh.dz24.info", "lynk.my", "mcaf.ee", "yep.it", "ow.ly",
                  "x61.ch", "qr.net", "shrinkee.com", "u.to", "ho.io", "thinfi.com", "tiny.cc", "tinyurl.com", "tny.im",
                  "flic.krp", "v.gd", "y2u.be", "cutt.us", "zzb.bz", "adfoc.us", "bit.ly", "cur.lv", "git.io", "hec.su",
-                 "viid.me", "tldrify.com", "tr.im"]
+                 "viid.me", "tldrify.com", "tr.im", "link.do"]
 
 CCTLD = [".ac", ".ad", ".ae", ".af", ".ag", ".ai", ".al", ".am", ".an", ".ao", ".aq", ".ar", ".as", ".at", ".au", ".aw",
          ".ax", ".az", ".ba", ".bb", ".bd", ".be", ".bf", ".bg", ".bh", ".bi", ".bj", ".bl", ".bm", ".bn", ".bo", ".bq",
@@ -88,11 +88,11 @@ class URL:
         # http, url and domain attributes
         if not manualInit:
 
-            if len(url.split("http://")) == 2:
+            if len(url.split("http://")) != 1:
                 self.http = "http"
                 self.url = url.split("http://")[1]
 
-            elif len(url.split("https://")) == 2:
+            elif len(url.split("https://")) != 1:
                 self.http = "https"
                 self.url = url.split("https://")[1]
 
