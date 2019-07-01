@@ -140,7 +140,7 @@ class URL:
                     except:
                         logger.error("Can not get HTML content from : " + self.url)
                         # time.sleep(1.5)
-        if self.whoisDomain != None and self.whoisDomain.domain !=:
+        if self.whoisDomain != None:
             self.domain = self.whoisDomain.domain
 
         ## Weights
