@@ -380,7 +380,10 @@ class URL:
         """
 
         try:
-            remoteServerIP = socket.gethostbyname(self.domain)
+            try:
+                remoteServerIP = socket.gethostbyname(self.domain)
+            except socket.gaierror:
+                remoteServerIP = socket.gethostbyname(self.url.split("/")[0].split(":")[0])
 
             for port in PORTS_TO_SCAN:
                 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -948,6 +951,7 @@ class URL:
             self.ageCertificateTesting()
             features.append(self.certificateAgeWeight)
         else:
+            self.certificateAgeWeight = 1
             features.append(1)
 
         # testing expiration date of domain
