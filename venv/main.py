@@ -483,7 +483,6 @@ if __name__ == "__main__":
     historyExtractionParser.add_argument("-d", "--date", type=int, default=0,
                                          help="Used to set the date after which the URLs will be extracted from "
                                               "browsers history")
-    historyExtractionParser.add_argument('-n', "--name", required=True, nargs=1, type=str, help="Name of the save")
 
     historyExtractionParser.set_defaults(func=historyExtract)
 
