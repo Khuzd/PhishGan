@@ -22,6 +22,8 @@ def google_search(search_term):
     :return: bool
     """
     service = build("customsearch", "v1", developerKey=my_api_key, cache_discovery=False)
-    res = service.cse().list(q=search_term, cx=my_cse_id, num=10).execute()
-
+    try:
+        res = service.cse().list(q=search_term, cx=my_cse_id, num=10).execute()
+    except HttpError:
+        res = service.cse().list(q=search_term, cx=my_cse_id, num=10).execute()
     return 'items' in res
