@@ -148,7 +148,7 @@ class MyBase:
 
                 # Replace old website in database by new website
                 result.content = pickle.dumps(tmp)
-                self.session.commit()
+            self.session.commit()
 
             del query
         return
