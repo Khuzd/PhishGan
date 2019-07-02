@@ -614,8 +614,13 @@ class URL:
         test the number of forwarding
         :return: -1,0 or 1
         """
-        countForward = len(requests.get(self.http + "://" + self.url).history)
-
+        try:
+            countForward = len(requests.get(self.http + "://" + self.url).history)
+        except requests.exceptions.ConnectionError:
+            try:
+                countForward = len(requests.get(self.http + "://" + self.url).history)
+            except requests.exceptions.ConnectionError:
+                return
         if countForward <= 1:
             self.forwardWeight = -1
             return
