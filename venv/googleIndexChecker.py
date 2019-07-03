@@ -7,7 +7,10 @@ Author : Pierrick ROBIC--BUTEZ
 2019
 """
 
+import time
+
 from googleapiclient.discovery import build
+from googleapiclient.errors import HttpError
 
 # api obtained on this URL : https://developers.google.com/api-client-library/python/guide/aaa_apikeys
 # cse create on this URL : http://www.google.com/cse/
@@ -25,5 +28,6 @@ def google_search(search_term):
     try:
         res = service.cse().list(q=search_term, cx=my_cse_id, num=10).execute()
     except HttpError:
+        time.sleep(10)
         res = service.cse().list(q=search_term, cx=my_cse_id, num=10).execute()
     return 'items' in res
