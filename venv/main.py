@@ -369,10 +369,6 @@ def ORMExtract(args):
         :return: nothing
         """
 
-    def extractfeature(web):
-        web.featuresExtraction()
-        return web
-
     # Load database
     Base = ORMmanage.MyBase(args.database[0])
     Base.create_tables()
@@ -404,11 +400,11 @@ def ORMExtract(args):
             if web.html == None:
                 result2.append(web)
                 # result1.remove(web)
-            else :
+            else:
                 tmp.append(web)
         if args.extraction:
             # Extract features
-            result2 += ThreadPool().map(extractfeature, tmp)
+            result2 += ThreadPool().map(UrlToDatabase.URL.featuresExtraction, tmp)
 
             for web in result2:
                 # Add in database
