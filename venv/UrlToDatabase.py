@@ -366,7 +366,7 @@ class URL:
 
         if favicon is not None:
             linkFavicon = favicon.get("href")
-            if self.domain not in linkFavicon:
+            if linkFavicon is not None and self.domain not in linkFavicon:
                 self.faviconWeight = 1
                 return
 
