@@ -393,14 +393,22 @@ def ORMExtract(args):
     i = 1
     for url in URLs:
         logger.debug(str(i))
+        logger.info("Add : {}".format(url))
         i += args.thread
 
         # Create URL object
         result1 = ThreadPool().map(UrlToDatabase.URL, url)
-
+        result2 = []
+        tmp = []
+        for web in result1:
+            if web.html == None:
+                result2.append(web)
+                # result1.remove(web)
+            else :
+                tmp.append(web)
         if args.extraction:
             # Extract features
-            result2 = ThreadPool().map(extractfeature, result1)
+            result2 += ThreadPool().map(extractfeature, tmp)
 
             for web in result2:
                 # Add in database
