@@ -920,139 +920,108 @@ class URL:
 
         # testing ip adress
         self.IPtesting()
-        features.append(self.ipWeight)
 
         # testing lenght of the url
         self.leghtTesting()
-        features.append(self.lenghtWeight)
 
         # testing shortener url
         self.shortenerTEsting()
-        features.append(self.shorteningWeight)
 
         # testing at symbol
         self.atSymbolTetsting()
-        features.append(self.atWeight)
 
         # testing double slash
         self.doubleSlashTesting()
-        features.append(self.doubleSlashWeight)
 
         # testing dash
         self.dashTesting()
-        features.append(self.dashWeight)
 
         # testing subdomain count
         self.subDomainTesting()
-        features.append(self.subDomainWeight)
 
         # testing age of the domain certificate
         if self.http == "https":
             self.ageCertificateTesting()
-            features.append(self.certificateAgeWeight)
         else:
             self.certificateAgeWeight = 1
-            features.append(1)
 
         # testing expiration date of domain
         self.expirationDomainTesting()
-        features.append(self.expirationWeight)
-        if features[-1] == -2:
+        if self.expirationWeight == -2:
             return -1
         # testing favicon href
         self.faviconTesting()
-        features.append(self.faviconWeight)
 
         # testing ports
         self.portTesting()
-        features.append(self.portWeight)
 
-        if features[-1] == -2:
+        if self.portWeight == -2:
             logger.error("port testing error")
             return -1
 
         # testing http token
         self.httpTesting()
-        features.append(self.httpWeight)
 
         # testing request URL
         self.requestedURL()
-        features.append(self.requestedWeight)
 
         # testing anchors
         self.anchorsTesting()
-        features.append(self.anchorsWeight)
 
         # testing tags links
         self.tagsLinksTesting()
-        features.append(self.tagWeight)
 
         # testing SFH
         self.SFHTesting()
-        features.append(self.SFHWeight)
 
         # testing email
         self.emailTesting()
-        features.append(self.emailWeight)
 
         # testing abnormal url
         self.abnormalURLTesting()
-        features.append(self.abnormalWeight)
 
         # testing forwarding
         self.forwardingTesting()
-        features.append(self.forwardWeight)
 
         # testing abnormal status bar
         self.barCustomTesting()
-        features.append(self.barCustomWeight)
 
         # testing right click disabling
         self.rightClickTesting()
-        features.append(self.rightClickWeight)
 
         # testing popup
         self.popUpTesting()
-        features.append(self.popupWeight)
 
         # testing IFrame
         self.IFrameTesting()
-        features.append(self.iFrameWeight)
 
         # testing domain age
         self.domainAgeTesting()
-        features.append(self.domainAgeWeight)
-        if features[-1] == -2:
+        if self.domainAgeWeight == -2:
             return -1
 
         # testing DNS record
         self.DNSRecordTesting()
-        features.append(self.dnsWeight)
 
         # testing traffic
         self.trafficTesting()
-        features.append(self.trafficWeight)
 
         # testing page rank
         self.pageRankTesting()
-        features.append(self.pageRankWeight)
 
         # testo google indexing
         self.googleIndexTesting()
-        features.append(self.indexingWeight)
 
-        if features[-1] == -2:
+        if self.indexingWeight == -2:
             return -2
 
         # testing links pointing to the webpage
         self.linksPointingToTesting()
-        features.append(self.linksWeight)
 
         # testing statistics
         self.statisticReportTEsting()
-        features.append(self.statisticWeight)
 
-        return features
+        return self.getFeatures()
 
     def getFeatures(self):
         """

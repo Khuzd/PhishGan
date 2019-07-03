@@ -63,31 +63,19 @@ class MyBase:
         MyBase.Base.metadata.create_all(self.engine)
         return
 
-    def adding(self, url, table, extraction):
+    def adding(self, website, table):
         """
         Used to add URL in a table of the database
-        :param url: str
+        :param website: UrlToDatabase.URL
         :param table: str
-        :param extraction: bool
         :return: nothing
         """
         try:
-            # Check if URL is not already in the table
-            if self.session.query(self.__getattribute__(table)).filter(
-                    self.__getattribute__(table).url == url).count() == 0:
-                logger.info("adding: " + url)
-                website = UrlToDatabase.URL(url)
+            adding = self.__getattribute__(table)(url=website.url, content=pickle.dumps(website))
+            print("hey")
+            self.session.add(adding)
+            self.session.commit()
 
-                # Extract feature if asked
-                if extraction and website.html is not None:
-                    if type(website.featuresExtraction()) is list:
-                        adding = self.__getattribute__(table)(url=website.url, content=pickle.dumps(website))
-                        self.session.add(adding)
-                        self.session.commit()
-                else:
-                    adding = self.__getattribute__(table)(url=website.url, content=pickle.dumps(website))
-                    self.session.add(adding)
-                    self.session.commit()
         except AttributeError:
             logger.critical("Please add table {} in the database".format(table))
 

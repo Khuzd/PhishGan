@@ -56,6 +56,7 @@ from stem.control import Controller
 import logging
 from logging.handlers import RotatingFileHandler
 from func_timeout import func_timeout
+from pathos.pools import ThreadPool
 
 ## Default datasets
 UCI_PATH = 'data/UCI_dataset.csv'
@@ -367,23 +368,54 @@ def ORMExtract(args):
         :param args: Namespace
         :return: nothing
         """
+
+    def extractfeature(web):
+        web.featuresExtraction()
+        return web
+
     # Load database
     Base = ORMmanage.MyBase(args.database[0])
     Base.create_tables()
 
+    if type(args.thread) is list:
+        args.thread = args.thread[0]
+
     # Load data
-    URLs = importData.csvToList(args.path[0])[1].keys()
+    URLs = list(importData.csvToList(args.path[0])[1].keys())
+    for url in URLs:
+        if Base.session.query(Base.__getattribute__(args.table[0])).filter(
+                Base.__getattribute__(args.table[0]).url == url).count() != 0:
+            URLs.remove(url)
+    itera = iter(URLs)
+    URLs = zip(*[itera] * args.thread)
 
     # Add data to database
     i = 1
     for url in URLs:
         logger.debug(str(i))
-        i += 1
-        Base.adding(url, args.table[0], args.extraction)
-        if i % 50 == 0:
+        i += args.thread
+
+        # Create URL object
+        result1 = ThreadPool().map(UrlToDatabase.URL, url)
+
+        if args.extraction:
+            # Extract features
+            result2 = ThreadPool().map(extractfeature, result1)
+
+            for web in result2:
+                # Add in database
+                Base.adding(web, args.table[0])
+        else:
+            for web in result1:
+                # Add in database
+                Base.adding(web, args.table[0])
+
+        if i > 50:
+            # Get new identity with tor
             with Controller.from_port(port=9051) as controller:
                 controller.authenticate()
                 controller.signal(Signal.NEWNYM)
+            i = 1
 
 
 if __name__ == "__main__":
@@ -517,7 +549,9 @@ if __name__ == "__main__":
                                   help="Path to the csv file which contained URLs")
     ORMExtractParser.add_argument("-t", "--table", nargs=1, type=str, required=True,
                                   help="Name of the table where data will be stored")
-    ORMExtractParser.add_argument("-e", "--extraction", action="store_true", help="Verbose option")
+    ORMExtractParser.add_argument("-e", "--extraction", action="store_true",
+                                  help="Used to set up the features extraction when adding URLs in the database")
+    ORMExtractParser.add_argument("-th", "--thread", type=int, default=1, help="Number of threads")
 
     ORMExtractParser.set_defaults(func=ORMExtract)
 
