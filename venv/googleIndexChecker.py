@@ -7,10 +7,15 @@ Author : Pierrick ROBIC--BUTEZ
 2019
 """
 
+import logging
 import time
+from socket import error
 
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
+
+# Import logger
+logger = logging.getLogger('main')
 
 # api obtained on this URL : https://developers.google.com/api-client-library/python/guide/aaa_apikeys
 # cse create on this URL : http://www.google.com/cse/
@@ -24,10 +29,35 @@ def google_search(search_term):
     :param search_term: str
     :return: bool
     """
-    service = build("customsearch", "v1", developerKey=my_api_key, cache_discovery=False)
     try:
-        res = service.cse().list(q=search_term, cx=my_cse_id, num=10).execute()
-    except HttpError:
-        time.sleep(10)
-        res = service.cse().list(q=search_term, cx=my_cse_id, num=10).execute()
-    return 'items' in res
+        try:
+            service = build("customsearch", "v1", developerKey=my_api_key, cache_discovery=False)
+        except error:
+            time.sleep(10)
+            try:
+                service = build("customsearch", "v1", developerKey=my_api_key, cache_discovery=False)
+            except error:
+                time.sleep(300)
+                try:
+                    service = build("customsearch", "v1", developerKey=my_api_key, cache_discovery=False)
+                except error:
+                    time.sleep(60)
+
+        try:
+            res = service.cse().list(q=search_term, cx=my_cse_id, num=10).execute()
+        except HttpError:
+            time.sleep(10)
+            try:
+                res = service.cse().list(q=search_term, cx=my_cse_id, num=10).execute()
+            except HttpError:
+                time.sleep(30)
+                try:
+                    res = service.cse().list(q=search_term, cx=my_cse_id, num=10).execute()
+                except:
+                    time.sleep(60)
+                    res = service.cse().list(q=search_term, cx=my_cse_id, num=10).execute()
+
+        return 'items' in res
+    except Exception as e:
+        logger.critical(e)
+        return "error"
