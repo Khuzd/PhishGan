@@ -919,107 +919,227 @@ class URL:
         logger.info("Testing : " + self.url)
 
         # testing ip adress
-        self.IPtesting()
+        try:
+            self.IPtesting()
+        except Exception as e:
+            logger.critical(e)
+            self.ipWeight = "error"
 
         # testing lenght of the url
-        self.leghtTesting()
+        try:
+            self.leghtTesting()
+        except Exception as e:
+            logger.critical(e)
+            self.lenghtWeight = "error"
 
         # testing shortener url
-        self.shortenerTEsting()
+        try:
+            self.shortenerTEsting()
+        except Exception as e:
+            logger.critical(e)
+            self.shorteningWeight = "error"
 
         # testing at symbol
-        self.atSymbolTetsting()
+        try:
+            self.atSymbolTetsting()
+        except Exception as e:
+            logger.critical(e)
+            self.atWeight = "error"
 
         # testing double slash
-        self.doubleSlashTesting()
+        try:
+            self.doubleSlashTesting()
+        except Exception as e:
+            logger.critical(e)
+            self.doubleSlashWeight = "error"
 
         # testing dash
-        self.dashTesting()
+        try:
+            self.dashTesting()
+        except Exception as e:
+            logger.critical(e)
+            self.dashWeight = "error"
 
         # testing subdomain count
-        self.subDomainTesting()
+        try:
+            self.subDomainTesting()
+        except Exception as e:
+            logger.critical(e)
+            self.subDomainWeight = "error"
 
         # testing age of the domain certificate
-        if self.http == "https":
-            self.ageCertificateTesting()
-        else:
-            self.certificateAgeWeight = 1
+        try:
+            if self.http == "https":
+                self.ageCertificateTesting()
+            else:
+                self.certificateAgeWeight = 1
+        except Exception as e:
+            logger.critical(e)
+            self.certificateAgeWeight = "error"
 
         # testing expiration date of domain
-        self.expirationDomainTesting()
-        if self.expirationWeight == -2:
-            return -1
+        try:
+            self.expirationDomainTesting()
+            if self.expirationWeight == -2:
+                return -1
+        except Exception as e:
+            logger.critical(e)
+            self.expirationWeight = "error"
         # testing favicon href
-        self.faviconTesting()
+        try:
+            self.faviconTesting()
+        except Exception as e:
+            logger.critical(e)
+            self.faviconWeight = "error"
 
         # testing ports
-        self.portTesting()
+        try:
+            self.portTesting()
 
-        if self.portWeight == -2:
-            logger.error("port testing error")
-            return -1
+            if self.portWeight == -2:
+                logger.error("port testing error")
+                return -1
+        except Exception as e:
+            logger.critical(e)
+            self.portWeight = "error"
 
         # testing http token
-        self.httpTesting()
+        try:
+            self.httpTesting()
+        except Exception as e:
+            logger.critical(e)
+            self.httpWeight = "error"
 
         # testing request URL
-        self.requestedURL()
+        try:
+            self.requestedURL()
+        except Exception as e:
+            logger.critical(e)
+            self.requestedWeight = "error"
 
         # testing anchors
-        self.anchorsTesting()
+        try:
+            self.anchorsTesting()
+        except Exception as e:
+            logger.critical(e)
+            self.anchorsWeight = "error"
 
         # testing tags links
-        self.tagsLinksTesting()
+        try:
+            self.tagsLinksTesting()
+        except Exception as e:
+            logger.critical(e)
+            self.tagWeight = "error"
 
         # testing SFH
-        self.SFHTesting()
+        try:
+            self.SFHTesting()
+        except Exception as e:
+            logger.critical(e)
+            self.SFHWeight = "error"
 
         # testing email
-        self.emailTesting()
+        try:
+            self.emailTesting()
+        except Exception as e:
+            logger.critical(e)
+            self.emailWeight = "error"
 
         # testing abnormal url
-        self.abnormalURLTesting()
+        try:
+            self.abnormalURLTesting()
+        except Exception as e:
+            logger.critical(e)
+            self.abnormalWeight = "error"
 
         # testing forwarding
-        self.forwardingTesting()
+        try:
+            self.forwardingTesting()
+        except Exception as e:
+            logger.critical(e)
+            self.forwardWeight = "error"
 
         # testing abnormal status bar
-        self.barCustomTesting()
+        try:
+            self.barCustomTesting()
+        except Exception as e:
+            logger.critical(e)
+            self.barCustomWeight = "error"
 
         # testing right click disabling
-        self.rightClickTesting()
+        try:
+            self.rightClickTesting()
+        except Exception as e:
+            logger.critical(e)
+            self.rightClickWeight = "error"
 
         # testing popup
-        self.popUpTesting()
+        try:
+            self.popUpTesting()
+        except Exception as e:
+            logger.critical(e)
+            self.popupWeight = "error"
 
         # testing IFrame
-        self.IFrameTesting()
+        try:
+            self.IFrameTesting()
+        except Exception as e:
+            logger.critical(e)
+            self.iFrameWeight = "error"
 
         # testing domain age
-        self.domainAgeTesting()
-        if self.domainAgeWeight == -2:
-            return -1
+        try:
+            self.domainAgeTesting()
+            if self.domainAgeWeight == -2:
+                return -1
+        except Exception as e:
+            logger.critical(e)
+            self.domainAgeWeight = "error"
 
         # testing DNS record
-        self.DNSRecordTesting()
+        try:
+            self.DNSRecordTesting()
+        except Exception as e:
+            logger.critical(e)
+            self.dnsWeight = "error"
 
         # testing traffic
-        self.trafficTesting()
+        try:
+            self.trafficTesting()
+        except Exception as e:
+            logger.critical(e)
+            self.trafficWeight = "error"
 
         # testing page rank
-        self.pageRankTesting()
+        try:
+            self.pageRankTesting()
+        except Exception as e:
+            logger.critical(e)
+            self.pageRankWeight = "error"
 
         # testo google indexing
-        self.googleIndexTesting()
+        try:
+            self.googleIndexTesting()
 
-        if self.indexingWeight == -2:
-            return -2
+            if self.indexingWeight == -2:
+                return -2
+        except Exception as e:
+            logger.critical(e)
+            self.indexingWeight = "error"
 
         # testing links pointing to the webpage
-        self.linksPointingToTesting()
+        try:
+            self.linksPointingToTesting()
+        except Exception as e:
+            logger.critical(e)
+            self.linksWeight = "error"
 
         # testing statistics
-        self.statisticReportTEsting()
+        try:
+            self.statisticReportTEsting()
+        except Exception as e:
+            logger.critical(e)
+            self.statisticWeight = "error"
 
         return self.getFeatures()
 
