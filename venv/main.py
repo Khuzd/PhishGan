@@ -382,6 +382,7 @@ def ORMExtract(args):
         if Base.session.query(Base.__getattribute__(args.table[0])).filter(
                 Base.__getattribute__(args.table[0]).url == url).count() != 0:
             URLs.remove(url)
+    logger.info("{} websites will be added to the database".format(len(URLs)))
     itera = iter(URLs)
     URLs = zip(*[itera] * args.thread)
 
@@ -414,12 +415,11 @@ def ORMExtract(args):
                 # Add in database
                 Base.adding(web, args.table[0])
 
-        if i > 50:
+        if i % ((50 // args.thread) * args.thread) == 1 and i != 1:
             # Get new identity with tor
             with Controller.from_port(port=9051) as controller:
                 controller.authenticate()
                 controller.signal(Signal.NEWNYM)
-            i = 1
 
 
 if __name__ == "__main__":
