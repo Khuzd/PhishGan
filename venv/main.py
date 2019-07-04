@@ -421,9 +421,10 @@ def ORMExtract(args):
                 tmp.append(web)
         if args.extraction:
             # Extract features
-            result2 += ThreadPool().map(UrlToDatabase.URL.featuresExtraction, tmp)
-
+            ThreadPool().map(UrlToDatabase.URL.featuresExtraction, tmp)
+            result2 += tmp
             for web in result2:
+                print(web)
                 # Add in database
                 Base.adding(web, args.table[0])
         else:

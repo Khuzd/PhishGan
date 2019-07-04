@@ -88,13 +88,13 @@ class URL:
         # http, url and domain attributes
         if not manualInit:
 
-            if len(url.split("http://")) != 1:
+            if "http://" in url[:7]:
                 self.http = "http"
-                self.url = url.split("http://")[1]
+                self.url = url[7:]
 
-            elif len(url.split("https://")) != 1:
+            elif "https://" in url[:8]:
                 self.http = "https"
-                self.url = url.split("https://")[1]
+                self.url = url[8:]
 
             self.domain = self.url.split("/")[0].split(":")[0]
 

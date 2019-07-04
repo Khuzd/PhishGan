@@ -72,11 +72,10 @@ class MyBase:
         """
         try:
             adding = self.__getattribute__(table)(url=website.url, content=pickle.dumps(website))
-            print("hey")
             self.session.add(adding)
             self.session.commit()
 
-        except AttributeError:
+        except ConnectionError:
             logger.critical("Please add table {} in the database".format(table))
 
         return
