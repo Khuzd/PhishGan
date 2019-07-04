@@ -327,7 +327,7 @@ class URL:
     def expirationDomainTesting(self):
         """
         test if the valid duration of the domain is enough long
-        :return: -1 or 1
+        :return: -1, 0 or 1
         """
         if self.whoisDomain is not None:
             now = datetime.datetime.now()
@@ -638,7 +638,7 @@ class URL:
     def barCustomTesting(self):
         """
         Check if the status bar is not abnormally modify
-        :return: -1 or 1
+        :return: -1, 0 or 1
         """
 
         soup = BeautifulSoup(self.html, features="lxml")
@@ -683,7 +683,7 @@ class URL:
     def popUpTesting(self):
         """
         testing if popup with text fields
-        :return: -1 or 1
+        :return: -1, 0 or 1
         """
         prompt = re.findall(r"prompt\(", str(self.html)) + re.findall(r"confirm\(", str(self.html)) + re.findall(
             r"alert\(", str(self.html))
