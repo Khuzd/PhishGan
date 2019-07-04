@@ -378,23 +378,31 @@ def ORMExtract(args):
 
     # Load data
     URLs = list(importData.csvToList(args.path[0])[1].keys())
-    tmp = []
+
+    # ---------------------
+    #  Filter the results already in database
+    # ---------------------
+    alreadyIn = []
+    for url in Base.session.query(Base.__getattribute__(args.table[0])).all():
+        alreadyIn.append(url.url)
+
     for url in URLs:
         if "http://" in url[:7]:
-            url = url[7:]
+            URLs[URLs.index(url)] = url[7:]
         elif "https://" in url[:8]:
-            url = url[8:]
-        if Base.session.query(Base.__getattribute__(args.table[0])).filter(
-                Base.__getattribute__(args.table[0]).url == url).count() == 0:
-            tmp.append(url)
-    URLs = tmp
-    del tmp
+            URLs[URLs.index(url)] = url[8:]
+
+    URLs = set(URLs)
+
+    for url in alreadyIn:
+        URLs.remove(url)
     logger.info("{} websites will be added to the database".format(len(URLs)))
     itera = iter(URLs)
     URLs = zip(*[itera] * args.thread)
-    exit(0)
 
-    # Add data to database
+    # ---------------------
+    #  Add to the database
+    # ---------------------
     i = 1
     for url in URLs:
         logger.debug(str(i))
