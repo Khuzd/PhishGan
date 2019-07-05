@@ -22,7 +22,7 @@ import socks
 from bs4 import BeautifulSoup
 from func_timeout import func_timeout, FunctionTimedOut
 
-import googleIndexChecker
+import googleApi
 from libs.whois import whois
 from libs.whois.parser import PywhoisError
 
@@ -824,7 +824,7 @@ class URL:
         test if url is indexed by google
         :return: -1 or 1
         """
-        index = googleIndexChecker.google_search("site:" + self.url)
+        index = googleApi.google_search("site:" + self.url)
         if index:
             self.indexingWeight = -1
             return
