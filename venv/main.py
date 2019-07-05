@@ -395,7 +395,10 @@ def ORMExtract(args):
     URLs = set(URLs)
 
     for url in alreadyIn:
-        URLs.remove(url)
+        try:
+            URLs.remove(url)
+        except KeyError:
+            pass
     logger.info("{} websites will be added to the database".format(len(URLs)))
     itera = iter(URLs)
     URLs = zip(*[itera] * args.thread)
