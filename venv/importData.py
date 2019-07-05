@@ -17,7 +17,7 @@ def csvToList(path):
     :return: (title of features list, list of features for all sites)
     """
     features = {}
-    with open(path, newline='', encoding='utf8') as csvfile:
+    with open(path, newline='', encoding='utf-8-sig') as csvfile:
         for row in csv.reader(csvfile, delimiter=',', quotechar='|'):
             features[row[0]] = row[1:]
         csvfile.close()
