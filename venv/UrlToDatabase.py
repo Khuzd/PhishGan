@@ -80,6 +80,8 @@ class URL:
         self.domain = None
         self.whoisDomain = None
         self.html = None
+        self.hostname = None
+        self.certificate = None
 
         # ---------------------
         #  Calculate attributes
@@ -95,8 +97,11 @@ class URL:
             elif "https://" in url[:8]:
                 self.http = "https"
                 self.url = url[8:]
+            else:
+                self.http = ""
 
-            self.domain = self.url.split("/")[0].split(":")[0]
+            self.hostname = self.url.split("/")[0].split(":")[0]
+            self.domain = self.hostname
 
             # whoisDomain attribute
             retry = True
@@ -142,6 +147,22 @@ class URL:
                         # time.sleep(1.5)
         if self.whoisDomain != None:
             self.domain = self.whoisDomain.domain
+
+        if self.http == "https":
+            ctx = ssl.create_default_context()
+            s = ctx.wrap_socket(socket.socket(), server_hostname=self.hostname)
+            try:
+                s.connect((self.hostname, 443))
+                self.certificate = s.getpeercert()
+            except:
+
+                ctx = ssl.create_default_context()
+                s = ctx.wrap_socket(socket.socket(), server_hostname=self.hostname)
+                try:
+                    s.connect((self.hostname, 443))
+                    self.certificate = s.getpeercert()
+                except:
+                    self.certificate = None
 
         ## Weights
         self.ipWeight = "error"
@@ -260,10 +281,10 @@ class URL:
         test if there are too many subdomains
         :return: -1,0 or 1
         """
-        if len(self.domain.split("www.")) == 2:
-            domain = self.domain.split("www.")[1]
+        if len(self.hostname.split("www.")) == 2:
+            domain = self.hostname.split("www.")[1]
         else:
-            domain = self.domain
+            domain = self.hostname
 
         for tld in CCTLD:
             if re.match(("(.)*" + tld + "$"), str(domain)):
@@ -293,25 +314,9 @@ class URL:
         :return: -1,0 or 1
         """
 
-        ctx = ssl.create_default_context()
-        s = ctx.wrap_socket(socket.socket(), server_hostname=self.domain)
-        try:
-            s.connect((self.domain, 443))
-            cert = s.getpeercert()
-        except:
-
-            ctx = ssl.create_default_context()
-            s = ctx.wrap_socket(socket.socket(), server_hostname=self.domain)
-            try:
-                s.connect((self.domain, 443))
-                cert = s.getpeercert()
-            except:
-                self.certificateAgeWeight = 1
-                return
-
-        issuer = dict(x[0] for x in cert['issuer'])["organizationName"].lower()
-        beginDate = datetime.datetime.strptime(cert["notBefore"].split(' GMT')[0], '%b  %d %H:%M:%S %Y')
-        endDate = datetime.datetime.strptime(cert["notAfter"].split(' GMT')[0], '%b  %d %H:%M:%S %Y')
+        issuer = dict(x[0] for x in self.certificate['issuer'])["organizationName"].lower()
+        beginDate = datetime.datetime.strptime(self.certificate["notBefore"].split(' GMT')[0], '%b  %d %H:%M:%S %Y')
+        endDate = datetime.datetime.strptime(self.certificate["notAfter"].split(' GMT')[0], '%b  %d %H:%M:%S %Y')
 
         delta = endDate - beginDate
 
@@ -381,7 +386,7 @@ class URL:
 
         try:
             try:
-                remoteServerIP = socket.gethostbyname(self.domain)
+                remoteServerIP = socket.gethostbyname(self.hostname)
             except socket.gaierror:
                 remoteServerIP = socket.gethostbyname(self.url.split("/")[0].split(":")[0])
 
@@ -754,10 +759,10 @@ class URL:
         :return: -1 or 1
         """
 
-        if len(self.domain.split("www.")) == 2:
-            domain = self.domain.split("www.")[1]
+        if len(self.hostname.split("www.")) == 2:
+            domain = self.hostname.split("www.")[1]
         else:
-            domain = self.domain
+            domain = self.hostname
 
         try:
             empty = True
@@ -886,7 +891,7 @@ class URL:
         :return: -1 or 1
         """
         try:
-            IPdomain = socket.gethostbyname(self.domain)
+            IPdomain = socket.gethostbyname(self.hostname)
         except socket.gaierror:
             self.statisticWeight = -1
             return
@@ -969,7 +974,7 @@ class URL:
 
         # testing age of the domain certificate
         try:
-            if self.http == "https":
+            if self.http == "https" and self.certificate is not None:
                 self.ageCertificateTesting()
             else:
                 self.certificateAgeWeight = 1
