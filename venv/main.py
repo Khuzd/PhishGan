@@ -124,9 +124,9 @@ def graph(args):
     # Generate graph(s)
     if type(args.division) == list:
         args.division = args.division[0]
-    GanGraphGeneration.multiGraph(args.beginLR[0], args.endLR[0], args.stepLR[0], args.epochs[0], args.beginSample[0],
-                                  args.endSample[0], args.stepSample[0], args.pltFrequency[0], dataset,
-                                  outPath=''.join(args.output), divide=args.division, dataType=args.type[0])
+    GanGraphGeneration.multi_graph(args.beginLR[0], args.endLR[0], args.stepLR[0], args.epochs[0], args.beginSample[0],
+                                   args.endSample[0], args.stepSample[0], args.pltFrequency[0], dataset,
+                                   outPath=''.join(args.output), divide=args.division, dataType=args.type[0])
     return
 
 
@@ -142,7 +142,7 @@ def extraction(args):
     if args.URL is not None:
         website = UrlToDatabase.URL(args.URL[0])
         try:
-            results = func_timeout(50, website.featuresExtraction)
+            results = func_timeout(50, website.features_extraction)
         except Exception as e:
             results = " fail " + str(e)
 
@@ -167,7 +167,7 @@ def extraction(args):
         for url in args.list:
             website = UrlToDatabase.URL(url)
             try:
-                results = func_timeout(50, website.featuresExtraction)
+                results = func_timeout(50, website.features_extraction)
             except Exception as e:
                 results = " fail " + str(e)
             if args.output == "console" or args.output[0] == "console":
@@ -206,7 +206,7 @@ def creation(args):
         dataset = args.dataset[0]
 
     # Train then save
-    gan.train(args.epochs[0], importData.csvToList(dataset)[1].values())
+    gan.train(args.epochs[0], importData.csv_to_list(dataset)[1].values())
     gan.save(args.name[0], args.location[0])
     return
 
@@ -223,7 +223,7 @@ def prediction(args):
 
     if args.file is not None:
         # Load data
-        data = importData.csvToList(args.file[0])[1]
+        data = importData.csv_to_list(args.file[0])[1]
         for url in data.keys():
             # Make a prediction
             results = gan.discriminator.predict_on_batch(np.array(data[url]).astype(np.int)[:].reshape(1, 30, 1))
@@ -261,17 +261,17 @@ def prediction(args):
     return
 
 
-def reportGraph(args):
+def report_graph(args):
     """
         Function for the reportGraphParser
         :param args: Namespace
         :return: nothing
         """
-    GanGraphGeneration.reportAccuracyGraph(args.path[0])
+    GanGraphGeneration.report_accuracy_graph(args.path[0])
     return
 
 
-def historyExtract(args):
+def history_extract(args):
     """
         Function for the historyExtractionParser
         :param args: Namespace
@@ -280,9 +280,9 @@ def historyExtract(args):
     # ---------------------
     #  Extract URLs from history browsers
     # ---------------------
-    URLs = browser_history_extraction.chromeExtraction(args.date)
-    URLs += browser_history_extraction.firefoxExtraction(args.date)
-    URLs += browser_history_extraction.operaExtraction(args.date)
+    URLs = browser_history_extraction.chrome_extraction(args.date)
+    URLs += browser_history_extraction.firefox_extraction(args.date)
+    URLs += browser_history_extraction.opera_extraction(args.date)
 
     # ---------------------
     #  Write results in the right place
@@ -297,7 +297,7 @@ def historyExtract(args):
                 writer.writerow([url])
 
 
-def historyTrain(args):
+def history_train(args):
     """
         Function for the historyTrainParser
         :param args: Namespace
@@ -312,7 +312,7 @@ def historyTrain(args):
     features = []
     for website in Base.session.query(Base.History).all():
         url = pickle.loads(website.content)
-        features.append(url.getFeatures())
+        features.append(url.get_features())
     random.shuffle(features)
 
     # Train the GAN with history
@@ -327,31 +327,31 @@ def historyTrain(args):
         args.division = args.division[0]
 
     if args.division == 1:
-        GanGraphGeneration.graphCreation(X, Dloss, vDloss, gan.lr, gan.sampleSize, "loss", bestEpoch,
-                                         bestReport["accuracy"], Gloss, vGloss,
-                                         path=args.output)
-        GanGraphGeneration.graphCreation(X, accuracy, vacc, gan.lr, gan.sampleSize, "accuracy", bestEpoch,
-                                         bestReport["accuracy"],
-                                         path=args.output)
+        GanGraphGeneration.graph_creation(X, Dloss, vDloss, gan.lr, gan.sampleSize, "loss", bestEpoch,
+                                          bestReport["accuracy"], Gloss, vGloss,
+                                          path=args.output)
+        GanGraphGeneration.graph_creation(X, accuracy, vacc, gan.lr, gan.sampleSize, "accuracy", bestEpoch,
+                                          bestReport["accuracy"],
+                                          path=args.output)
     else:
         for i in range(args.division):
             lenght = len(X)
-            GanGraphGeneration.graphCreation(X[i * (lenght // args.division):(i + 1) * (lenght // args.division)],
+            GanGraphGeneration.graph_creation(X[i * (lenght // args.division):(i + 1) * (lenght // args.division)],
                                              Dloss[i * (lenght // args.division):(i + 1) * (lenght // args.division)],
                                              vDloss[i * (lenght // args.division):(i + 1) * (lenght // args.division)],
-                                             gan.lr, gan.sampleSize, "loss",
-                                             bestEpoch, bestReport["accuracy"],
+                                              gan.lr, gan.sampleSize, "loss",
+                                              bestEpoch, bestReport["accuracy"],
                                              Gloss[i * (lenght // args.division):(i + 1) * (lenght // args.division)],
                                              vGloss[i * (lenght // args.division):(i + 1) * (lenght // args.division)],
-                                             path=args.output,
-                                             suffix="part" + str(i))
-            GanGraphGeneration.graphCreation(X[i * (lenght // args.division):(i + 1) * (lenght // args.division)],
+                                              path=args.output,
+                                              suffix="part" + str(i))
+            GanGraphGeneration.graph_creation(X[i * (lenght // args.division):(i + 1) * (lenght // args.division)],
                                              accuracy[
                                              i * (lenght // args.division):(i + 1) * (lenght // args.division)],
                                              vacc[i * (lenght // args.division):(i + 1) * (lenght // args.division)],
-                                             gan.lr, gan.sampleSize, "accuracy",
-                                             bestEpoch, bestReport["accuracy"],
-                                             path=args.output, suffix="part" + str(i))
+                                              gan.lr, gan.sampleSize, "accuracy",
+                                              bestEpoch, bestReport["accuracy"],
+                                              path=args.output, suffix="part" + str(i))
 
     # Save classification report
     with open(args.output + "/" + str(gan.sampleSize) + "/" + "Report_" + str(
@@ -362,7 +362,7 @@ def historyTrain(args):
     return
 
 
-def ORMExtract(args):
+def orm_extract(args):
     """
         Function for the ORMExtractParser
         :param args: Namespace
@@ -377,7 +377,7 @@ def ORMExtract(args):
         args.thread = args.thread[0]
 
     # Load data
-    URLs = list(importData.csvToList(args.path[0])[1].keys())
+    URLs = list(importData.csv_to_list(args.path[0])[1].keys())
 
     # ---------------------
     #  Filter the results already in database
@@ -417,14 +417,14 @@ def ORMExtract(args):
         result2 = []
         tmp = []
         for web in result1:
-            if web.html == None:
+            if web.html is None:
                 result2.append(web)
                 # result1.remove(web)
             else:
                 tmp.append(web)
         if args.extraction:
             # Extract features
-            ThreadPool().map(UrlToDatabase.URL.featuresExtraction, tmp)
+            ThreadPool().map(UrlToDatabase.URL.features_extraction, tmp)
             result2 += tmp
             for web in result2:
                 print(web)
@@ -522,16 +522,16 @@ if __name__ == "__main__":
     # ---------------------
     #  Report parser
     # ---------------------
-    reportGraphParser = subparsers.add_parser("reportGraph",
+    reportGraphParser = subparsers.add_parser("report_graph",
                                               help="Used to plot graphs of accuracies from classification report")
     reportGraphParser.add_argument("-p", "--path", nargs=1, type=str, required=True,
                                    help="Path to the folder contained the folders for each sample size")
-    reportGraphParser.set_defaults(func=reportGraph)
+    reportGraphParser.set_defaults(func=report_graph)
 
     # ---------------------
     #  HistoryExtraction parser
     # ---------------------
-    historyExtractionParser = subparsers.add_parser("historyExtract", help="Used to used to extract browsers history")
+    historyExtractionParser = subparsers.add_parser("history_extract", help="Used to used to extract browsers history")
     historyExtractionParser.add_argument("-o", "--output", default="console", type=str, nargs=1,
                                          help="Option to chose the type of ouptput : console or file. If file, "
                                               "the value have "
@@ -540,12 +540,12 @@ if __name__ == "__main__":
                                          help="Used to set the date after which the URLs will be extracted from "
                                               "browsers history")
 
-    historyExtractionParser.set_defaults(func=historyExtract)
+    historyExtractionParser.set_defaults(func=history_extract)
 
     # ---------------------
     #  HistoryTrain parser
     # ---------------------
-    historyTrainParser = subparsers.add_parser("historyTrain",
+    historyTrainParser = subparsers.add_parser("history_train",
                                                help="Used to train the GAN to improve him with your history browser")
     historyTrainParser.add_argument("-l", "--location", required=True, nargs=1, type=str,
                                     help="Location of the GAN save")
@@ -560,7 +560,7 @@ if __name__ == "__main__":
                                     help="Output path where graphs will be stored")
     historyTrainParser.add_argument('-plt', "--pltFrequency", required=True, nargs=1, type=int,
                                     help="Frequency of the plots on graphs")
-    historyTrainParser.set_defaults(func=historyTrain)
+    historyTrainParser.set_defaults(func=history_train)
 
     # ---------------------
     #  ORMextract Parser
@@ -577,7 +577,7 @@ if __name__ == "__main__":
                                   help="Used to set up the features extraction when adding URLs in the database")
     ORMExtractParser.add_argument("-th", "--thread", type=int, default=1, help="Number of threads")
 
-    ORMExtractParser.set_defaults(func=ORMExtract)
+    ORMExtractParser.set_defaults(func=orm_extract)
 
     # ---------------------
     #  Parse

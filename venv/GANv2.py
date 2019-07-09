@@ -35,11 +35,11 @@ import tensorflow as tf
 tf.set_random_seed(seed_value)
 
 # 5. Configure a new global `tensorflow` session
-from keras import backend as K
+from keras import backend as k
 
 session_conf = tf.ConfigProto(intra_op_parallelism_threads=1, inter_op_parallelism_threads=1, device_count={"CPU": 1})
 sess = tf.Session(graph=tf.get_default_graph(), config=session_conf)
-K.set_session(sess)
+k.set_session(sess)
 
 from keras.layers import Input, Dense, Reshape, Flatten
 from keras.layers import BatchNormalization
@@ -248,7 +248,7 @@ class GAN:
 
         del json_file, loaded_model_json
 
-    def classReport(self, cleanTestDataset, phishTestDataset, calculate=True):
+    def class_report(self, cleanTestDataset, phishTestDataset, calculate=True):
         """
         Classification report for the GAN after training
         :param cleanTestDataset: list of list
@@ -300,8 +300,8 @@ class GAN:
 
         # Load testing datasets
         if phishData is None or cleanData is None:
-            phisTest = list(importData.csvToList(PHIS_PATH_TEST)[1].values())
-            cleanTest = list(importData.csvToList(CLEAN_PATH_TEST)[1].values())
+            phisTest = list(importData.csv_to_list(PHIS_PATH_TEST)[1].values())
+            cleanTest = list(importData.csv_to_list(CLEAN_PATH_TEST)[1].values())
         else:
             phisTest = list(phishData)
             cleanTest = list(cleanData)
@@ -386,7 +386,7 @@ class GAN:
 
             # Generate the classificaiton report if necessary
             if predict:
-                report = self.classReport(cleanTest, phisTest)
+                report = self.class_report(cleanTest, phisTest)
 
                 if "accuracy" in report:
                     if report["accuracy"] > bestClass["accuracy"]:
@@ -399,6 +399,6 @@ class GAN:
         del X_train
 
         if not predict:
-            self.classReport(cleanTest, phisTest, calculate=False)
+            self.class_report(cleanTest, phisTest, calculate=False)
 
         return X, accuracy, Dloss, Gloss, vaccuracy, vDloss, vGloss, bestClass, bestEpoch

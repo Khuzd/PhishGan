@@ -88,7 +88,7 @@ def google_safe_browsing_check(url):
 
     answer = {"matches": []}
 
-    while (len(URLs) > i * 499):
+    while len(URLs) > i * 499:
         data = {
             "client": {
                 "clientId": "PhishGan",

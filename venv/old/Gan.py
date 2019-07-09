@@ -65,7 +65,7 @@ def glorot_init(shape):
 def gan(lr, sample):
     if SELECT_DATASET == 'uc':  # using UCI dataset
 
-        featuresName, features, results = Uc.csvToList(UCI_PATH)
+        featuresName, features, results = Uc.csv_to_list(UCI_PATH)
 
         # Training Params
 

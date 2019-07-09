@@ -16,7 +16,7 @@ import sqlite3
 logger = logging.getLogger('main')
 
 
-def chromeExtraction(date):
+def chrome_extraction(date):
     """
     :param date: int
     Extract history of local Google Chrome browser
@@ -68,7 +68,7 @@ def chromeExtraction(date):
         return []
 
 
-def firefoxExtraction(date):
+def firefox_extraction(date):
     """
         Extract history of local Firefox browser
         :param date: int
@@ -121,7 +121,7 @@ def firefoxExtraction(date):
         return []
 
 
-def operaExtraction(date):
+def opera_extraction(date):
     """
     Extract history of local opera browser
     :param date: int

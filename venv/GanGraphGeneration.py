@@ -52,7 +52,7 @@ import logging
 logger = logging.getLogger('main')
 
 
-def graphCreation(X, YD, VYD, lr, sample, label, bestEpoch, bestAccu, YG=None, VYG=None, path="graphs", suffix=""):
+def graph_creation(X, YD, VYD, lr, sample, label, bestEpoch, bestAccu, YG=None, VYG=None, path="graphs", suffix=""):
     """
     create graph and save it in /graphs directory
     :param X: list (X axis)
@@ -95,8 +95,8 @@ def graphCreation(X, YD, VYD, lr, sample, label, bestEpoch, bestAccu, YG=None, V
     return
 
 
-def multiGraph(begin_lr, end_lr, step_lr, epochs, begin_sampleSize, end_SampleSize, step_sampleSize, plotFrequency,
-               datasetPath, outPath="graphs", divide=1, dataType="phish"):
+def multi_graph(begin_lr, end_lr, step_lr, epochs, begin_sampleSize, end_SampleSize, step_sampleSize, plotFrequency,
+                datasetPath, outPath="graphs", divide=1, dataType="phish"):
     """
     Create multiple graph for the GAN to analyse parameters efficiency
     :param begin_lr: float (first learning rate)
@@ -141,31 +141,31 @@ def multiGraph(begin_lr, end_lr, step_lr, epochs, begin_sampleSize, end_SampleSi
             # Train
             X, accuracy, Dloss, Gloss, vacc, vDloss, vGloss, bestReport, \
             bestEpoch = gan.train(epochs=epochs, plotFrequency=plotFrequency,
-                                  data=importData.csvToList(datasetPath)[1].values(), predict=True)
+                                  data=importData.csv_to_list(datasetPath)[1].values(), predict=True)
 
             # ---------------------
             #  Plot graph(s)
             # ---------------------
             if divide == 1:
-                graphCreation(X, Dloss, vDloss, lr, sample, "loss", bestEpoch, bestReport["accuracy"], Gloss, vGloss,
-                              path=outPath)
-                graphCreation(X, accuracy, vacc, lr, sample, "accuracy", bestEpoch, bestReport["accuracy"],
-                              path=outPath)
+                graph_creation(X, Dloss, vDloss, lr, sample, "loss", bestEpoch, bestReport["accuracy"], Gloss, vGloss,
+                               path=outPath)
+                graph_creation(X, accuracy, vacc, lr, sample, "accuracy", bestEpoch, bestReport["accuracy"],
+                               path=outPath)
             else:
                 for i in range(divide):
                     lenght = len(X)
-                    graphCreation(X[i * (lenght // divide):(i + 1) * (lenght // divide)],
+                    graph_creation(X[i * (lenght // divide):(i + 1) * (lenght // divide)],
                                   Dloss[i * (lenght // divide):(i + 1) * (lenght // divide)],
                                   vDloss[i * (lenght // divide):(i + 1) * (lenght // divide)], lr, sample, "loss",
-                                  bestEpoch, bestReport["accuracy"],
+                                   bestEpoch, bestReport["accuracy"],
                                   Gloss[i * (lenght // divide):(i + 1) * (lenght // divide)],
                                   vGloss[i * (lenght // divide):(i + 1) * (lenght // divide)], path=outPath,
-                                  suffix="part" + str(i))
-                    graphCreation(X[i * (lenght // divide):(i + 1) * (lenght // divide)],
+                                   suffix="part" + str(i))
+                    graph_creation(X[i * (lenght // divide):(i + 1) * (lenght // divide)],
                                   accuracy[i * (lenght // divide):(i + 1) * (lenght // divide)],
                                   vacc[i * (lenght // divide):(i + 1) * (lenght // divide)], lr, sample, "accuracy",
-                                  bestEpoch, bestReport["accuracy"],
-                                  path=outPath, suffix="part" + str(i))
+                                   bestEpoch, bestReport["accuracy"],
+                                   path=outPath, suffix="part" + str(i))
 
             # Save classification report
             with open(outPath + "/" + str(sample) + "/" + "Report_" + str(
@@ -179,7 +179,7 @@ def multiGraph(begin_lr, end_lr, step_lr, epochs, begin_sampleSize, end_SampleSi
     return
 
 
-def reportAccuracyGraph(path):
+def report_accuracy_graph(path):
     """
     Plot graph of accuracies from classification reports
     :param path: str (path to the folder contained the folders for each sample size)

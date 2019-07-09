@@ -10,7 +10,7 @@ Author : Pierrick ROBIC--BUTEZ
 import csv
 
 
-def csvToList(path):
+def csv_to_list(path):
     """
     Used to import data from csv file
     :param path: path to the UCI csv file

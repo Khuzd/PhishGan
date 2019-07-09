@@ -145,7 +145,7 @@ class URL:
                     except:
                         logger.error("Can not get HTML content from : " + self.url)
                         # time.sleep(1.5)
-        if self.whoisDomain != None:
+        if self.whoisDomain is not None:
             self.domain = self.whoisDomain.domain
 
         if self.http == "https":
@@ -202,7 +202,7 @@ class URL:
 
         return
 
-    def IPtesting(self):
+    def ip_testing(self):
         """
         test if the domain is a IP adress
         :return: -1 or 1
@@ -218,7 +218,7 @@ class URL:
             self.ipWeight = -1
             return
 
-    def leghtTesting(self):
+    def leght_testing(self):
         """
         test if url lenght is <54, between 54 and 75 or over 75
         :return: -1,0 or 1
@@ -234,7 +234,7 @@ class URL:
             self.lenghtWeight = 1
             return
 
-    def shortenerTEsting(self):
+    def shortener_testing(self):
         """
         test if the url is a short url
         :return: -1 or 1
@@ -247,7 +247,7 @@ class URL:
         self.shorteningWeight = -1
         return
 
-    def atSymbolTetsting(self):
+    def at_symbol_tetsting(self):
         """
         test if the at symbol is in url
         :return: -1 or 1
@@ -258,7 +258,7 @@ class URL:
         self.atWeight = -1
         return
 
-    def doubleSlashTesting(self):
+    def double_slash_testing(self):
         """
         test if there is double slash in url
         :return: -1 or 1
@@ -269,7 +269,7 @@ class URL:
         self.doubleSlashWeight = -1
         return
 
-    def dashTesting(self):
+    def dash_testing(self):
         """
             test if there is dash in url
             :return: -1 or 1
@@ -280,7 +280,7 @@ class URL:
         self.dashWeight = -1
         return
 
-    def subDomainTesting(self):
+    def sub_domain_testing(self):
         """
         test if there are too many subdomains
         :return: -1,0 or 1
@@ -312,7 +312,7 @@ class URL:
             self.subDomainWeight = 1
             return
 
-    def ageCertificateTesting(self):
+    def age_certificate_testing(self):
         """
         test if the certificate is not too young and delivered by a trusted issuer
         :return: -1,0 or 1
@@ -333,7 +333,7 @@ class URL:
         self.certificateAgeWeight = 0
         return
 
-    def expirationDomainTesting(self):
+    def expiration_domain_testing(self):
         """
         test if the valid duration of the domain is enough long
         :return: -1, 0 or 1
@@ -361,7 +361,7 @@ class URL:
         else:
             self.expirationWeight = 1
 
-    def faviconTesting(self):
+    def favicon_testing(self):
         """
         test if the favicon url is from the same domain as the site
         :return: -1 or 1
@@ -382,7 +382,7 @@ class URL:
         self.faviconWeight = -1
         return
 
-    def portTesting(self):
+    def port_testing(self):
         """
         test all important ports to check if they are opened or closed
         :return: -1 or 1 or error
@@ -413,7 +413,7 @@ class URL:
             logger.error(e)
             return -2
 
-    def httpTesting(self):
+    def http_testing(self):
         """
         test if there is the http token into the URL
         :return: -1 or 1
@@ -425,7 +425,7 @@ class URL:
         self.httpWeight = -1
         return
 
-    def requestedURL(self):
+    def requested_url(self):
         """
         test the percentage of external objects
         :return: -1,0 or 1
@@ -470,7 +470,7 @@ class URL:
         self.requestedWeight = -1
         return
 
-    def anchorsTesting(self):
+    def anchors_testing(self):
         """
         test the percentage of external links anchors
         :return: -1,0 or 1
@@ -501,7 +501,7 @@ class URL:
         self.anchorsWeight = 1
         return
 
-    def tagsLinksTesting(self):
+    def tags_links_testing(self):
         """
         test the percentage of external links into meta, script and link tags
         :return: -1,0 or 1
@@ -546,7 +546,7 @@ class URL:
         self.tagWeight = -1
         return
 
-    def SFHTesting(self):
+    def sfh_testing(self):
         """
         test if the Server Form Handler of all forms is not suspicious
         :return: -1,0 or 1
@@ -569,7 +569,7 @@ class URL:
         self.SFHWeight = -1
         return
 
-    def emailTesting(self):
+    def email_testing(self):
         """
         test if no user's informations are send by email
         :return: -1 or 1
@@ -585,7 +585,7 @@ class URL:
         self.emailWeight = -1
         return
 
-    def abnormalURLTesting(self):
+    def abnormal_url_testing(self):
         """
         test if registrant name is in the url
         :return: -1 or 1
@@ -621,7 +621,7 @@ class URL:
         self.abnormalWeight = 1
         return
 
-    def forwardingTesting(self):
+    def forwarding_testing(self):
         """
         test the number of forwarding
         :return: -1,0 or 1
@@ -644,7 +644,7 @@ class URL:
         self.forwardWeight = 1
         return
 
-    def barCustomTesting(self):
+    def bar_custom_testing(self):
         """
         Check if the status bar is not abnormally modify
         :return: -1, 0 or 1
@@ -662,7 +662,7 @@ class URL:
         self.barCustomWeight = -1
         return
 
-    def rightClickTesting(self):
+    def right_click_testing(self):
         """
         test if the right click is not disabled
         :return: -1 or 1
@@ -689,14 +689,14 @@ class URL:
         self.rightClickWeight = -1
         return
 
-    def popUpTesting(self):
+    def popup_testing(self):
         """
         testing if popup with text fields
         :return: -1, 0 or 1
         """
         prompt = re.findall(r"prompt\(", str(self.html)) + re.findall(r"confirm\(", str(self.html)) + re.findall(
             r"alert\(", str(self.html))
-        if prompt != []:
+        if prompt:
             if len(prompt) > 4:
                 self.popupWeight = 1
                 return
@@ -707,7 +707,7 @@ class URL:
         self.popupWeight = -1
         return
 
-    def IFrameTesting(self):
+    def iframe_testing(self):
         """
         testing if the site use Iframe
         :return: -1 or 1
@@ -730,7 +730,7 @@ class URL:
         # else:
         #     return -1
 
-    def domainAgeTesting(self):
+    def domain_age_testing(self):
         """
         testing if domain age is greater than 6 months
         :return: -1, 0 or 1
@@ -757,7 +757,7 @@ class URL:
         else:
             self.domainAgeWeight = 1
 
-    def DNSRecordTesting(self):
+    def dns_record_testing(self):
         """
         test if the domain is recorded in a DNS
         :return: -1 or 1
@@ -788,7 +788,7 @@ class URL:
         self.dnsWeight = 1
         return
 
-    def trafficTesting(self):
+    def traffic_testing(self):
         """
         collect the website rank on AWIS database and test if it is not abnormal
         :return: -1,0 or 1
@@ -808,7 +808,7 @@ class URL:
         self.trafficWeight = -1
         return
 
-    def pageRankTesting(self):
+    def page_rank_testing(self):
         """
         Test the pagerank of the domain
         :return: -1 or 1
@@ -828,7 +828,7 @@ class URL:
             self.pageRankWeight = 1
             return
 
-    def googleIndexTesting(self):
+    def google_index_testing(self):
         """
         test if url is indexed by google
         :return: -1 or 1
@@ -867,7 +867,7 @@ class URL:
         #     print(e)
         #     pass
 
-    def linksPointingToTesting(self):
+    def links_pointing_to_testing(self):
         """
         collect the count of all sites which linked to the url on AWIS database and test if it is not abnormal
         :return: -1,0 or 1
@@ -889,7 +889,7 @@ class URL:
         self.linksWeight = -1
         return
 
-    def statisticReportTEsting(self):
+    def statistic_report_testing(self):
         """
         test if the ip address of the domain is in top 50 of www.stopbadware.org
         :return: -1 or 1
@@ -917,61 +917,59 @@ class URL:
         self.statisticWeight = -1
         return
 
-    def featuresExtraction(self):
+    def features_extraction(self):
         """
         Extract all features and set the values into the attribute weights
-        :param queue: queue
         :return: -1,-1, None or results into queue
         """
-        features = []
 
         logger.info("Testing : " + self.url)
 
         # testing ip adress
         try:
-            self.IPtesting()
+            self.ip_testing()
         except Exception as e:
             logger.critical(e)
             self.ipWeight = "error"
 
         # testing lenght of the url
         try:
-            self.leghtTesting()
+            self.leght_testing()
         except Exception as e:
             logger.critical(e)
             self.lenghtWeight = "error"
 
         # testing shortener url
         try:
-            self.shortenerTEsting()
+            self.shortener_testing()
         except Exception as e:
             logger.critical(e)
             self.shorteningWeight = "error"
 
         # testing at symbol
         try:
-            self.atSymbolTetsting()
+            self.at_symbol_tetsting()
         except Exception as e:
             logger.critical(e)
             self.atWeight = "error"
 
         # testing double slash
         try:
-            self.doubleSlashTesting()
+            self.double_slash_testing()
         except Exception as e:
             logger.critical(e)
             self.doubleSlashWeight = "error"
 
         # testing dash
         try:
-            self.dashTesting()
+            self.dash_testing()
         except Exception as e:
             logger.critical(e)
             self.dashWeight = "error"
 
         # testing subdomain count
         try:
-            self.subDomainTesting()
+            self.sub_domain_testing()
         except Exception as e:
             logger.critical(e)
             self.subDomainWeight = "error"
@@ -979,7 +977,7 @@ class URL:
         # testing age of the domain certificate
         try:
             if self.http == "https" and self.certificate is not None:
-                self.ageCertificateTesting()
+                self.age_certificate_testing()
             else:
                 self.certificateAgeWeight = 1
         except Exception as e:
@@ -988,7 +986,7 @@ class URL:
 
         # testing expiration date of domain
         try:
-            self.expirationDomainTesting()
+            self.expiration_domain_testing()
             if self.expirationWeight == -2:
                 return -1
         except Exception as e:
@@ -996,14 +994,14 @@ class URL:
             self.expirationWeight = "error"
         # testing favicon href
         try:
-            self.faviconTesting()
+            self.favicon_testing()
         except Exception as e:
             logger.critical(e)
             self.faviconWeight = "error"
 
         # testing ports
         try:
-            self.portTesting()
+            self.port_testing()
 
             if self.portWeight == -2:
                 logger.error("port testing error")
@@ -1014,91 +1012,91 @@ class URL:
 
         # testing http token
         try:
-            self.httpTesting()
+            self.http_testing()
         except Exception as e:
             logger.critical(e)
             self.httpWeight = "error"
 
         # testing request URL
         try:
-            self.requestedURL()
+            self.requested_url()
         except Exception as e:
             logger.critical(e)
             self.requestedWeight = "error"
 
         # testing anchors
         try:
-            self.anchorsTesting()
+            self.anchors_testing()
         except Exception as e:
             logger.critical(e)
             self.anchorsWeight = "error"
 
         # testing tags links
         try:
-            self.tagsLinksTesting()
+            self.tags_links_testing()
         except Exception as e:
             logger.critical(e)
             self.tagWeight = "error"
 
         # testing SFH
         try:
-            self.SFHTesting()
+            self.sfh_testing()
         except Exception as e:
             logger.critical(e)
             self.SFHWeight = "error"
 
         # testing email
         try:
-            self.emailTesting()
+            self.email_testing()
         except Exception as e:
             logger.critical(e)
             self.emailWeight = "error"
 
         # testing abnormal url
         try:
-            self.abnormalURLTesting()
+            self.abnormal_url_testing()
         except Exception as e:
             logger.critical(e)
             self.abnormalWeight = "error"
 
         # testing forwarding
         try:
-            self.forwardingTesting()
+            self.forwarding_testing()
         except Exception as e:
             logger.critical(e)
             self.forwardWeight = "error"
 
         # testing abnormal status bar
         try:
-            self.barCustomTesting()
+            self.bar_custom_testing()
         except Exception as e:
             logger.critical(e)
             self.barCustomWeight = "error"
 
         # testing right click disabling
         try:
-            self.rightClickTesting()
+            self.right_click_testing()
         except Exception as e:
             logger.critical(e)
             self.rightClickWeight = "error"
 
         # testing popup
         try:
-            self.popUpTesting()
+            self.popup_testing()
         except Exception as e:
             logger.critical(e)
             self.popupWeight = "error"
 
         # testing IFrame
         try:
-            self.IFrameTesting()
+            self.iframe_testing()
         except Exception as e:
             logger.critical(e)
             self.iFrameWeight = "error"
 
         # testing domain age
         try:
-            self.domainAgeTesting()
+            self.domain_age_testing()
             if self.domainAgeWeight == -2:
                 return -1
         except Exception as e:
@@ -1107,28 +1105,28 @@ class URL:
 
         # testing DNS record
         try:
-            self.DNSRecordTesting()
+            self.dns_record_testing()
         except Exception as e:
             logger.critical(e)
             self.dnsWeight = "error"
 
         # testing traffic
         try:
-            self.trafficTesting()
+            self.traffic_testing()
         except Exception as e:
             logger.critical(e)
             self.trafficWeight = "error"
 
         # testing page rank
         try:
-            self.pageRankTesting()
+            self.page_rank_testing()
         except Exception as e:
             logger.critical(e)
             self.pageRankWeight = "error"
 
         # testo google indexing
         try:
-            self.googleIndexTesting()
+            self.google_index_testing()
 
             if self.indexingWeight == -2:
                 return -2
@@ -1138,21 +1136,21 @@ class URL:
 
         # testing links pointing to the webpage
         try:
-            self.linksPointingToTesting()
+            self.links_pointing_to_testing()
         except Exception as e:
             logger.critical(e)
             self.linksWeight = "error"
 
         # testing statistics
         try:
-            self.statisticReportTEsting()
+            self.statistic_report_testing()
         except Exception as e:
             logger.critical(e)
             self.statisticWeight = "error"
 
-        return self.getFeatures()
+        return self.get_features()
 
-    def getFeatures(self):
+    def get_features(self):
         """
         Get all features
         :return: list
@@ -1165,7 +1163,7 @@ class URL:
                  self.dnsWeight, self.trafficWeight, self.pageRankWeight, self.indexingWeight, self.linksWeight,
                  self.statisticWeight])
 
-    def setFeatures(self, features):
+    def set_features(self, features):
         """
         Set the features from a list
         :param features: list
@@ -1229,7 +1227,7 @@ def extraction(inputFile, output, begin=1):
             if count >= begin:
                 try:
                     # Extract features
-                    results = func_timeout(50, website.featuresExtraction)
+                    results = func_timeout(50, website.features_extraction)
                     logger.debug(results)
                     if results == -1:
                         notReacheable.append(results)
@@ -1260,7 +1258,7 @@ def extraction(inputFile, output, begin=1):
 
         # Extract features
         try:
-            results = func_timeout(90, website.featuresExtraction)
+            results = func_timeout(90, website.features_extraction)
             if results == -1:
                 notReacheable.append(results)
             else:
