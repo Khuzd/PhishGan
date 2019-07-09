@@ -150,6 +150,8 @@ class URL:
 
         if self.http == "https":
             ctx = ssl.create_default_context()
+            ctx.check_hostname = False
+            ctx.verify_mode = ssl.CERT_NONE
             s = ctx.wrap_socket(socket.socket(), server_hostname=self.hostname)
             try:
                 s.connect((self.hostname, 443))
@@ -157,6 +159,8 @@ class URL:
             except:
 
                 ctx = ssl.create_default_context()
+                ctx.check_hostname = False
+                ctx.verify_mode = ssl.CERT_NONE
                 s = ctx.wrap_socket(socket.socket(), server_hostname=self.hostname)
                 try:
                     s.connect((self.hostname, 443))
