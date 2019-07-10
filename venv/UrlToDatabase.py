@@ -1204,6 +1204,187 @@ class URL:
         self.statisticWeight = features[29]
         return
 
+    def re_extract_non_request_features(self):
+        try:
+            self.ip_testing()
+        except Exception as e:
+            logger.critical(e)
+            self.ipWeight = "error"
+
+        # testing lenght of the url
+        try:
+            self.leght_testing()
+        except Exception as e:
+            logger.critical(e)
+            self.lenghtWeight = "error"
+
+        # testing shortener url
+        try:
+            self.shortener_testing()
+        except Exception as e:
+            logger.critical(e)
+            self.shorteningWeight = "error"
+
+        # testing at symbol
+        try:
+            self.at_symbol_tetsting()
+        except Exception as e:
+            logger.critical(e)
+            self.atWeight = "error"
+
+        # testing double slash
+        try:
+            self.double_slash_testing()
+        except Exception as e:
+            logger.critical(e)
+            self.doubleSlashWeight = "error"
+
+        # testing dash
+        try:
+            self.dash_testing()
+        except Exception as e:
+            logger.critical(e)
+            self.dashWeight = "error"
+
+        # testing subdomain count
+        try:
+            self.sub_domain_testing()
+        except Exception as e:
+            logger.critical(e)
+            self.subDomainWeight = "error"
+
+        # testing age of the domain certificate
+        try:
+            if self.http == "https" and self.certificate is not None:
+                self.age_certificate_testing()
+            else:
+                self.certificateAgeWeight = 1
+        except Exception as e:
+            logger.critical(e)
+            self.certificateAgeWeight = "error"
+
+        # testing expiration date of domain
+        try:
+            self.expiration_domain_testing()
+            if self.expirationWeight == -2:
+                return -1
+        except Exception as e:
+            logger.critical(e)
+            self.expirationWeight = "error"
+        # testing favicon href
+        try:
+            self.favicon_testing()
+        except Exception as e:
+            logger.critical(e)
+            self.faviconWeight = "error"
+
+        # testing http token
+        try:
+            self.http_testing()
+        except Exception as e:
+            logger.critical(e)
+            self.httpWeight = "error"
+
+        # testing request URL
+        try:
+            self.requested_url()
+        except Exception as e:
+            logger.critical(e)
+            self.requestedWeight = "error"
+
+        # testing anchors
+        try:
+            self.anchors_testing()
+        except Exception as e:
+            logger.critical(e)
+            self.anchorsWeight = "error"
+
+        # testing tags links
+        try:
+            self.tags_links_testing()
+        except Exception as e:
+            logger.critical(e)
+            self.tagWeight = "error"
+
+        # testing SFH
+        try:
+            self.sfh_testing()
+        except Exception as e:
+            logger.critical(e)
+            self.SFHWeight = "error"
+
+        # testing email
+        try:
+            self.email_testing()
+        except Exception as e:
+            logger.critical(e)
+            self.emailWeight = "error"
+
+        # testing abnormal url
+        try:
+            self.abnormal_url_testing()
+        except Exception as e:
+            logger.critical(e)
+            self.abnormalWeight = "error"
+
+        # testing abnormal status bar
+        try:
+            self.bar_custom_testing()
+        except Exception as e:
+            logger.critical(e)
+            self.barCustomWeight = "error"
+
+        # testing right click disabling
+        try:
+            self.right_click_testing()
+        except Exception as e:
+            logger.critical(e)
+            self.rightClickWeight = "error"
+
+        # testing popup
+        try:
+            self.popup_testing()
+        except Exception as e:
+            logger.critical(e)
+            self.popupWeight = "error"
+
+        # testing IFrame
+        try:
+            self.iframe_testing()
+        except Exception as e:
+            logger.critical(e)
+            self.iFrameWeight = "error"
+
+        # testing domain age
+        try:
+            self.domain_age_testing()
+            if self.domainAgeWeight == -2:
+                return -1
+        except Exception as e:
+            logger.critical(e)
+            self.domainAgeWeight = "error"
+
+        # # testing traffic
+        # try:
+        #     self.traffic_testing()
+        # except Exception as e:
+        #     logger.critical(e)
+        #     self.trafficWeight = "error"
+
+        # # testing links pointing to the webpage
+        # try:
+        #     self.links_pointing_to_testing()
+        # except Exception as e:
+        #     logger.critical(e)
+        #     self.linksWeight = "error"
+        #
+        # # testing statistics
+        # try:
+        #     self.statistic_report_testing()
+        # except Exception as e:
+        #     logger.critical(e)
+        #     self.statisticWeight = "error"
+
 
 def extraction(inputFile, output, begin=1):
     """

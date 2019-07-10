@@ -1,6 +1,7 @@
 import logging
 import pickle
 
+from pathos.pools import ThreadPool
 from sqlalchemy import Binary
 from sqlalchemy import Column, Integer, String
 from sqlalchemy import create_engine
@@ -100,6 +101,9 @@ class MyBase:
                 tmp.domain = oldUrl.domain
                 tmp.whoisDomain = oldUrl.whoisDomain
                 tmp.html = oldUrl.html
+                tmp.url = oldUrl.url
+                tmp.hostname = oldUrl.hostname
+                tmp.certificate = oldUrl.certificate
 
                 # Load weights
                 tmp.ipWeight = oldUrl.ipWeight
@@ -139,3 +143,23 @@ class MyBase:
 
             del query
         return
+
+    def new_url_analysis(self):
+        for table in self.Base.metadata.tables.keys():
+            query = self.session.query(self.__getattribute__(table.capitalize())).all()
+
+            # Load old wabsite data
+            contents = []
+            for result in query:
+                contents.append(pickle.loads(result.content))
+            logger.info("Data from table {} loaded".format(str(table)))
+
+            ThreadPool().map(UrlToDatabase.URL.re_extract_non_request_features, contents)
+            logger.info("Data loaded from table {} transformed".format(str(table)))
+            i = 0
+            for i in range(len(query)):
+                query[i].content = pickle.dumps(contents[i])
+            self.session.commit()
+            logger.info("Data loaded from table {} commited".format(str(table)))
+
+            del query, contents
