@@ -104,6 +104,7 @@ class MyBase:
                 tmp.url = oldUrl.url
                 tmp.hostname = oldUrl.hostname
                 tmp.certificate = oldUrl.certificate
+                tmp.soup = oldUrl.soup
 
                 # Load weights
                 tmp.ipWeight = oldUrl.ipWeight
