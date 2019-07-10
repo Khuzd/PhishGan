@@ -82,7 +82,6 @@ class URL:
         self.html = None
         self.hostname = None
         self.certificate = None
-        self.soup = None
 
         # ---------------------
         #  Calculate attributes
@@ -148,9 +147,6 @@ class URL:
                         # time.sleep(1.5)
         if self.whoisDomain is not None:
             self.domain = self.whoisDomain.domain
-
-        if self.html is not None:
-            self.soup = BeautifulSoup(self.html, features="lxml")
 
         if self.http == "https":
             ctx = ssl.create_default_context()
@@ -371,7 +367,8 @@ class URL:
         :return: -1 or 1
         """
 
-        head = self.soup.find("head")
+        soup = BeautifulSoup(self.html, features="lxml")
+        head = soup.find("head")
         favicon = None
         if head is not None:
             favicon = head.find("link", {"rel": "icon"})
@@ -439,16 +436,18 @@ class URL:
 
         m = []
 
-        for p in self.soup.find_all("img"):
+        soup = BeautifulSoup(self.html, features="lxml")
+
+        for p in soup.find_all("img"):
             if p.has_attr("src") and "http" in p.get("src"):
                 m.append(p.get('src'))
 
-        for p in self.soup.find_all("video"):
+        for p in soup.find_all("video"):
             for q in p.find_all("source"):
                 if q.has_attr("src") and "http" in q.get("src"):
                     m.append(q.get('src'))
 
-        for p in self.soup.find_all("audio"):
+        for p in soup.find_all("audio"):
             for q in p.find_all("source"):
                 if q.has_attr("src") and "http" in q.get("src"):
                     m.append(q.get('src'))
@@ -476,8 +475,9 @@ class URL:
         test the percentage of external links anchors
         :return: -1,0 or 1
         """
+        soup = BeautifulSoup(self.html, features="lxml")
 
-        tags = self.soup.findAll("a", href=True)
+        tags = soup.findAll("a", href=True)
         anchors = []
         for tag in tags:
             anchors.append(tag.get("href"))
@@ -511,9 +511,11 @@ class URL:
 
         m = []
 
-        meta = self.soup.find_all("meta")
-        links = self.soup.find_all("link")
-        scripts = self.soup.find_all("script")
+        soup = BeautifulSoup(self.html, features="lxml")
+
+        meta = soup.find_all("meta")
+        links = soup.find_all("link")
+        scripts = soup.find_all("script")
 
         for tag in meta:
             for link in re.findall(re.compile("\"http.*?\""), str(tag)):
@@ -549,8 +551,9 @@ class URL:
         test if the Server Form Handler of all forms is not suspicious
         :return: -1,0 or 1
         """
+        soup = BeautifulSoup(self.html, features="lxml")
 
-        for form in self.soup.find_all("form"):
+        for form in soup.find_all("form"):
             if str(form.get("action")) == "":
                 self.SFHWeight = 1
                 return
@@ -647,7 +650,9 @@ class URL:
         :return: -1, 0 or 1
         """
 
-        for tag in self.soup.find_all(onmouseover=True):
+        soup = BeautifulSoup(self.html, features="lxml")
+
+        for tag in soup.find_all(onmouseover=True):
             if "window.status" in str(tag).lower():
                 self.barCustomWeight = 1
                 return
@@ -708,7 +713,9 @@ class URL:
         :return: -1 or 1
         """
 
-        for frame in self.soup.find_all("iframe"):
+        soup = BeautifulSoup(self.html, features="lxml")
+
+        for frame in soup.find_all("iframe"):
             if frame.get("src") is not None and self.domain not in frame.get("src"):
                 if "www" in frame.get("src") or "http" in frame.get("src"):
                     self.iFrameWeight = 1
