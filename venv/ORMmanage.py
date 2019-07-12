@@ -198,7 +198,6 @@ class MyBase:
 
             ThreadPool().map(UrlToDatabase.URL.re_extract_non_request_features, contents)
             logger.info("Data loaded from table {} transformed".format(str(table)))
-            i = 0
             for i in range(len(query)):
                 query[i].content = pickle.dumps(contents[i])
             self.session.commit()

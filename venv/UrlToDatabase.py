@@ -236,6 +236,9 @@ class URL:
 
         return
 
+    # ---------------------
+    #  Classic weights calculation
+    # ---------------------
     def ip_testing(self):
         """
         test if the domain is a IP adress
@@ -252,7 +255,7 @@ class URL:
             self.ipWeight = -1
             return
 
-    def leght_testing(self):
+    def lenght_testing(self):
         """
         test if url lenght is <54, between 54 and 75 or over 75
         :return: -1,0 or 1
@@ -281,7 +284,7 @@ class URL:
         self.shorteningWeight = -1
         return
 
-    def at_symbol_tetsting(self):
+    def at_symbol_testing(self):
         """
         test if the at symbol is in url
         :return: -1 or 1
@@ -458,7 +461,7 @@ class URL:
         self.httpWeight = -1
         return
 
-    def requested_url(self):
+    def requested_url_testing(self):
         """
         test the percentage of external objects
         :return: -1,0 or 1
@@ -940,6 +943,99 @@ class URL:
         self.statisticWeight = -1
         return
 
+    # ---------------------
+    #  Scaled weights calculation
+    # ---------------------
+    def ip_scaled_calculation(self):
+        self.ipScaledWeight = (float(self.ipWeight) * 0.5) - 0.5
+
+    def lenght_scaled_calculation(self):
+        pass
+
+    def shortener_scaled_calculation(self):
+        self.shorteningScaledWeight = (float(self.shorteningWeight) * 0.5) - 0.5
+
+    def at_symbol_scaled_calculation(self):
+        pass
+
+    def double_slash_scaled_calculation(self):
+        self.doubleSlashScaledWeight = (float(self.doubleSlashWeight) * 0.5) - 0.5
+
+    def dash_scaled_calculation(self):
+        pass
+
+    def sub_domain_scaled_calculation(self):
+        pass
+
+    def age_certificate_scaled_calculation(self):
+        pass
+
+    def expiration_domain_scaled_calculation(self):
+        pass
+
+    def favicon_scaled_calculation(self):
+        self.faviconScaledWeight = (float(self.faviconWeight) * 0.5) - 0.5
+
+    def port_scaled_calculation(self):
+        pass
+
+    def http_scaled_calculation(self):
+        self.httpScaledWeight = (float(self.httpWeight) * 0.5) - 0.5
+
+    def requested_url(self):
+        pass
+
+    def anchors_scaled_calculation(self):
+        pass
+
+    def tags_links_scaled_calculation(self):
+        pass
+
+    def sfh_scaled_calculation(self):
+        pass
+
+    def email_scaled_calculation(self):
+        self.emailScaledWeight = (float(self.emailWeight) * 0.5) - 0.5
+
+    def abnormal_url_scaled_calculation(self):
+        self.abnormalScaledWeight = (float(self.abnormalWeight) * 0.5) - 0.5
+
+    def forwarding_scaled_calculation(self):
+        self.forwardScaledWeight = (float(self.forwardWeight) * 0.5) - 0.5
+
+    def bar_custom_scaled_calculation(self):
+        self.barCustomScaledWeight = (float(self.barCustomWeight) * 0.5) - 0.5
+
+    def right_click_scaled_calculation(self):
+        self.rightClickScaledWeight = (float(self.rightClickWeight) * 0.5) - 0.5
+
+    def popup_scaled_calculation(self):
+        pass
+
+    def iframe_scaled_calculation(self):
+        self.iFrameScaledWeight = (float(self.iFrameWeight) * 0.5) - 0.5
+
+    def domain_age_scaled_calculation(self):
+        pass
+
+    def dns_record_scaled_calculation(self):
+        self.dnsScaledWeight = (float(self.dnsWeight) * 0.5) - 0.5
+
+    def traffic_scaled_calculation(self):
+        pass
+
+    def page_rank_scaled_calculation(self):
+        pass
+
+    def google_index_scaled_calculation(self):
+        self.indexingScaledWeight = (float(self.indexingWeight) * 0.5) - 0.5
+
+    def links_pointing_to_scaled_calculation(self):
+        pass
+
+    def statistic_report_scaled_calculation(self):
+        self.statisticScaledWeight = (float(self.statisticWeight) * 0.5) - 0.5
+
     def features_extraction(self):
         """
         Extract all features and set the values into the attribute weights
@@ -957,7 +1053,7 @@ class URL:
 
         # testing lenght of the url
         try:
-            self.leght_testing()
+            self.lenght_testing()
         except Exception as e:
             logger.critical(e)
             self.lenghtWeight = "error"
@@ -971,7 +1067,7 @@ class URL:
 
         # testing at symbol
         try:
-            self.at_symbol_tetsting()
+            self.at_symbol_testing()
         except Exception as e:
             logger.critical(e)
             self.atWeight = "error"
@@ -1173,6 +1269,239 @@ class URL:
 
         return self.get_features()
 
+    def features_scaled_calculation(self):
+        """
+        Extract all features and set the values into the attribute weights
+        :return: -1,-1, None or results into queue
+        """
+
+        logger.info("Calculate : " + self.url)
+
+        # calculation of ip adress
+        try:
+            self.ip_scaled_calculation()
+        except Exception as e:
+            logger.critical(e)
+            self.ipScaledWeight = "error"
+
+        # calculation of lenght of the url
+        try:
+            self.lenght_scaled_calculation()
+        except Exception as e:
+            logger.critical(e)
+            self.lenghtScaledWeight = "error"
+
+        # calculation of shortener url
+        try:
+            self.shortener_scaled_calculation()
+        except Exception as e:
+            logger.critical(e)
+            self.shorteningScaledWeight = "error"
+
+        # calculation of at symbol
+        try:
+            self.at_symbol_testing()
+        except Exception as e:
+            logger.critical(e)
+            self.atScaledWeight = "error"
+
+        # calculation of double slash
+        try:
+            self.double_slash_scaled_calculation()
+        except Exception as e:
+            logger.critical(e)
+            self.doubleSlashScaledWeight = "error"
+
+        # calculation of dash
+        try:
+            self.dash_scaled_calculation()
+        except Exception as e:
+            logger.critical(e)
+            self.dashScaledWeight = "error"
+
+        # calculation of subdomain count
+        try:
+            self.sub_domain_scaled_calculation()
+        except Exception as e:
+            logger.critical(e)
+            self.subDomainScaledWeight = "error"
+
+        # calculation of age of the domain certificate
+        try:
+            if self.http == "https" and self.certificate is not None:
+                self.age_certificate_scaled_calculation()
+            else:
+                self.certificateAgeScaledWeight = 1
+        except Exception as e:
+            logger.critical(e)
+            self.certificateAgeScaledWeight = "error"
+
+        # calculation of expiration date of domain
+        try:
+            self.expiration_domain_scaled_calculation()
+            if self.expirationScaledWeight == -2:
+                return -1
+        except Exception as e:
+            logger.critical(e)
+            self.expirationScaledWeight = "error"
+        # calculation of favicon href
+        try:
+            self.favicon_scaled_calculation()
+        except Exception as e:
+            logger.critical(e)
+            self.faviconScaledWeight = "error"
+
+        # calculation of ports
+        try:
+            self.port_scaled_calculation()
+
+            if self.portScaledWeight == -2:
+                logger.error("port testing error")
+                return -1
+        except Exception as e:
+            logger.critical(e)
+            self.portScaledWeight = "error"
+
+        # calculation of http token
+        try:
+            self.http_scaled_calculation()
+        except Exception as e:
+            logger.critical(e)
+            self.httpScaledWeight = "error"
+
+        # calculation of request URL
+        try:
+            self.requested_url()
+        except Exception as e:
+            logger.critical(e)
+            self.requestedScaledWeight = "error"
+
+        # calculation of anchors
+        try:
+            self.anchors_scaled_calculation()
+        except Exception as e:
+            logger.critical(e)
+            self.anchorsScaledWeight = "error"
+
+        # calculation of tags links
+        try:
+            self.tags_links_scaled_calculation()
+        except Exception as e:
+            logger.critical(e)
+            self.tagScaledWeight = "error"
+
+        # calculation of SFH
+        try:
+            self.sfh_scaled_calculation()
+        except Exception as e:
+            logger.critical(e)
+            self.SFHScaledWeight = "error"
+
+        # calculation of email
+        try:
+            self.email_scaled_calculation()
+        except Exception as e:
+            logger.critical(e)
+            self.emailScaledWeight = "error"
+
+        # calculation of abnormal url
+        try:
+            self.abnormal_url_scaled_calculation()
+        except Exception as e:
+            logger.critical(e)
+            self.abnormalScaledWeight = "error"
+
+        # calculation of forwarding
+        try:
+            self.forwarding_scaled_calculation()
+        except Exception as e:
+            logger.critical(e)
+            self.forwardScaledWeight = "error"
+
+        # calculation of abnormal status bar
+        try:
+            self.bar_custom_scaled_calculation()
+        except Exception as e:
+            logger.critical(e)
+            self.barCustomScaledWeight = "error"
+
+        # calculation of right click disabling
+        try:
+            self.right_click_scaled_calculation()
+        except Exception as e:
+            logger.critical(e)
+            self.rightClickScaledWeight = "error"
+
+        # calculation of popup
+        try:
+            self.popup_scaled_calculation()
+        except Exception as e:
+            logger.critical(e)
+            self.popupScaledWeight = "error"
+
+        # calculation of IFrame
+        try:
+            self.iframe_scaled_calculation()
+        except Exception as e:
+            logger.critical(e)
+            self.iFrameScaledWeight = "error"
+
+        # calculation of domain age
+        try:
+            self.domain_age_scaled_calculation()
+            if self.domainAgeScaledWeight == -2:
+                return -1
+        except Exception as e:
+            logger.critical(e)
+            self.domainAgeScaledWeight = "error"
+
+        # calculation of DNS record
+        try:
+            self.dns_record_scaled_calculation()
+        except Exception as e:
+            logger.critical(e)
+            self.dnsScaledWeight = "error"
+
+        # calculation of traffic
+        try:
+            self.traffic_scaled_calculation()
+        except Exception as e:
+            logger.critical(e)
+            self.trafficScaledWeight = "error"
+
+        # calculation of page rank
+        try:
+            self.page_rank_scaled_calculation()
+        except Exception as e:
+            logger.critical(e)
+            self.pageRankScaledWeight = "error"
+
+        # testo google indexing
+        try:
+            self.google_index_scaled_calculation()
+
+            if self.indexingScaledWeight == -2:
+                return -2
+        except Exception as e:
+            logger.critical(e)
+            self.indexingScaledWeight = "error"
+
+        # calculation of links pointing to the webpage
+        try:
+            self.links_pointing_to_scaled_calculation()
+        except Exception as e:
+            logger.critical(e)
+            self.linksScaledWeight = "error"
+
+        # calculation of statistics
+        try:
+            self.statistic_report_scaled_calculation()
+        except Exception as e:
+            logger.critical(e)
+            self.statisticScaledWeight = "error"
+
+        return self.get_features()
+
     def get_features(self):
         """
         Get all features
@@ -1298,7 +1627,7 @@ class URL:
 
         # testing lenght of the url
         try:
-            self.leght_testing()
+            self.lenght_testing()
         except Exception as e:
             logger.critical(e)
             self.lenghtWeight = "error"
@@ -1312,7 +1641,7 @@ class URL:
 
         # testing at symbol
         try:
-            self.at_symbol_tetsting()
+            self.at_symbol_testing()
         except Exception as e:
             logger.critical(e)
             self.atWeight = "error"
