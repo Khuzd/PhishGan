@@ -11,6 +11,7 @@ import csv
 import datetime
 import json
 import logging
+import pickle
 import re
 import socket
 import ssl
@@ -22,6 +23,7 @@ import socks
 from bs4 import BeautifulSoup
 from func_timeout import func_timeout, FunctionTimedOut
 
+import ORMmanage
 import googleApi
 from libs.whois import whois
 from libs.whois.parser import PywhoisError
@@ -950,6 +952,10 @@ class URL:
         self.ipScaledWeight = (float(self.ipWeight) * 0.5) - 0.5
 
     def lenght_scaled_calculation(self):
+        Base = ORMmanage.MyBase("DB/toto.db")
+        self.lenghtScaledWeight = pickle.loads(
+            Base.session.query(Base.Scalers).filter(Base.Scalers.features == "url_len").first().content).transform(
+            [[len(self.hostname)]])[0][0]
         pass
 
     def shortener_scaled_calculation(self):
