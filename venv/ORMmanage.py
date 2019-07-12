@@ -56,6 +56,15 @@ class MyBase:
         url = Column(String)
         content = Column(Binary)
 
+    class Scalers(Base):
+        """
+        Table for scalers
+        """
+        __tablename__ = "scalers"
+        id = Column(Integer, primary_key=True)
+        features = Column(String)
+        content = Column(Binary)
+
     def create_tables(self):
         """
         Used to create different tables
