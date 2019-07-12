@@ -48,7 +48,8 @@ URL_SHORTENER = ["shrinkee.com", "goo.gl", "7.ly", "adf.ly", "admy.link", "al.ly
 CCTLD = [".ac", ".ad", ".ae", ".af", ".ag", ".ai", ".al", ".am", ".an", ".ao", ".aq", ".ar", ".as", ".at", ".au", ".aw",
          ".ax", ".az", ".ba", ".bb", ".bd", ".be", ".bf", ".bg", ".bh", ".bi", ".bj", ".bl", ".bm", ".bn", ".bo", ".bq",
          ".br", ".brussels", ".bs", ".bt", ".bu", ".bv", ".bw", ".by", ".bz", ".bzh", ".ca", ".cat", ".cc", ".cd",
-         ".cf", ".cg", ".ch", ".ci", ".ck", ".cl", ".cm", ".cn", ".co", ".corsica", ".cr", ".cs ", ".cu", ".cv", ".cw",
+         ".cf", ".cg", ".ch", ".ci", ".ck", ".cl", ".cm", ".cn", ".co", ".com", ".corsica", ".cr", ".cs ", ".cu", ".cv",
+         ".cw",
          ".cx", ".cy", ".cz", ".dd", ".de", ".dj", ".dk", ".dm", ".do", ".dz", ".ec", ".ee", ".eg", ".eh", ".er", ".es",
          ".et", ".eu", ".fi", ".fj", ".fk", ".fm", ".fo", ".fr", ".ga", ".gb", ".gd", ".ge", ".gf", ".gg", ".gh", ".gi",
          ".gl", ".gm", ".gn", ".gp", ".gq", ".gr", ".gs", ".gt", ".gu", ".gw", ".gy", ".hk", ".hm", ".hn", ".hr", ".ht",
@@ -67,7 +68,7 @@ PORTS_TO_SCAN = [(21, False), (22, False), (23, False), (80, True), (443, True),
                  (1521, False), (3306, False), (3389, False)]
 
 TRUSTED_ISSUERS = ["geotrust", "godaddy", "network solutions", "thawte", "comodo", "doster", "verisign", "symantec",
-                   "rapidssl", "digicert"]
+                   "rapidssl", "digicert", "google", "let's encrypt", "comodo ca limited", "cloudflare", "microsoft"]
 
 
 class URL:
@@ -149,9 +150,6 @@ class URL:
         if self.whoisDomain is not None:
             self.domain = self.whoisDomain.domain
 
-        if self.html is not None:
-            self.soup = BeautifulSoup(self.html, features="lxml")
-
         if self.http == "https":
             ctx = ssl.create_default_context()
             ctx.check_hostname = False
@@ -228,10 +226,10 @@ class URL:
         :return: -1,0 or 1
         """
 
-        if len(self.url) < 54:
+        if len(self.hostname) <= 14:
             self.lenghtWeight = -1
             return
-        elif 54 < len(self.url) < 75:
+        elif 14 < len(self.hostname) < 19:
             self.lenghtWeight = 0
             return
         else:
@@ -356,7 +354,7 @@ class URL:
                 self.expirationWeight = 0
                 return
 
-            if delta.days > 365:
+            if delta.days > 330:
                 self.expirationWeight = -1
                 return
             else:
@@ -1198,6 +1196,8 @@ class URL:
         return
 
     def re_extract_non_request_features(self):
+        self.soup = BeautifulSoup(self.html.decode('utf-8', 'ignore'), features="lxml")
+
         try:
             self.ip_testing()
         except Exception as e:
@@ -1377,6 +1377,10 @@ class URL:
         # except Exception as e:
         #     logger.critical(e)
         #     self.statisticWeight = "error"
+
+        self.soup = None
+
+        return self
 
 
 def extraction(inputFile, output, begin=1):
