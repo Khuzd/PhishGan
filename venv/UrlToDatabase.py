@@ -202,6 +202,38 @@ class URL:
         self.linksWeight = "error"
         self.statisticWeight = "error"
 
+        ## ScaledWeights
+        self.ipScaledWeight = "error"
+        self.lenghtScaledWeight = "error"
+        self.shorteningScaledWeight = "error"
+        self.atScaledWeight = "error"
+        self.doubleSlashScaledWeight = "error"
+        self.dashScaledWeight = "error"
+        self.subDomainScaledWeight = "error"
+        self.certificateAgeScaledWeight = "error"
+        self.expirationScaledWeight = "error"
+        self.faviconScaledWeight = "error"
+        self.portScaledWeight = "error"
+        self.httpScaledWeight = "error"
+        self.requestedScaledWeight = "error"
+        self.anchorsScaledWeight = "error"
+        self.tagScaledWeight = "error"
+        self.SFHScaledWeight = "error"
+        self.emailScaledWeight = "error"
+        self.abnormalScaledWeight = "error"
+        self.forwardScaledWeight = "error"
+        self.barCustomScaledWeight = "error"
+        self.rightClickScaledWeight = "error"
+        self.popupScaledWeight = "error"
+        self.iFrameScaledWeight = "error"
+        self.domainAgeScaledWeight = "error"
+        self.dnsScaledWeight = "error"
+        self.trafficScaledWeight = "error"
+        self.pageRankScaledWeight = "error"
+        self.indexingScaledWeight = "error"
+        self.linksScaledWeight = "error"
+        self.statisticScaledWeight = "error"
+
         return
 
     def ip_testing(self):
@@ -1154,6 +1186,25 @@ class URL:
                  self.dnsWeight, self.trafficWeight, self.pageRankWeight, self.indexingWeight, self.linksWeight,
                  self.statisticWeight])
 
+    def get_scaled_features(self):
+        """
+        Get all scaled features
+        :return: list
+        """
+        return ([self.ipScaledWeight, self.lenghtScaledWeight, self.shorteningScaledWeight, self.atScaledWeight,
+                 self.doubleSlashScaledWeight,
+                 self.dashScaledWeight, self.subDomainScaledWeight, self.certificateAgeScaledWeight,
+                 self.expirationScaledWeight,
+                 self.faviconScaledWeight, self.portScaledWeight, self.httpScaledWeight, self.requestedScaledWeight,
+                 self.anchorsScaledWeight,
+                 self.tagScaledWeight, self.SFHScaledWeight, self.emailScaledWeight, self.abnormalScaledWeight,
+                 self.forwardScaledWeight,
+                 self.barCustomScaledWeight, self.rightClickScaledWeight, self.popupScaledWeight,
+                 self.iFrameScaledWeight, self.domainAgeScaledWeight,
+                 self.dnsScaledWeight, self.trafficScaledWeight, self.pageRankScaledWeight, self.indexingScaledWeight,
+                 self.linksScaledWeight,
+                 self.statisticScaledWeight])
+
     def set_features(self, features):
         """
         Set the features from a list
@@ -1193,6 +1244,47 @@ class URL:
         self.indexingWeight = features[27]
         self.linksWeight = features[28]
         self.statisticWeight = features[29]
+        return
+
+    def set_scaled_features(self, features):
+        """
+        Set the scaled features from a list
+        :param features: list
+        :return: nothing
+        """
+        if type(features) is not list or len(features) != 30:
+            logger.error("Bad argument for features setter")
+            return
+        self.ipScaledWeight = features[0]
+        self.lenghtScaledWeight = features[1]
+        self.shorteningScaledWeight = features[2]
+        self.atScaledWeight = features[3]
+        self.doubleSlashScaledWeight = features[4]
+        self.dashScaledWeight = features[5]
+        self.subDomainScaledWeight = features[6]
+        self.certificateAgeScaledWeight = features[7]
+        self.expirationScaledWeight = features[8]
+        self.faviconScaledWeight = features[9]
+        self.portScaledWeight = features[10]
+        self.httpScaledWeight = features[11]
+        self.requestedScaledWeight = features[12]
+        self.anchorsScaledWeight = features[13]
+        self.tagScaledWeight = features[14]
+        self.SFHScaledWeight = features[15]
+        self.emailScaledWeight = features[16]
+        self.abnormalScaledWeight = features[17]
+        self.forwardScaledWeight = features[18]
+        self.barCustomScaledWeight = features[19]
+        self.rightClickScaledWeight = features[20]
+        self.popupScaledWeight = features[21]
+        self.iFrameScaledWeight = features[22]
+        self.domainAgeScaledWeight = features[23]
+        self.dnsScaledWeight = features[24]
+        self.trafficScaledWeight = features[25]
+        self.pageRankScaledWeight = features[26]
+        self.indexingScaledWeight = features[27]
+        self.linksScaledWeight = features[28]
+        self.statisticScaledWeight = features[29]
         return
 
     def re_extract_non_request_features(self):
@@ -1356,27 +1448,6 @@ class URL:
         except Exception as e:
             logger.critical(e)
             self.domainAgeWeight = "error"
-
-        # # testing traffic
-        # try:
-        #     self.traffic_testing()
-        # except Exception as e:
-        #     logger.critical(e)
-        #     self.trafficWeight = "error"
-
-        # # testing links pointing to the webpage
-        # try:
-        #     self.links_pointing_to_testing()
-        # except Exception as e:
-        #     logger.critical(e)
-        #     self.linksWeight = "error"
-        #
-        # # testing statistics
-        # try:
-        #     self.statistic_report_testing()
-        # except Exception as e:
-        #     logger.critical(e)
-        #     self.statisticWeight = "error"
 
         self.soup = None
 
