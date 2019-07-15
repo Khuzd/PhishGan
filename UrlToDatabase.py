@@ -446,23 +446,22 @@ class URL:
         m = []
 
         for p in self.soup.find_all("img"):
-            if p.has_attr("src") and "http" in p.get("src"):
+            if p.has_attr("src") and "http" in p.get("src")[:4]:
                 m.append(p.get('src'))
 
         for p in self.soup.find_all("video"):
             for q in p.find_all("source"):
-                if q.has_attr("src") and "http" in q.get("src"):
+                if q.has_attr("src") and "http" in q.get("src")[:4]:
                     m.append(q.get('src'))
 
         for p in self.soup.find_all("audio"):
             for q in p.find_all("source"):
-                if q.has_attr("src") and "http" in q.get("src"):
+                if q.has_attr("src") and "http" in q.get("src")[:4]:
                     m.append(q.get('src'))
 
         for link in m:
             if self.domain not in link:
-                if "http" in link or "www" in link:
-                    externalLinks += 1
+                externalLinks += 1
             totalLinks += 1
 
         if totalLinks != 0:
@@ -526,11 +525,11 @@ class URL:
                 m.append(link)
 
         for tag in links:
-            if tag.has_attr("href") and "http" in tag.get("href"):
+            if tag.has_attr("href") and "http" in tag.get("href")[:4]:
                 m.append(tag.get("href"))
 
         for tag in scripts:
-            if tag.has_attr("href") and "http" in tag.get("href"):
+            if tag.has_attr("href") and "http" in tag.get("href")[:4]:
                 m.append(tag.get("href"))
 
         for link in m:
@@ -565,8 +564,8 @@ class URL:
                 self.SFHWeight = 1
                 return
 
-            elif self.domain not in str(form.get("action")) or "http" in str(form.get("action")) or "www" in str(
-                    form.get("action")):
+            elif self.domain not in str(form.get("action")) and ("http" in str(form.get("action")) or "www" in str(
+                    form.get("action"))):
                 self.SFHWeight = 0
                 return
         self.SFHWeight = -1
