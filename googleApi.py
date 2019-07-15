@@ -21,10 +21,10 @@ logger = logging.getLogger('main')
 
 # api obtained on this URL : https://developers.google.com/api-client-library/python/guide/aaa_apikeys
 # cse create on this URL : http://www.google.com/cse/
-my_api_key_custom_search = open("venv/api_keys/google_api_key_custom_search.txt").read()
-my_cse_id_custom_search = open("venv/api_keys/google_cse_id_custom_search.txt").read()
+my_api_key_custom_search = open("api_keys/google_api_key_custom_search.txt").read()
+my_cse_id_custom_search = open("api_keys/google_cse_id_custom_search.txt").read()
 
-my_api_key_safe_browsing = open("venv/api_keys/google_api_key_safe_browsing.txt").read()
+my_api_key_safe_browsing = open("api_keys/google_api_key_safe_browsing.txt").read()
 
 
 def google_search(search_term):
