@@ -56,14 +56,16 @@ class MyBase:
         url = Column(String)
         content = Column(Binary)
 
-    class Scalers(Base):
+    class Normalization(Base):
         """
-        Table for scalers
+        Table for Normalization
         """
-        __tablename__ = "scalers"
+        __tablename__ = "normalization"
         id = Column(Integer, primary_key=True)
-        features = Column(String)
-        content = Column(Binary)
+        feature = Column(String)
+        data = Column(Binary)
+        normalizer = Column(Binary)
+        scaler = Column(Binary)
 
     def create_tables(self):
         """
@@ -117,7 +119,7 @@ class MyBase:
 
                 # Load weights
                 tmp.ipWeight = int(oldUrl.ipWeight)
-                tmp.lenghtWeight = int(oldUrl.lenghtWeight)
+                tmp.lengthWeight = int(oldUrl.lenghtWeight)
                 tmp.shorteningWeight = int(oldUrl.shorteningWeight)
                 tmp.atWeight = int(oldUrl.atWeight)
                 tmp.doubleSlashWeight = int(oldUrl.doubleSlashWeight)
@@ -149,7 +151,7 @@ class MyBase:
 
                 # Load scaled weights
                 tmp.ipScaledWeight = float(oldUrl.ipScaledWeight)
-                tmp.lenghtScaledWeight = float(oldUrl.lenghtScaledWeight)
+                tmp.lengthScaledWeight = float(oldUrl.lenghtScaledWeight)
                 tmp.shorteningScaledWeight = float(oldUrl.shorteningScaledWeight)
                 tmp.atScaledWeight = float(oldUrl.atScaledWeight)
                 tmp.doubleSlashScaledWeight = float(oldUrl.doubleSlashScaledWeight)
