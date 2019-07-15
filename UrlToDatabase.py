@@ -6,7 +6,6 @@ University of Gloucestershire
 Author : Pierrick ROBIC--BUTEZ
 2019
 """
-
 import csv
 import datetime
 import json
@@ -22,6 +21,7 @@ import requests
 import socks
 from bs4 import BeautifulSoup
 from func_timeout import func_timeout, FunctionTimedOut
+from publicsuffixlist import PublicSuffixList
 
 import ORMmanage
 import googleApi
@@ -46,25 +46,6 @@ URL_SHORTENER = ["shrinkee.com", "goo.gl", "7.ly", "adf.ly", "admy.link", "al.ly
                  "x61.ch", "qr.net", "shrinkee.com", "u.to", "ho.io", "thinfi.com", "tiny.cc", "tinyurl.com", "tny.im",
                  "flic.krp", "v.gd", "y2u.be", "cutt.us", "zzb.bz", "adfoc.us", "bit.ly", "cur.lv", "git.io", "hec.su",
                  "viid.me", "tldrify.com", "tr.im", "link.do"]
-
-CCTLD = [".ac", ".ad", ".ae", ".af", ".ag", ".ai", ".al", ".am", ".an", ".ao", ".aq", ".ar", ".as", ".at", ".au", ".aw",
-         ".ax", ".az", ".ba", ".bb", ".bd", ".be", ".bf", ".bg", ".bh", ".bi", ".bj", ".bl", ".bm", ".bn", ".bo", ".bq",
-         ".br", ".brussels", ".bs", ".bt", ".bu", ".bv", ".bw", ".by", ".bz", ".bzh", ".ca", ".cat", ".cc", ".cd",
-         ".cf", ".cg", ".ch", ".ci", ".ck", ".cl", ".cm", ".cn", ".co", ".com", ".corsica", ".cr", ".cs ", ".cu", ".cv",
-         ".cw",
-         ".cx", ".cy", ".cz", ".dd", ".de", ".dj", ".dk", ".dm", ".do", ".dz", ".ec", ".ee", ".eg", ".eh", ".er", ".es",
-         ".et", ".eu", ".fi", ".fj", ".fk", ".fm", ".fo", ".fr", ".ga", ".gb", ".gd", ".ge", ".gf", ".gg", ".gh", ".gi",
-         ".gl", ".gm", ".gn", ".gp", ".gq", ".gr", ".gs", ".gt", ".gu", ".gw", ".gy", ".hk", ".hm", ".hn", ".hr", ".ht",
-         ".hu", ".id", ".ie", ".il", ".im", ".in", ".io", ".iq", ".ir", ".is", ".it", ".je", ".jm", ".jo", ".jp", ".ke",
-         ".kg", ".kh", ".ki", ".km", ".kn", ".kp", ".kr", ".krd", ".kw", ".ky", ".kz", ".la", ".lb", ".lc", ".li",
-         ".lk", ".lr", ".ls", ".lt", ".lu", ".lv", ".ly", ".ma", ".mc", ".md", ".me", ".mf", ".mg", ".mh", ".mk", ".ml",
-         ".mm", ".mn", ".mo", ".mp", ".mq", ".mr", ".ms", ".mt", ".mu", ".mv", ".mw", ".mx", ".my", ".mz", ".na", ".nc",
-         ".ne", ".nf", ".ng", ".ni", ".nl", ".no", ".np", ".nr", ".nu", ".nz", ".om", ".pa", ".pe", ".pf", ".pg", ".ph",
-         ".pk", ".pl", ".pm", ".pn", ".pr", ".ps", ".pt", ".pw", ".py", ".qa", ".quebec", ".re", ".ro", ".rs", ".ru",
-         ".rw", ".sa", ".sb", ".sc", ".sd", ".se", ".sg", ".sh", ".si", ".sj", ".sk", ".sl", ".sm", ".sn", ".so", ".sr",
-         ".ss", ".st", ".su", ".sv", ".sx", ".sy", ".sz", ".tc", ".td", ".tf", ".tg", ".th", ".tj", ".tk", ".tl", ".tm",
-         ".tn", ".to", ".tp", ".tr", ".tt", ".tv", ".tw", ".tz", ".ua", ".ug", ".uk", ".um", ".us", ".uy", ".uz", ".va",
-         ".vc", ".ve", ".vg", ".vi", ".vn", ".vu", ".wf", ".ws", ".ye", ".yt", ".yu", ".za", ".zm", ".zr", ".zw"]
 
 PORTS_TO_SCAN = [(21, False), (22, False), (23, False), (80, True), (443, True), (445, False), (1433, False),
                  (1521, False), (3306, False), (3389, False)]
@@ -174,7 +155,7 @@ class URL:
 
         ## Weights
         self.ipWeight = "error"
-        self.lenghtWeight = "error"
+        self.lengthWeight = "error"
         self.shorteningWeight = "error"
         self.atWeight = "error"
         self.doubleSlashWeight = "error"
@@ -206,7 +187,7 @@ class URL:
 
         ## ScaledWeights
         self.ipScaledWeight = "error"
-        self.lenghtScaledWeight = "error"
+        self.lengthScaledWeight = "error"
         self.shorteningScaledWeight = "error"
         self.atScaledWeight = "error"
         self.doubleSlashScaledWeight = "error"
@@ -257,20 +238,20 @@ class URL:
             self.ipWeight = -1
             return
 
-    def lenght_testing(self):
+    def length_testing(self):
         """
-        test if url lenght is <54, between 54 and 75 or over 75
+        test if url length is <54, between 54 and 75 or over 75
         :return: -1,0 or 1
         """
 
         if len(self.hostname) <= 14:
-            self.lenghtWeight = -1
+            self.lengthWeight = -1
             return
         elif 14 < len(self.hostname) < 19:
-            self.lenghtWeight = 0
+            self.lengthWeight = 0
             return
         else:
-            self.lenghtWeight = 1
+            self.lengthWeight = 1
             return
 
     def shortener_testing(self):
@@ -324,23 +305,13 @@ class URL:
         test if there are too many subdomains
         :return: -1,0 or 1
         """
-        if len(self.hostname.split("www.")) == 2:
-            domain = self.hostname.split("www.")[1]
+        psl = PublicSuffixList()
+        domain = self.hostname
+        if domain is None:
+            domain = ""
         else:
-            domain = self.hostname
+            domain = domain[:len(domain) - (len(psl.publicsuffix(domain)) + 1)]
 
-        for tld in CCTLD:
-            if re.match(("(.)*" + tld + "$"), str(domain)):
-                domain = domain[:len(domain) - len(tld)]
-                if domain.count('.') <= 1:
-                    self.subDomainWeight = -1
-                    return
-                elif domain.count('.') == 2:
-                    self.subDomainWeight = 0
-                    return
-                else:
-                    self.subDomainWeight = 1
-                    return
         if domain.count('.') <= 1:
             self.subDomainWeight = -1
             return
@@ -951,9 +922,9 @@ class URL:
     def ip_scaled_calculation(self):
         self.ipScaledWeight = (float(self.ipWeight) * 0.5) - 0.5
 
-    def lenght_scaled_calculation(self):
+    def length_scaled_calculation(self):
         Base = ORMmanage.MyBase("DB/toto.db")
-        self.lenghtScaledWeight = pickle.loads(
+        self.lengthScaledWeight = pickle.loads(
             Base.session.query(Base.Scalers).filter(Base.Scalers.features == "url_len").first().content).transform(
             [[len(self.hostname)]])[0][0]
         pass
@@ -962,7 +933,7 @@ class URL:
         self.shorteningScaledWeight = (float(self.shorteningWeight) * 0.5) - 0.5
 
     def at_symbol_scaled_calculation(self):
-        pass
+        self.atScaledWeight = (float(self.atWeight) * 0.5) - 0.5
 
     def double_slash_scaled_calculation(self):
         self.doubleSlashScaledWeight = (float(self.doubleSlashWeight) * 0.5) - 0.5
@@ -983,7 +954,7 @@ class URL:
         self.faviconScaledWeight = (float(self.faviconWeight) * 0.5) - 0.5
 
     def port_scaled_calculation(self):
-        pass
+        self.portScaledWeight = (float(self.portWeight) * 0.5) - 0.5
 
     def http_scaled_calculation(self):
         self.httpScaledWeight = (float(self.httpWeight) * 0.5) - 0.5
@@ -1057,12 +1028,12 @@ class URL:
             logger.critical(e)
             self.ipWeight = "error"
 
-        # testing lenght of the url
+        # testing length of the url
         try:
-            self.lenght_testing()
+            self.length_testing()
         except Exception as e:
             logger.critical(e)
-            self.lenghtWeight = "error"
+            self.lengthWeight = "error"
 
         # testing shortener url
         try:
@@ -1290,12 +1261,12 @@ class URL:
             logger.critical(e)
             self.ipScaledWeight = "error"
 
-        # calculation of lenght of the url
+        # calculation of length of the url
         try:
-            self.lenght_scaled_calculation()
+            self.length_scaled_calculation()
         except Exception as e:
             logger.critical(e)
-            self.lenghtScaledWeight = "error"
+            self.lengthScaledWeight = "error"
 
         # calculation of shortener url
         try:
@@ -1513,7 +1484,7 @@ class URL:
         Get all features
         :return: list
         """
-        return ([self.ipWeight, self.lenghtWeight, self.shorteningWeight, self.atWeight, self.doubleSlashWeight,
+        return ([self.ipWeight, self.lengthWeight, self.shorteningWeight, self.atWeight, self.doubleSlashWeight,
                  self.dashWeight, self.subDomainWeight, self.certificateAgeWeight, self.expirationWeight,
                  self.faviconWeight, self.portWeight, self.httpWeight, self.requestedWeight, self.anchorsWeight,
                  self.tagWeight, self.SFHWeight, self.emailWeight, self.abnormalWeight, self.forwardWeight,
@@ -1526,7 +1497,7 @@ class URL:
         Get all scaled features
         :return: list
         """
-        return ([self.ipScaledWeight, self.lenghtScaledWeight, self.shorteningScaledWeight, self.atScaledWeight,
+        return ([self.ipScaledWeight, self.lengthScaledWeight, self.shorteningScaledWeight, self.atScaledWeight,
                  self.doubleSlashScaledWeight,
                  self.dashScaledWeight, self.subDomainScaledWeight, self.certificateAgeScaledWeight,
                  self.expirationScaledWeight,
@@ -1550,7 +1521,7 @@ class URL:
             logger.error("Bad argument for features setter")
             return
         self.ipWeight = features[0]
-        self.lenghtWeight = features[1]
+        self.lengthWeight = features[1]
         self.shorteningWeight = features[2]
         self.atWeight = features[3]
         self.doubleSlashWeight = features[4]
@@ -1591,7 +1562,7 @@ class URL:
             logger.error("Bad argument for features setter")
             return
         self.ipScaledWeight = features[0]
-        self.lenghtScaledWeight = features[1]
+        self.lengthScaledWeight = features[1]
         self.shorteningScaledWeight = features[2]
         self.atScaledWeight = features[3]
         self.doubleSlashScaledWeight = features[4]
@@ -1631,12 +1602,12 @@ class URL:
             logger.critical(e)
             self.ipWeight = "error"
 
-        # testing lenght of the url
+        # testing length of the url
         try:
-            self.lenght_testing()
+            self.length_testing()
         except Exception as e:
             logger.critical(e)
-            self.lenghtWeight = "error"
+            self.lengthWeight = "error"
 
         # testing shortener url
         try:
