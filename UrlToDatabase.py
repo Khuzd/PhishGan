@@ -67,6 +67,9 @@ class URL:
         self.hostname = None
         self.certificate = None
         self.soup = None
+        self.amazonAlexa = None
+        self.pageRank = None
+        self.redirectCount = None
 
         # ---------------------
         #  Calculate attributes
