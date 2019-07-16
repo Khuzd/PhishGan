@@ -491,8 +491,8 @@ class URL:
         externalLinks = 0
 
         for anchor in anchors:
-            if self.domain not in anchor:
-                if "www" in anchor or "http" in anchor:
+            if self.domain not in anchor and "http":
+                if "www" in anchor[:3] or "http" in anchor[:4]:
                     externalLinks += 1
 
         if externalLinks == 0 or externalLinks / totalLink < 0.31:
