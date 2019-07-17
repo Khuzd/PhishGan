@@ -811,9 +811,15 @@ class URL:
         try:
             soup = BeautifulSoup(self.amazonAlexa, features="lxml")
             rank = int((soup.find("aws:trafficdata").find("aws:rank").contents)[0])
-        except AttributeError:
-            self.trafficWeight = 1
-            return
+        except (AttributeError, IndexError):
+            try:
+                soup = BeautifulSoup(requests.get("https://www.alexa.com/siteinfo/" + self.domain).content,
+                                     features="lxml")
+                tag = soup.find(id="card_rank").find("", {"class": "rank-global"}).find("", {"class": "big data"})
+                rank = int("".join(re.findall('\d+', str(tag))))
+            except(AttributeError, IndexError):
+                self.trafficWeight = 1
+                return
 
         if rank > 100000:
             self.trafficWeight = 0
@@ -882,9 +888,15 @@ class URL:
         soup = BeautifulSoup(self.amazonAlexa, features="lxml")
         try:
             countLinks = int(soup.find("aws:linksincount").contents[0])
-        except AttributeError:
-            self.linksWeight = 1
-            return
+        except (AttributeError, IndexError):
+            try:
+                soup = BeautifulSoup(requests.get("https://www.alexa.com/siteinfo/" + self.url).content,
+                                     features="lxml")
+                countLinks = int(
+                    "".join(soup.find("", {"class": "linksin"}).find("", {"class": "big data"}).get_text().split(",")))
+            except(AttributeError, IndexError):
+                self.linksWeight = 1
+                return
         if countLinks == 0:
             self.linksWeight = 1
             return
