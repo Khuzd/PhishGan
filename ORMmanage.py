@@ -117,10 +117,13 @@ class MyBase:
                     tmp.hostname = oldUrl.hostname
                     tmp.certificate = oldUrl.certificate
                     tmp.soup = oldUrl.soup
+                    tmp.amazonAlexa = oldUrl.amazonAlexa
+                    tmp.pageRank = oldUrl.pageRank
+                    tmp.redirectCount = oldUrl.redirectCount
 
                     # Load weights
                     tmp.ipWeight = int(oldUrl.ipWeight)
-                    tmp.lengthWeight = int(oldUrl.lenghtWeight)
+                    tmp.lengthWeight = int(oldUrl.lengthWeight)
                     tmp.shorteningWeight = int(oldUrl.shorteningWeight)
                     tmp.atWeight = int(oldUrl.atWeight)
                     tmp.doubleSlashWeight = int(oldUrl.doubleSlashWeight)
@@ -152,7 +155,7 @@ class MyBase:
 
                     # Load scaled weights
                     tmp.ipScaledWeight = float(oldUrl.ipScaledWeight)
-                    tmp.lengthScaledWeight = float(oldUrl.lenghtScaledWeight)
+                    tmp.lengthScaledWeight = float(oldUrl.lengthScaledWeight)
                     tmp.shorteningScaledWeight = float(oldUrl.shorteningScaledWeight)
                     tmp.atScaledWeight = float(oldUrl.atScaledWeight)
                     tmp.doubleSlashScaledWeight = float(oldUrl.doubleSlashScaledWeight)
