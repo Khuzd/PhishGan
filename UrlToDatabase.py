@@ -21,6 +21,7 @@ import requests
 import socks
 from bs4 import BeautifulSoup
 from func_timeout import func_timeout, FunctionTimedOut
+from myawis import CallAwis
 from publicsuffixlist import PublicSuffixList
 
 import ORMmanage
@@ -155,6 +156,19 @@ class URL:
                     self.certificate = s.getpeercert()
                 except:
                     self.certificate = None
+
+        # PageRank calculus
+        try:
+            self.pageRank = requests.get("https://openpagerank.com/api/v1.0/getPageRank?domains%5B0%5D=" + self.domain,
+                                         headers={"API-OPR": open("api_keys/openPageRank_key.txt").read()}).json()[
+                "response"][0]['page_rank_decimal']
+        except:
+            logger.error("domain pagerank not found")
+            self.pageRank = 0
+
+        # Get AWIS Alexa information
+        self.amazonAlexa = CallAwis(open("api_keys/awis_acces_id.txt").read(),
+                                    open("api_keys/awis_secret_access_key.txt").read()).urlinfo(self.domain)
 
         ## Weights
         self.ipWeight = "error"
@@ -814,19 +828,12 @@ class URL:
         Test the pagerank of the domain
         :return: -1 or 1
         """
-        answer = requests.get("https://openpagerank.com/api/v1.0/getPageRank?domains%5B0%5D=" + self.domain,
-                              headers={"API-OPR": "cswc0oc4wo0gs0ssgk044044wosc0ggwgoksocg8"})
 
-        try:
-            if answer.json()["response"][0]['page_rank_decimal'] <= 2:
-                self.pageRankWeight = 1
-                return
-            else:
-                self.pageRankWeight = -1
-                return
-        except (KeyError, TypeError):
-            logger.error("domain pagerank not found")
+        if self.pageRank <= 2:
             self.pageRankWeight = 1
+            return
+        else:
+            self.pageRankWeight = -1
             return
 
     def google_index_testing(self):
