@@ -14,10 +14,10 @@ Author : Pierrick ROBIC--BUTEZ
 seed_value = 42
 
 # 1. Set the `PYTHONHASHSEED` environment variable at a fixed value
-from os import environ
+import os
 
-environ['PYTHONHASHSEED'] = '0'
-environ['CUDA_VISIBLE_DEVICES'] = ''
+os.environ['PYTHONHASHSEED'] = '0'
+os.environ['CUDA_VISIBLE_DEVICES'] = ''
 
 # 2. Set the `python` built-in pseudo-random generator at a fixed value
 import random
@@ -30,30 +30,30 @@ import numpy as np
 np.random.seed(seed_value)
 
 # 4. Set the `tensorflow` pseudo-random generator at a fixed value
-from tensorflow import set_random_seed, ConfigProto, get_default_graph, Session
+import tensorflow as tf
 
-set_random_seed(seed_value)
+tf.set_random_seed(seed_value)
 
 # 5. Configure a new global `tensorflow` session
-from keras.backend import set_session
+from keras import backend as K
 
-session_conf = ConfigProto(intra_op_parallelism_threads=1, inter_op_parallelism_threads=1, device_count={"CPU": 1})
-sess = Session(graph=get_default_graph(), config=session_conf)
-set_session(sess)
+session_conf = tf.ConfigProto(intra_op_parallelism_threads=1, inter_op_parallelism_threads=1, device_count={"CPU": 1})
+sess = tf.Session(graph=tf.get_default_graph(), config=session_conf)
+K.set_session(sess)
 
-from argparse import ArgumentParser, _SubParsersAction
-from GanGraphGeneration import multi_graph, report_accuracy_graph, graph_creation
-from UrlToDatabase import URL, extraction
+import argparse
+import GanGraphGeneration
+import UrlToDatabase
 import csv
 from GANv2 import GAN
-from importData import csv_to_list
-from browser_history_extraction import chrome_extraction, firefox_extraction, opera_extraction
-from ORMmanage import MyBase
-from pickle import loads
-from decimal import Decimal, ROUND_DOWN
+import importData
+import browser_history_extraction
+import ORMmanage
+import pickle
+import decimal
 from stem import Signal
 from stem.control import Controller
-from logging import getLogger, DEBUG, StreamHandler, WARNING, Formatter
+import logging
 from logging.handlers import RotatingFileHandler
 from func_timeout import func_timeout
 from pathos.pools import ThreadPool
@@ -66,22 +66,22 @@ CLEAN_PATH = 'data/Amazon_top25000outtrain.csv'
 #  Define logger
 # ---------------------
 
-logger = getLogger()
-logger.setLevel(DEBUG)
+logger = logging.getLogger()
+logger.setLevel(logging.DEBUG)
 
-formatter = Formatter('%(asctime)s :: %(levelname)s :: %(message)s')
+formatter = logging.Formatter('%(asctime)s :: %(levelname)s :: %(message)s')
 file_handler = RotatingFileHandler('log/phishGan.log', 'a', 1000000, 1)
-file_handler.setLevel(DEBUG)
+file_handler.setLevel(logging.DEBUG)
 file_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
 
-stream_handler = StreamHandler()
-stream_handler.setLevel(WARNING)
+stream_handler = logging.StreamHandler()
+stream_handler.setLevel(logging.WARNING)
 
 logger.addHandler(stream_handler)
 
 
-class MyParser(ArgumentParser):
+class MyParser(argparse.ArgumentParser):
     def print_help(self, file=None):
         """
         Redefine print help function to print the help of all subparsers when main -h
@@ -90,7 +90,7 @@ class MyParser(ArgumentParser):
 
         subparsers_actions = [
             action for action in self._actions
-            if isinstance(action, _SubParsersAction)]
+            if isinstance(action, argparse._SubParsersAction)]
         for subparsers_action in subparsers_actions:
             # get all subparsers and print help
             for choice, subparser in subparsers_action.choices.items():
@@ -124,9 +124,9 @@ def graph(args):
     # Generate graph(s)
     if type(args.division) == list:
         args.division = args.division[0]
-    multi_graph(args.beginLR[0], args.endLR[0], args.stepLR[0], args.epochs[0], args.beginSample[0],
-                args.endSample[0], args.stepSample[0], args.pltFrequency[0], dataset,
-                outPath=''.join(args.output), divide=args.division, dataType=args.type[0])
+    GanGraphGeneration.multi_graph(args.beginLR[0], args.endLR[0], args.stepLR[0], args.epochs[0], args.beginSample[0],
+                                   args.endSample[0], args.stepSample[0], args.pltFrequency[0], dataset,
+                                   outPath=''.join(args.output), divide=args.division, dataType=args.type[0])
     return
 
 
@@ -140,7 +140,7 @@ def extraction(args):
     #  Case of features extraction for only one URL
     # ---------------------
     if args.URL is not None:
-        website = URL(args.URL[0])
+        website = UrlToDatabase.URL(args.URL[0])
         try:
             results = func_timeout(50, website.features_extraction)
         except Exception as e:
@@ -158,14 +158,14 @@ def extraction(args):
     elif args.file is not None:
         if type(args.begin) is list:
             args.begin = args.begin[0]
-        extraction(args.file[0], args.output[0], args.begin)
+        UrlToDatabase.extraction(args.file[0], args.output[0], args.begin)
 
     # ---------------------
     #  Case of features extraction for a list of URLs
     # ---------------------
     elif args.list is not None:
         for url in args.list:
-            website = URL(url)
+            website = UrlToDatabase.URL(url)
             try:
                 results = func_timeout(50, website.features_extraction)
             except Exception as e:
@@ -190,11 +190,11 @@ def creation(args):
     # ---------------------
     random.seed(seed_value)
     np.random.seed(seed_value)
-    set_random_seed(seed_value)
-    session_conf = ConfigProto(intra_op_parallelism_threads=1, inter_op_parallelism_threads=1,
-                               device_count={"CPU": 1})
-    sess = Session(graph=get_default_graph(), config=session_conf)
-    set_session(sess)
+    tf.set_random_seed(seed_value)
+    session_conf = tf.ConfigProto(intra_op_parallelism_threads=1, inter_op_parallelism_threads=1,
+                                  device_count={"CPU": 1})
+    sess = tf.Session(graph=tf.get_default_graph(), config=session_conf)
+    K.set_session(sess)
     gan = GAN(lr=args.lr[0], sample=args.size[0])
 
     # Load dataset
@@ -206,7 +206,7 @@ def creation(args):
         dataset = args.dataset[0]
 
     # Train then save
-    gan.train(args.epochs[0], csv_to_list(dataset)[1].values())
+    gan.train(args.epochs[0], importData.csv_to_list(dataset)[1].values())
     gan.save(args.name[0], args.location[0])
     return
 
@@ -223,7 +223,7 @@ def prediction(args):
 
     if args.file is not None:
         # Load data
-        data = csv_to_list(args.file[0])[1]
+        data = importData.csv_to_list(args.file[0])[1]
         for url in data.keys():
             # Make a prediction
             results = gan.discriminator.predict_on_batch(np.array(data[url]).astype(np.int)[:].reshape(1, 30, 1))
@@ -267,7 +267,7 @@ def report_graph(args):
         :param args: Namespace
         :return: nothing
         """
-    report_accuracy_graph(args.path[0])
+    GanGraphGeneration.report_accuracy_graph(args.path[0])
     return
 
 
@@ -280,9 +280,9 @@ def history_extract(args):
     # ---------------------
     #  Extract URLs from history browsers
     # ---------------------
-    URLs = chrome_extraction(args.date)
-    URLs += firefox_extraction(args.date)
-    URLs += opera_extraction(args.date)
+    URLs = browser_history_extraction.chrome_extraction(args.date)
+    URLs += browser_history_extraction.firefox_extraction(args.date)
+    URLs += browser_history_extraction.opera_extraction(args.date)
 
     # ---------------------
     #  Write results in the right place
@@ -308,10 +308,10 @@ def history_train(args):
     gan.load(args.name[0], args.location[0])
 
     # Load database and extract features
-    Base = MyBase("DB/database.db")
+    Base = ORMmanage.MyBase("DB/database.db")
     features = []
     for website in Base.session.query(Base.History).all():
-        url = loads(website.content)
+        url = pickle.loads(website.content)
         features.append(url.get_features())
     random.shuffle(features)
 
@@ -327,35 +327,35 @@ def history_train(args):
         args.division = args.division[0]
 
     if args.division == 1:
-        graph_creation(X, Dloss, vDloss, gan.lr, gan.sampleSize, "loss", bestEpoch,
-                       bestReport["accuracy"], Gloss, vGloss,
-                       path=args.output)
-        graph_creation(X, accuracy, vacc, gan.lr, gan.sampleSize, "accuracy", bestEpoch,
-                       bestReport["accuracy"],
-                       path=args.output)
+        GanGraphGeneration.graph_creation(X, Dloss, vDloss, gan.lr, gan.sampleSize, "loss", bestEpoch,
+                                          bestReport["accuracy"], Gloss, vGloss,
+                                          path=args.output)
+        GanGraphGeneration.graph_creation(X, accuracy, vacc, gan.lr, gan.sampleSize, "accuracy", bestEpoch,
+                                          bestReport["accuracy"],
+                                          path=args.output)
     else:
         for i in range(args.division):
             lenght = len(X)
-            graph_creation(X[i * (lenght // args.division):(i + 1) * (lenght // args.division)],
-                           Dloss[i * (lenght // args.division):(i + 1) * (lenght // args.division)],
-                           vDloss[i * (lenght // args.division):(i + 1) * (lenght // args.division)],
-                           gan.lr, gan.sampleSize, "loss",
-                           bestEpoch, bestReport["accuracy"],
-                           Gloss[i * (lenght // args.division):(i + 1) * (lenght // args.division)],
-                           vGloss[i * (lenght // args.division):(i + 1) * (lenght // args.division)],
-                           path=args.output,
-                           suffix="part" + str(i))
-            graph_creation(X[i * (lenght // args.division):(i + 1) * (lenght // args.division)],
-                           accuracy[
-                           i * (lenght // args.division):(i + 1) * (lenght // args.division)],
-                           vacc[i * (lenght // args.division):(i + 1) * (lenght // args.division)],
-                           gan.lr, gan.sampleSize, "accuracy",
-                           bestEpoch, bestReport["accuracy"],
-                           path=args.output, suffix="part" + str(i))
+            GanGraphGeneration.graph_creation(X[i * (lenght // args.division):(i + 1) * (lenght // args.division)],
+                                             Dloss[i * (lenght // args.division):(i + 1) * (lenght // args.division)],
+                                             vDloss[i * (lenght // args.division):(i + 1) * (lenght // args.division)],
+                                              gan.lr, gan.sampleSize, "loss",
+                                              bestEpoch, bestReport["accuracy"],
+                                             Gloss[i * (lenght // args.division):(i + 1) * (lenght // args.division)],
+                                             vGloss[i * (lenght // args.division):(i + 1) * (lenght // args.division)],
+                                              path=args.output,
+                                              suffix="part" + str(i))
+            GanGraphGeneration.graph_creation(X[i * (lenght // args.division):(i + 1) * (lenght // args.division)],
+                                             accuracy[
+                                             i * (lenght // args.division):(i + 1) * (lenght // args.division)],
+                                             vacc[i * (lenght // args.division):(i + 1) * (lenght // args.division)],
+                                              gan.lr, gan.sampleSize, "accuracy",
+                                              bestEpoch, bestReport["accuracy"],
+                                              path=args.output, suffix="part" + str(i))
 
     # Save classification report
     with open(args.output + "/" + str(gan.sampleSize) + "/" + "Report_" + str(
-            Decimal(gan.lr).quantize(Decimal('.0001'), rounding=ROUND_DOWN)) + ".txt", "w",
+            decimal.Decimal(gan.lr).quantize(decimal.Decimal('.0001'), rounding=decimal.ROUND_DOWN)) + ".txt", "w",
               newline='', encoding='utf-8') as reportFile:
         reportFile.write(str(bestReport))
 
@@ -370,14 +370,14 @@ def orm_extract(args):
         """
 
     # Load database
-    Base = MyBase(args.database[0])
+    Base = ORMmanage.MyBase(args.database[0])
     Base.create_tables()
 
     if type(args.thread) is list:
         args.thread = args.thread[0]
 
     # Load data
-    URLs = list(csv_to_list(args.path[0])[1].keys())
+    URLs = list(importData.csv_to_list(args.path[0])[1].keys())
 
     # ---------------------
     #  Filter the results already in database
@@ -413,7 +413,7 @@ def orm_extract(args):
         i += args.thread
 
         # Create URL object
-        result1 = ThreadPool().map(URL, url)
+        result1 = ThreadPool().map(UrlToDatabase.URL, url)
         result2 = []
         tmp = []
         for web in result1:
@@ -424,7 +424,7 @@ def orm_extract(args):
                 tmp.append(web)
         if args.extraction:
             # Extract features
-            ThreadPool().map(URL.features_extraction, tmp)
+            ThreadPool().map(UrlToDatabase.URL.features_extraction, tmp)
             result2 += tmp
             for web in result2:
                 print(web)

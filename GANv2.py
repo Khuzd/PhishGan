@@ -14,10 +14,10 @@ Author : Pierrick ROBIC--BUTEZ
 seed_value = 42
 
 # 1. Set the `PYTHONHASHSEED` environment variable at a fixed value
-from os import environ
+import os
 
-environ['PYTHONHASHSEED'] = '0'
-environ['CUDA_VISIBLE_DEVICES'] = ''
+os.environ['PYTHONHASHSEED'] = '0'
+os.environ['CUDA_VISIBLE_DEVICES'] = ''
 
 # 2. Set the `python` built-in pseudo-random generator at a fixed value
 import random
@@ -30,17 +30,16 @@ import numpy as np
 np.random.seed(seed_value)
 
 # 4. Set the `tensorflow` pseudo-random generator at a fixed value
-from tensorflow import set_random_seed, ConfigProto, get_default_graph, Session
-from tensorflow import train
+import tensorflow as tf
 
-set_random_seed(seed_value)
+tf.set_random_seed(seed_value)
 
 # 5. Configure a new global `tensorflow` session
-from keras.backend import set_session
+from keras import backend as k
 
-session_conf = ConfigProto(intra_op_parallelism_threads=1, inter_op_parallelism_threads=1, device_count={"CPU": 1})
-sess = Session(graph=get_default_graph(), config=session_conf)
-set_session(sess)
+session_conf = tf.ConfigProto(intra_op_parallelism_threads=1, inter_op_parallelism_threads=1, device_count={"CPU": 1})
+sess = tf.Session(graph=tf.get_default_graph(), config=session_conf)
+k.set_session(sess)
 
 from keras.layers import Input, Dense, Reshape, Flatten
 from keras.layers import BatchNormalization
@@ -50,14 +49,14 @@ from keras.utils import plot_model
 
 from sklearn.metrics import classification_report
 
-from importData import csv_to_list
-from logging import getLogger
-from json import dumps, loads
+import importData
+import logging
+import json
 
 # Import logger
-logger = getLogger('main')
+logger = logging.getLogger('main')
 
-# environ["PATH"] += os.pathsep + 'C:/Program Files (x86)/Graphviz2.38/bin'
+# os.environ["PATH"] += os.pathsep + 'C:/Program Files (x86)/Graphviz2.38/bin'
 
 # Default datasets path
 PHIS_PATH_TEST = "data/Phishtank_outtest.csv"
@@ -80,7 +79,7 @@ class GAN:
         self.sampleSize = sample
         self.dataType = "phish"
         self.lr = lr
-        self.optimizer = train.AdamOptimizer(learning_rate=self.lr)
+        self.optimizer = tf.train.AdamOptimizer(learning_rate=self.lr)
 
         # Build and compile the discriminator
         self.discriminator = self.build_discriminator()
@@ -204,7 +203,7 @@ class GAN:
             tmp["discriminator"] = None
             tmp["combined"] = None
             print(tmp)
-            json_file.write(dumps(tmp))
+            json_file.write(json.dumps(tmp))
 
         del generator_model_json, discriminator_model_json, combined_model_json
 
@@ -217,7 +216,7 @@ class GAN:
         """
         ## Load object
         with open(path + "/" + prefix + "object.json", "r") as json_file:
-            tmp = loads(json_file.read())
+            tmp = json.loads(json_file.read())
         self.__dict__.update(tmp)
 
         ## Load models
@@ -245,7 +244,7 @@ class GAN:
         self.generator.load_weights(path + "/" + prefix + "generator_model.h5")
 
         ## Load optimizer
-        self.optimizer = train.AdamOptimizer(learning_rate=self.lr)
+        self.optimizer = tf.train.AdamOptimizer(learning_rate=self.lr)
 
         del json_file, loaded_model_json
 
@@ -284,12 +283,12 @@ class GAN:
             return classification_report(np.array(true), np.array(predict), output_dict=True)
         return
 
-    def train(self, epochs, data, ploequency=20, predict=False, phishData=None, cleanData=None):
+    def train(self, epochs, data, plotFrequency=20, predict=False, phishData=None, cleanData=None):
         """
         Train the GAN
         :param epochs: int
         :param data: string (path to the dataset used to train the GAN)
-        :param ploequency: int
+        :param plotFrequency: int
         :param predict bool (if the training include prediction on test datasets)
         :param phishData: list of lists
         :param cleanData: list of lists
@@ -301,8 +300,8 @@ class GAN:
 
         # Load testing datasets
         if phishData is None or cleanData is None:
-            phisTest = list(csv_to_list(PHIS_PATH_TEST)[1].values())
-            cleanTest = list(csv_to_list(CLEAN_PATH_TEST)[1].values())
+            phisTest = list(importData.csv_to_list(PHIS_PATH_TEST)[1].values())
+            cleanTest = list(importData.csv_to_list(CLEAN_PATH_TEST)[1].values())
         else:
             phisTest = list(phishData)
             cleanTest = list(cleanData)
@@ -374,7 +373,7 @@ class GAN:
             vg_loss = self.combined.test_on_batch(noise, valid)
 
             # Plot the progress
-            if epoch % ploequency == 0:
+            if epoch % plotFrequency == 0:
                 logger.info("%d [D loss: %f, acc.: %.2f%%] [G loss: %f] [D vloss: %f, vacc.: %.2f%%] [G vloss: %f]" % (
                     epoch, d_loss[0], 100 * d_loss[1], g_loss, vd_loss[0], 100 * vd_loss[1], vg_loss))
                 accuracy.append(d_loss[1])

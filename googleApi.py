@@ -7,17 +7,17 @@ Author : Pierrick ROBIC--BUTEZ
 2019
 """
 
-from json import dumps, loads
-from logging import getLogger
+import logging
+import time
 from socket import error
-from time import sleep
+import json
+import requests
 
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
-from requests import post
 
 # Import logger
-logger = getLogger('main')
+logger = logging.getLogger('main')
 
 # api obtained on this URL : https://developers.google.com/api-client-library/python/guide/aaa_apikeys
 # cse create on this URL : http://www.google.com/cse/
@@ -37,28 +37,28 @@ def google_search(search_term):
         try:
             service = build("customsearch", "v1", developerKey=my_api_key_custom_search, cache_discovery=False)
         except error:
-            sleep(10)
+            time.sleep(10)
             try:
                 service = build("customsearch", "v1", developerKey=my_api_key_custom_search, cache_discovery=False)
             except error:
-                sleep(30)
+                time.sleep(30)
                 try:
                     service = build("customsearch", "v1", developerKey=my_api_key_custom_search, cache_discovery=False)
                 except error:
-                    sleep(60)
+                    time.sleep(60)
                     service = build("customsearch", "v1", developerKey=my_api_key_custom_search, cache_discovery=False)
         try:
             res = service.cse().list(q=search_term, cx=my_cse_id_custom_search, num=10).execute()
         except HttpError:
-            sleep(10)
+            time.sleep(10)
             try:
                 res = service.cse().list(q=search_term, cx=my_cse_id_custom_search, num=10).execute()
             except HttpError:
-                sleep(30)
+                time.sleep(30)
                 try:
                     res = service.cse().list(q=search_term, cx=my_cse_id_custom_search, num=10).execute()
                 except:
-                    sleep(60)
+                    time.sleep(60)
                     res = service.cse().list(q=search_term, cx=my_cse_id_custom_search, num=10).execute()
 
         return 'items' in res
@@ -103,9 +103,9 @@ def google_safe_browsing_check(url):
             }
         }
 
-        data = dumps(data)
+        data = json.dumps(data)
 
-        req = loads(post(url=dest, data=data).text)
+        req = json.loads(requests.post(url=dest, data=data).text)
         print(req)
         try:
             answer["matches"] = answer["matches"] + req["matches"]

@@ -12,10 +12,10 @@ Author : Pierrick ROBIC--BUTEZ
 seed_value = 42
 
 # 1. Set the `PYTHONHASHSEED` environment variable at a fixed value
-from os import environ, mkdir, listdir
+import os
 
-environ['PYTHONHASHSEED'] = '0'
-environ['CUDA_VISIBLE_DEVICES'] = ''
+os.environ['PYTHONHASHSEED'] = '0'
+os.environ['CUDA_VISIBLE_DEVICES'] = ''
 
 # 2. Set the `python` built-in pseudo-random generator at a fixed value
 import random
@@ -28,27 +28,28 @@ import numpy as np
 np.random.seed(seed_value)
 
 # 4. Set the `tensorflow` pseudo-random generator at a fixed value
-from tensorflow import set_random_seed, ConfigProto, get_default_graph, Session
+import tensorflow as tf
 
-set_random_seed(seed_value)
+tf.set_random_seed(seed_value)
 
 # 5. Configure a new global `tensorflow` session
-from keras.backend import set_session, clear_session
+from keras import backend as K
 
-session_conf = ConfigProto(intra_op_parallelism_threads=1, inter_op_parallelism_threads=1, device_count={"CPU": 1})
-sess = Session(graph=get_default_graph(), config=session_conf)
-set_session(sess)
+session_conf = tf.ConfigProto(intra_op_parallelism_threads=1, inter_op_parallelism_threads=1, device_count={"CPU": 1})
+sess = tf.Session(graph=tf.get_default_graph(), config=session_conf)
+K.set_session(sess)
 
-from matplotlib.pyplot import plot, title, xlabel, ylabel, savefig, legend, clf
-from decimal import Decimal, ROUND_DOWN
+import matplotlib.pyplot as plt
+import decimal
 from GANv2 import GAN
-from glob import glob
-from re import findall
-from importData import csv_to_list
-from logging import getLogger
+import os
+import glob
+import re
+import importData
+import logging
 
 # Import logger
-logger = getLogger('main')
+logger = logging.getLogger('main')
 
 
 def graph_creation(X, YD, VYD, lr, sample, label, bestEpoch, bestAccu, YG=None, VYG=None, path="graphs", suffix=""):
@@ -68,28 +69,28 @@ def graph_creation(X, YD, VYD, lr, sample, label, bestEpoch, bestAccu, YG=None, 
     :param suffix: str
     """
     # Plot discriminator
-    plot(X, YD, label="Training Discriminator")
-    plot(X, VYD, label="Validation Discriminator")
+    plt.plot(X, YD, label="Training Discriminator")
+    plt.plot(X, VYD, label="Validation Discriminator")
 
     # Plot generator
     if YG:
-        plot(X, YG, label="Trainig Generator")
-        plot(X, VYG, label="Validation Generator")
+        plt.plot(X, YG, label="Trainig Generator")
+        plt.plot(X, VYG, label="Validation Generator")
 
     # All captions
-    title(
+    plt.title(
         label + " with a sample size of " + str(sample) + " and learning rate of " + str(lr) + "\n best Epoch: " + str(
             bestEpoch) + " - best accuracy: " + str(bestAccu))
-    xlabel("epochs")
-    ylabel(label)
-    legend()
+    plt.xlabel("epochs")
+    plt.ylabel(label)
+    plt.legend()
 
     # Save
-    savefig(path + "/" + str(sample) + "/" + str(label) + str(
-        Decimal(lr).quantize(Decimal('.0001'), rounding=ROUND_DOWN)) + suffix + ".png")
+    plt.savefig(path + "/" + str(sample) + "/" + str(label) + str(
+        decimal.Decimal(lr).quantize(decimal.Decimal('.0001'), rounding=decimal.ROUND_DOWN)) + suffix + ".png")
 
     # Clean
-    clf()
+    plt.clf()
 
     return
 
@@ -115,7 +116,7 @@ def multi_graph(begin_lr, end_lr, step_lr, epochs, begin_sampleSize, end_SampleS
 
     for sample in range(begin_sampleSize, end_SampleSize, step_sampleSize):
         try:
-            mkdir(outPath + "/" + str(sample))
+            os.mkdir(outPath + "/" + str(sample))
         except FileExistsError:
             pass
         except FileNotFoundError:
@@ -125,11 +126,11 @@ def multi_graph(begin_lr, end_lr, step_lr, epochs, begin_sampleSize, end_SampleS
             # Set seeds
             random.seed(seed_value)
             np.random.seed(seed_value)
-            set_random_seed(seed_value)
-            session_conf = ConfigProto(intra_op_parallelism_threads=1, inter_op_parallelism_threads=1,
-                                       device_count={"CPU": 1})
-            sess = Session(graph=get_default_graph(), config=session_conf)
-            set_session(sess)
+            tf.set_random_seed(seed_value)
+            session_conf = tf.ConfigProto(intra_op_parallelism_threads=1, inter_op_parallelism_threads=1,
+                                          device_count={"CPU": 1})
+            sess = tf.Session(graph=tf.get_default_graph(), config=session_conf)
+            K.set_session(sess)
 
             logger.info("sample : %f ; lr : %f" % (sample, lr))
 
@@ -140,7 +141,7 @@ def multi_graph(begin_lr, end_lr, step_lr, epochs, begin_sampleSize, end_SampleS
             # Train
             X, accuracy, Dloss, Gloss, vacc, vDloss, vGloss, bestReport, \
             bestEpoch = gan.train(epochs=epochs, plotFrequency=plotFrequency,
-                                  data=csv_to_list(datasetPath)[1].values(), predict=True)
+                                  data=importData.csv_to_list(datasetPath)[1].values(), predict=True)
 
             # ---------------------
             #  Plot graph(s)
@@ -154,26 +155,26 @@ def multi_graph(begin_lr, end_lr, step_lr, epochs, begin_sampleSize, end_SampleS
                 for i in range(divide):
                     lenght = len(X)
                     graph_creation(X[i * (lenght // divide):(i + 1) * (lenght // divide)],
-                                   Dloss[i * (lenght // divide):(i + 1) * (lenght // divide)],
-                                   vDloss[i * (lenght // divide):(i + 1) * (lenght // divide)], lr, sample, "loss",
+                                  Dloss[i * (lenght // divide):(i + 1) * (lenght // divide)],
+                                  vDloss[i * (lenght // divide):(i + 1) * (lenght // divide)], lr, sample, "loss",
                                    bestEpoch, bestReport["accuracy"],
-                                   Gloss[i * (lenght // divide):(i + 1) * (lenght // divide)],
-                                   vGloss[i * (lenght // divide):(i + 1) * (lenght // divide)], path=outPath,
+                                  Gloss[i * (lenght // divide):(i + 1) * (lenght // divide)],
+                                  vGloss[i * (lenght // divide):(i + 1) * (lenght // divide)], path=outPath,
                                    suffix="part" + str(i))
                     graph_creation(X[i * (lenght // divide):(i + 1) * (lenght // divide)],
-                                   accuracy[i * (lenght // divide):(i + 1) * (lenght // divide)],
-                                   vacc[i * (lenght // divide):(i + 1) * (lenght // divide)], lr, sample, "accuracy",
+                                  accuracy[i * (lenght // divide):(i + 1) * (lenght // divide)],
+                                  vacc[i * (lenght // divide):(i + 1) * (lenght // divide)], lr, sample, "accuracy",
                                    bestEpoch, bestReport["accuracy"],
                                    path=outPath, suffix="part" + str(i))
 
             # Save classification report
             with open(outPath + "/" + str(sample) + "/" + "Report_" + str(
-                    Decimal(lr).quantize(Decimal('.0001'), rounding=ROUND_DOWN)) + ".txt", "w",
+                    decimal.Decimal(lr).quantize(decimal.Decimal('.0001'), rounding=decimal.ROUND_DOWN)) + ".txt", "w",
                       newline='', encoding='utf-8') as reportFile:
                 reportFile.write(str(bestReport))
 
             del gan, sess, session_conf, X, accuracy, Dloss, Gloss, vacc, vDloss, vGloss, bestReport, bestEpoch
-            clear_session()
+            K.clear_session()
 
     return
 
@@ -185,25 +186,25 @@ def report_accuracy_graph(path):
     :return: nothing
     """
     try:
-        for folder in listdir(path):
+        for folder in os.listdir(path):
             accuracies = []
             LRs = []
 
             # Load data from classification reports
-            for report in glob(path + "/" + folder + "/" + "*.txt"):
+            for report in glob.glob(path + "/" + folder + "/" + "*.txt"):
                 file = open(report)
                 content = file.read()
                 file.close()
-                accuracies.append(float(findall("\d+\.\d+", findall(r"}, 'accuracy': 0.\d*?,", content)[0])[0]))
-                LRs.append(float(findall(r"\d+\.\d+", report)[0]))
+                accuracies.append(float(re.findall("\d+\.\d+", re.findall(r"}, 'accuracy': 0.\d*?,", content)[0])[0]))
+                LRs.append(float(re.findall(r"\d+\.\d+", report)[0]))
 
             # Plot
-            plot(LRs, accuracies)
-            title("Accuracies for a sample size of " + str(folder))
-            xlabel("Learning rate")
-            ylabel("Accuracy")
-            savefig(path + "/" + folder + "accuracyGraph.png")
-            clf()
+            plt.plot(LRs, accuracies)
+            plt.title("Accuracies for a sample size of " + str(folder))
+            plt.xlabel("Learning rate")
+            plt.ylabel("Accuracy")
+            plt.savefig(path + "/" + folder + "accuracyGraph.png")
+            plt.clf()
 
     except FileNotFoundError:
         logger.critical("The path to the directory {} is unreachable".format(path))
