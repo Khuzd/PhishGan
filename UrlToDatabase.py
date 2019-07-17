@@ -7,30 +7,30 @@ Author : Pierrick ROBIC--BUTEZ
 2019
 """
 import csv
-import datetime
 import json
-import logging
 import pickle
-import re
-import socket
-import ssl
-import struct
+from datetime import datetime
+from logging import getLogger
+from re import split, match, findall
+from socket import socket, AF_INET, SOCK_STREAM, gethostbyname, gaierror, timeout, inet_ntoa
+from ssl import create_default_context, CERT_NONE
+from struct import pack
 
-import dns.resolver
-import requests
-import socks
 from bs4 import BeautifulSoup
+from dns.resolver import Resolver
 from func_timeout import func_timeout, FunctionTimedOut
 from myawis import CallAwis
 from publicsuffixlist import PublicSuffixList
+from requests import get, exceptions, post
+from socks import GeneralProxyError
 
-import ORMmanage
-import googleApi
+from ORMmanage import MyBase
+from googleApi import google_search
 from libs.whois import whois
 from libs.whois.parser import PywhoisError
 
 # Import logger
-logger = logging.getLogger('main')
+logger = getLogger('main')
 
 # ---------------------
 #  Set constants
@@ -99,10 +99,10 @@ class URL:
                     retry = False
                     self.whoisDomain = func_timeout(30, whois, kwargs={'Url': str(self.domain)})
 
-                except (PywhoisError, socket.gaierror, socks.GeneralProxyError):
+                except (PywhoisError, gaierror, GeneralProxyError):
                     logger.error("URL : " + self.domain + " not in whois database")
                     # time.sleep(1.5)
-                except (ConnectionResetError, socket.timeout, ConnectionAbortedError):
+                except (ConnectionResetError, timeout, ConnectionAbortedError):
                     pass
 
                 except FunctionTimedOut:
@@ -110,7 +110,7 @@ class URL:
 
             # html and http attributes
             try:
-                self.html = func_timeout(30, requests.get, kwargs={'url': "https://" + self.url}).content
+                self.html = func_timeout(30, get, kwargs={'url': "https://" + self.url}).content
                 self.http = "https"
 
             except FunctionTimedOut:
@@ -118,14 +118,14 @@ class URL:
 
             except:
                 try:
-                    self.html = func_timeout(30, requests.get, kwargs={'url': "http://" + self.url}).content
+                    self.html = func_timeout(30, get, kwargs={'url': "http://" + self.url}).content
                     self.http = "http"
                 except FunctionTimedOut:
                     logger.error("Get timeout")
 
                 except:
                     try:
-                        self.html = func_timeout(30, requests.get, kwargs={'url': self.url}).content
+                        self.html = func_timeout(30, get, kwargs={'url': self.url}).content
                         self.http = ""
 
                     except FunctionTimedOut:
@@ -134,41 +134,41 @@ class URL:
                     except:
                         logger.error("Can not get HTML content from : " + self.url)
                         # time.sleep(1.5)
-        if self.whoisDomain is not None:
-            self.domain = self.whoisDomain.domain
+            if self.whoisDomain is not None:
+                self.domain = self.whoisDomain.domain
 
-        if self.http == "https":
-            ctx = ssl.create_default_context()
-            ctx.check_hostname = False
-            ctx.verify_mode = ssl.CERT_NONE
-            s = ctx.wrap_socket(socket.socket(), server_hostname=self.hostname)
-            try:
-                s.connect((self.hostname, 443))
-                self.certificate = s.getpeercert()
-            except:
-
-                ctx = ssl.create_default_context()
+            if self.http == "https":
+                ctx = create_default_context()
                 ctx.check_hostname = False
-                ctx.verify_mode = ssl.CERT_NONE
-                s = ctx.wrap_socket(socket.socket(), server_hostname=self.hostname)
+                ctx.verify_mode = CERT_NONE
+                s = ctx.wrap_socket(socket(), server_hostname=self.hostname)
                 try:
                     s.connect((self.hostname, 443))
                     self.certificate = s.getpeercert()
                 except:
-                    self.certificate = None
 
-        # PageRank calculus
-        try:
-            self.pageRank = requests.get("https://openpagerank.com/api/v1.0/getPageRank?domains%5B0%5D=" + self.domain,
-                                         headers={"API-OPR": open("api_keys/openPageRank_key.txt").read()}).json()[
-                "response"][0]['page_rank_decimal']
-        except:
-            logger.error("domain pagerank not found")
-            self.pageRank = 0
+                    ctx = create_default_context()
+                    ctx.check_hostname = False
+                    ctx.verify_mode = CERT_NONE
+                    s = ctx.wrap_socket(socket(), server_hostname=self.hostname)
+                    try:
+                        s.connect((self.hostname, 443))
+                        self.certificate = s.getpeercert()
+                    except:
+                        self.certificate = None
 
-        # Get AWIS Alexa information
-        self.amazonAlexa = CallAwis(open("api_keys/awis_acces_id.txt").read(),
-                                    open("api_keys/awis_secret_access_key.txt").read()).urlinfo(self.domain)
+            # PageRank calculus
+            try:
+                self.pageRank = get("https://openpagerank.com/api/v1.0/getPageRank?domains%5B0%5D=" + self.domain,
+                                    headers={"API-OPR": open("api_keys/openPageRank_key.txt").read()}).json()[
+                    "response"][0]['page_rank_decimal']
+            except:
+                logger.error("domain pagerank not found")
+                self.pageRank = 0
+
+            # Get AWIS Alexa information
+            self.amazonAlexa = CallAwis(open("api_keys/awis_access_id.txt").read(),
+                                        open("api_keys/awis_secret_access_key.txt").read()).urlinfo(self.domain)
 
         ## Weights
         self.ipWeight = "error"
@@ -245,10 +245,10 @@ class URL:
         :return: -1 or 1
         """
 
-        if (re.match(r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}", str(self.domain))) is not None:
+        if (match(r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}", str(self.domain))) is not None:
             self.ipWeight = 1
             return
-        elif (re.match(r"0x..\.0x..\.0x..\.0x..", str(self.domain))) is not None:
+        elif (match(r"0x..\.0x..\.0x..\.0x..", str(self.domain))) is not None:
             self.ipWeight = 1
             return
         else:
@@ -346,8 +346,8 @@ class URL:
         """
 
         issuer = dict(x[0] for x in self.certificate['issuer'])["organizationName"].lower()
-        beginDate = datetime.datetime.strptime(self.certificate["notBefore"].split(' GMT')[0], '%b  %d %H:%M:%S %Y')
-        endDate = datetime.datetime.strptime(self.certificate["notAfter"].split(' GMT')[0], '%b  %d %H:%M:%S %Y')
+        beginDate = datetime.strptime(self.certificate["notBefore"].split(' GMT')[0], '%b  %d %H:%M:%S %Y')
+        endDate = datetime.strptime(self.certificate["notAfter"].split(' GMT')[0], '%b  %d %H:%M:%S %Y')
 
         delta = endDate - beginDate
 
@@ -366,7 +366,7 @@ class URL:
         :return: -1, 0 or 1
         """
         if self.whoisDomain is not None:
-            now = datetime.datetime.now()
+            now = datetime.now()
 
             expiration = self.whoisDomain.expiration_date
             if type(expiration) == list:
@@ -416,12 +416,12 @@ class URL:
 
         try:
             try:
-                remoteServerIP = socket.gethostbyname(self.hostname)
-            except socket.gaierror:
-                remoteServerIP = socket.gethostbyname(self.url.split("/")[0].split(":")[0])
+                remoteServerIP = gethostbyname(self.hostname)
+            except gaierror:
+                remoteServerIP = gethostbyname(self.url.split("/")[0].split(":")[0])
 
             for port in PORTS_TO_SCAN:
-                sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                sock = socket(AF_INET, SOCK_STREAM)
                 sock.settimeout(0.3)
                 result = sock.connect_ex((remoteServerIP, port[0]))
                 sock.close()
@@ -538,7 +538,7 @@ class URL:
         scripts = self.soup.find_all("script")
 
         for tag in meta:
-            for link in re.findall(re.compile("\"http.*?\""), str(tag)):
+            for link in findall(compile("\"http.*?\""), str(tag)):
                 m.append(link)
 
         for tag in links:
@@ -614,12 +614,12 @@ class URL:
             if "org" in self.whoisDomain:
                 if type(self.whoisDomain["org"]) == list:
                     for org in self.whoisDomain["org"]:
-                        for suborg in re.split(". | ", org):
+                        for suborg in split(". | ", org):
                             if suborg.lower() in domain.lower():
                                 self.abnormalWeight = -1
                                 return
                 elif self.whoisDomain["org"] is not None:
-                    for suborg in re.split(". | ", self.whoisDomain["org"]):
+                    for suborg in split(". | ", self.whoisDomain["org"]):
                         if suborg.lower() in domain.lower():
                             self.abnormalWeight = -1
                             return
@@ -627,12 +627,12 @@ class URL:
             if "org1" in self.whoisDomain:
                 if type(self.whoisDomain["org1"]) == list:
                     for org in self.whoisDomain["org1"]:
-                        for suborg in re.split(". | ", org):
+                        for suborg in split(". | ", org):
                             if suborg.lower() in domain.lower():
                                 self.abnormalWeight = -1
                                 return
                 elif self.whoisDomain["org1"] is not None:
-                    for suborg in re.split(". | ", self.whoisDomain["org1"]):
+                    for suborg in split(". | ", self.whoisDomain["org1"]):
                         if suborg.lower() in domain.lower():
                             self.abnormalWeight = -1
                             return
@@ -646,11 +646,11 @@ class URL:
         :return: -1,0 or 1
         """
         try:
-            countForward = len(requests.get(self.http + "://" + self.url).history)
-        except requests.exceptions.ConnectionError:
+            countForward = len(get(self.http + "://" + self.url).history)
+        except exceptions.ConnectionError:
             try:
-                countForward = len(requests.get(self.http + "://" + self.url).history)
-            except requests.exceptions.ConnectionError:
+                countForward = len(get(self.http + "://" + self.url).history)
+            except exceptions.ConnectionError:
                 return
         if countForward <= 1:
             self.forwardWeight = -1
@@ -688,19 +688,19 @@ class URL:
         if "contextmenu" in str(self.html).lower():
             self.rightClickWeight = 1
             return
-        # if re.findall(r"addEventListener\(.{1,2}?contextmenu", str(html)) != []:
+        # if findall(r"addEventListener\(.{1,2}?contextmenu", str(html)) != []:
         #     return 1
         #
-        # if re.findall(r"addEvent\(.{1,2}?contextmenu", str(html)) != []:
+        # if findall(r"addEvent\(.{1,2}?contextmenu", str(html)) != []:
         #     return 1
         #
-        # if re.findall(r"oncontextmenu", str(html)) != []:
+        # if findall(r"oncontextmenu", str(html)) != []:
         #     return 1
 
-        # if re.findall(r"onmousedown", str(html)) != []:
+        # if findall(r"onmousedown", str(html)) != []:
         #     return 1
         #
-        # if re.findall(r"MOUSEDOWN", str(html)) != []:
+        # if findall(r"MOUSEDOWN", str(html)) != []:
         #     return 1
 
         self.rightClickWeight = -1
@@ -711,7 +711,7 @@ class URL:
         testing if popup with text fields
         :return: -1, 0 or 1
         """
-        prompt = re.findall(r"prompt\(", str(self.html)) + re.findall(r"confirm\(", str(self.html)) + re.findall(
+        prompt = findall(r"prompt\(", str(self.html)) + findall(r"confirm\(", str(self.html)) + findall(
             r"alert\(", str(self.html))
         if prompt:
             if len(prompt) > 4:
@@ -751,7 +751,7 @@ class URL:
         :return: -1, 0 or 1
         """
         if self.whoisDomain is not None:
-            now = datetime.datetime.now()
+            now = datetime.now()
 
             creation = self.whoisDomain.creation_date
 
@@ -785,7 +785,7 @@ class URL:
 
         try:
             empty = True
-            resolver = dns.resolver.Resolver()
+            resolver = Resolver()
             answer = resolver.query(domain, "NS")
             i = 0
             while empty and i < len(answer):
@@ -813,10 +813,10 @@ class URL:
             rank = int((soup.find("aws:trafficdata").find("aws:rank").contents)[0])
         except (AttributeError, IndexError):
             try:
-                soup = BeautifulSoup(requests.get("https://www.alexa.com/siteinfo/" + self.domain).content,
+                soup = BeautifulSoup(get("https://www.alexa.com/siteinfo/" + self.domain).content,
                                      features="lxml")
                 tag = soup.find(id="card_rank").find("", {"class": "rank-global"}).find("", {"class": "big data"})
-                rank = int("".join(re.findall('\d+', str(tag))))
+                rank = int("".join(findall('\d+', str(tag))))
             except(AttributeError, IndexError):
                 self.trafficWeight = 1
                 return
@@ -846,13 +846,13 @@ class URL:
         test if url is indexed by google
         :return: -1 or 1
         """
-        index = googleApi.google_search("site:" + self.url)
+        index = google_search("site:" + self.url)
         if index:
             self.indexingWeight = -1
             return
         self.indexingWeight = 1
         return
-        # html = requests.get('https://www.google.com/search?q=site:'+url, headers=headers, proxies=proxies).content
+        # html = get('https://www.google.com/search?q=site:'+url, headers=headers, proxies=proxies).content
         # soup=BeautifulSoup(html, features="lxml")
         # try:
         #     if soup.find(id="resultStats").contents != []:
@@ -870,9 +870,9 @@ class URL:
         #
         # return 1
         # try:
-        #     soup = BeautifulSoup(requests.get("https://www.ecosia.org/search?q=site%3A" + url, stream=False).content,
+        #     soup = BeautifulSoup(get("https://www.ecosia.org/search?q=site%3A" + url, stream=False).content,
         #                          features="lxml")
-        #     results = re.findall('\d+', soup.find("", {"class": "card-title card-title-result-count"}).text)
+        #     results = findall('\d+', soup.find("", {"class": "card-title card-title-result-count"}).text)
         #     if len(results) == 1 and results[0] == '0':
         #         return 1
         #     return -1
@@ -890,7 +890,7 @@ class URL:
             countLinks = int(soup.find("aws:linksincount").contents[0])
         except (AttributeError, IndexError):
             try:
-                soup = BeautifulSoup(requests.get("https://www.alexa.com/siteinfo/" + self.url).content,
+                soup = BeautifulSoup(get("https://www.alexa.com/siteinfo/" + self.url).content,
                                      features="lxml")
                 countLinks = int(
                     "".join(soup.find("", {"class": "linksin"}).find("", {"class": "big data"}).get_text().split(",")))
@@ -909,23 +909,23 @@ class URL:
 
     def statistic_report_testing(self):
         """
-        test if the ip address of the domain is in top 50 of www.stopbadware.org
+        test if the ip address of the domain is in top 50 of www.stopbadwaorg
         :return: -1 or 1
         """
         try:
-            IPdomain = socket.gethostbyname(self.hostname)
-        except socket.gaierror:
+            IPdomain = gethostbyname(self.hostname)
+        except gaierror:
             self.statisticWeight = -1
             return
 
         jsonDictIP = json.loads(
-            requests.post("https://www.stopbadware.org/sites/all/themes/sbw/clearinghouse.php",
-                          data={'q': 'tops'}).text)
+            post("https://www.stopbadwaorg/sites/all/themes/sbw/clearinghouse.php",
+                 data={'q': 'tops'}).text)
 
         IPList = []
 
         for site in jsonDictIP['top_ip']:
-            IPList.append(socket.inet_ntoa(struct.pack('!L', int(site['ip_addr']))))
+            IPList.append(inet_ntoa(pack('!L', int(site['ip_addr']))))
 
         for ip in IPList:
             if ip == IPdomain:
@@ -942,7 +942,7 @@ class URL:
         self.ipScaledWeight = (float(self.ipWeight) * 0.5) - 0.5
 
     def length_scaled_calculation(self):
-        Base = ORMmanage.MyBase("DB/toto.db")
+        Base = MyBase("DB/toto.db")
         norm = pickle.loads((Base.session.query(Base.Normalization).filter(
             Base.Normalization.feature == "url_length").first()).normalizer)
         scaler = pickle.loads(
@@ -961,7 +961,7 @@ class URL:
         self.doubleSlashScaledWeight = (float(self.doubleSlashWeight) * 0.5) - 0.5
 
     def dash_scaled_calculation(self):
-        Base = ORMmanage.MyBase("DB/toto.db")
+        Base = MyBase("DB/toto.db")
         norm = pickle.loads((Base.session.query(Base.Normalization).filter(
             Base.Normalization.feature == "dash").first()).normalizer)
         scaler = pickle.loads(
@@ -971,7 +971,7 @@ class URL:
         self.dashScaledWeight = scaler.transform(result.reshape(-1, 1))[0][0]
 
     def sub_domain_scaled_calculation(self):
-        Base = ORMmanage.MyBase("DB/toto.db")
+        Base = MyBase("DB/toto.db")
         norm = pickle.loads((Base.session.query(Base.Normalization).filter(
             Base.Normalization.feature == "sub_domain").first()).normalizer)
         scaler = pickle.loads(
@@ -989,7 +989,7 @@ class URL:
         self.subDomainScaledWeight = scaler.transform(result.reshape(-1, 1))[0][0]
 
     def age_certificate_scaled_calculation(self):
-        Base = ORMmanage.MyBase("DB/toto.db")
+        Base = MyBase("DB/toto.db")
         norm = pickle.loads((Base.session.query(Base.Normalization).filter(
             Base.Normalization.feature == "age_certificate").first()).normalizer)
         scaler = pickle.loads(
@@ -997,8 +997,8 @@ class URL:
                 Base.Normalization.feature == "age_certificate").first()).scaler)
 
         issuer = dict(x[0] for x in self.certificate['issuer'])["organizationName"].lower()
-        beginDate = datetime.datetime.strptime(self.certificate["notBefore"].split(' GMT')[0], '%b  %d %H:%M:%S %Y')
-        endDate = datetime.datetime.strptime(self.certificate["notAfter"].split(' GMT')[0], '%b  %d %H:%M:%S %Y')
+        beginDate = datetime.strptime(self.certificate["notBefore"].split(' GMT')[0], '%b  %d %H:%M:%S %Y')
+        endDate = datetime.strptime(self.certificate["notAfter"].split(' GMT')[0], '%b  %d %H:%M:%S %Y')
 
         delta = endDate - beginDate
 
@@ -1016,7 +1016,7 @@ class URL:
         self.certificateAgeScaledWeight = scaler.transform(result.reshape(-1, 1))[0][0]
 
     def expiration_domain_scaled_calculation(self):
-        Base = ORMmanage.MyBase("DB/toto.db")
+        Base = MyBase("DB/toto.db")
         norm = pickle.loads((Base.session.query(Base.Normalization).filter(
             Base.Normalization.feature == "expiration_domain").first()).normalizer)
         scaler = pickle.loads(
@@ -1024,7 +1024,7 @@ class URL:
                 Base.Normalization.feature == "expiration_domain").first()).scaler)
 
         if self.whoisDomain is not None:
-            now = datetime.datetime.now()
+            now = datetime.now()
 
             expiration = self.whoisDomain.expiration_date
             if type(expiration) == list:
@@ -1050,7 +1050,7 @@ class URL:
         self.httpScaledWeight = (float(self.httpWeight) * 0.5) - 0.5
 
     def requested_url_scaled_calculation(self):
-        Base = ORMmanage.MyBase("DB/toto.db")
+        Base = MyBase("DB/toto.db")
         norm = pickle.loads((Base.session.query(Base.Normalization).filter(
             Base.Normalization.feature == "requested_url").first()).normalizer)
         scaler = pickle.loads(
@@ -1090,7 +1090,7 @@ class URL:
             self.requestedScaledWeight = 0
 
     def anchors_scaled_calculation(self):
-        Base = ORMmanage.MyBase("DB/toto.db")
+        Base = MyBase("DB/toto.db")
         norm = pickle.loads((Base.session.query(Base.Normalization).filter(
             Base.Normalization.feature == "anchor").first()).normalizer)
         scaler = pickle.loads(
@@ -1118,7 +1118,7 @@ class URL:
             self.anchorsScaledWeight = 0
 
     def tags_links_scaled_calculation(self):
-        Base = ORMmanage.MyBase("DB/toto.db")
+        Base = MyBase("DB/toto.db")
         norm = pickle.loads((Base.session.query(Base.Normalization).filter(
             Base.Normalization.feature == "tags").first()).normalizer)
         scaler = pickle.loads(
@@ -1134,7 +1134,7 @@ class URL:
         scripts = self.soup.find_all("script")
 
         for tag in meta:
-            for link in re.findall(re.compile("\"http.*?\""), str(tag)):
+            for link in findall(compile("\"http.*?\""), str(tag)):
                 m.append(link)
 
         for tag in links:
@@ -1159,7 +1159,7 @@ class URL:
             self.tagScaledWeight = 0
 
     def sfh_scaled_calculation(self):
-        Base = ORMmanage.MyBase("DB/toto.db")
+        Base = MyBase("DB/toto.db")
         norm = pickle.loads((Base.session.query(Base.Normalization).filter(
             Base.Normalization.feature == "sfh").first()).normalizer)
         scaler = pickle.loads(
@@ -1202,13 +1202,13 @@ class URL:
         self.rightClickScaledWeight = (float(self.rightClickWeight) * 0.5) - 0.5
 
     def popup_scaled_calculation(self):
-        Base = ORMmanage.MyBase("DB/toto.db")
+        Base = MyBase("DB/toto.db")
         norm = pickle.loads((Base.session.query(Base.Normalization).filter(
             Base.Normalization.feature == "popup").first()).normalizer)
         scaler = pickle.loads(
             (Base.session.query(Base.Normalization).filter(Base.Normalization.feature == "popup").first()).scaler)
 
-        prompt = re.findall(r"prompt\(", str(self.html)) + re.findall(r"confirm\(", str(self.html)) + re.findall(
+        prompt = findall(r"prompt\(", str(self.html)) + findall(r"confirm\(", str(self.html)) + findall(
             r"alert\(", str(self.html))
 
         result = norm.transform([[len(prompt)]])
@@ -1218,14 +1218,14 @@ class URL:
         self.iFrameScaledWeight = (float(self.iFrameWeight) * 0.5) - 0.5
 
     def domain_age_scaled_calculation(self):
-        Base = ORMmanage.MyBase("DB/toto.db")
+        Base = MyBase("DB/toto.db")
         norm = pickle.loads((Base.session.query(Base.Normalization).filter(
             Base.Normalization.feature == "domain_age").first()).normalizer)
         scaler = pickle.loads(
             (Base.session.query(Base.Normalization).filter(Base.Normalization.feature == "domain_age").first()).scaler)
 
         if self.whoisDomain is not None:
-            now = datetime.datetime.now()
+            now = datetime.now()
 
             creation = self.whoisDomain.creation_date
 
@@ -1244,7 +1244,7 @@ class URL:
         self.dnsScaledWeight = (float(self.dnsWeight) * 0.5) - 0.5
 
     def traffic_scaled_calculation(self):
-        Base = ORMmanage.MyBase("DB/toto.db")
+        Base = MyBase("DB/toto.db")
         norm = pickle.loads((Base.session.query(Base.Normalization).filter(
             Base.Normalization.feature == "traffic").first()).normalizer)
         scaler = pickle.loads(
@@ -1255,10 +1255,10 @@ class URL:
             rank = int((soup.find("aws:trafficdata").find("aws:rank").contents)[0])
         except (AttributeError, IndexError):
             try:
-                soup = BeautifulSoup(requests.get("https://www.alexa.com/siteinfo/" + self.domain).content,
+                soup = BeautifulSoup(get("https://www.alexa.com/siteinfo/" + self.domain).content,
                                      features="lxml")
                 tag = soup.find(id="card_rank").find("", {"class": "rank-global"}).find("", {"class": "big data"})
-                rank = int("".join(re.findall('\d+', str(tag))))
+                rank = int("".join(findall('\d+', str(tag))))
             except(AttributeError, IndexError):
                 self.trafficScaledWeight = 0.5
                 return
@@ -1267,7 +1267,7 @@ class URL:
         self.trafficScaledWeight = scaler.transform(result.reshape(-1, 1))[0][0]
 
     def page_rank_scaled_calculation(self):
-        Base = ORMmanage.MyBase("DB/toto.db")
+        Base = MyBase("DB/toto.db")
         norm = pickle.loads((Base.session.query(Base.Normalization).filter(
             Base.Normalization.feature == "pageRank").first()).normalizer)
         scaler = pickle.loads(
@@ -1280,7 +1280,7 @@ class URL:
         self.indexingScaledWeight = (float(self.indexingWeight) * 0.5) - 0.5
 
     def links_pointing_to_scaled_calculation(self):
-        Base = ORMmanage.MyBase("DB/toto.db")
+        Base = MyBase("DB/toto.db")
         norm = pickle.loads((Base.session.query(Base.Normalization).filter(
             Base.Normalization.feature == "links_pointing").first()).normalizer)
         scaler = pickle.loads(
@@ -1292,7 +1292,7 @@ class URL:
             countLinks = int(soup.find("aws:linksincount").contents[0])
         except (AttributeError, IndexError):
             try:
-                soup = BeautifulSoup(requests.get("https://www.alexa.com/siteinfo/" + self.url).content,
+                soup = BeautifulSoup(get("https://www.alexa.com/siteinfo/" + self.url).content,
                                      features="lxml")
                 countLinks = int(
                     "".join(soup.find("", {"class": "linksin"}).find("", {"class": "big data"}).get_text().split(",")))

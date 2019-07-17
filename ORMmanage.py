@@ -1,5 +1,5 @@
-import logging
-import pickle
+from logging import getLogger
+from pickle import loads, dumps
 
 from pathos.pools import ThreadPool
 from sqlalchemy import Binary
@@ -11,7 +11,7 @@ from sqlalchemy.orm import sessionmaker
 import UrlToDatabase
 
 # Import logger
-logger = logging.getLogger('main')
+logger = getLogger('main')
 
 
 class MyBase:
@@ -83,7 +83,7 @@ class MyBase:
         :return: nothing
         """
         try:
-            adding = self.__getattribute__(table)(url=website.url, content=pickle.dumps(website))
+            adding = self.__getattribute__(table)(url=website.url, content=dumps(website))
             self.session.add(adding)
             self.session.commit()
 
@@ -103,7 +103,7 @@ class MyBase:
 
                 for result in query:
                     # Load old wabsite data
-                    oldUrl = pickle.loads(result.content)
+                    oldUrl = loads(result.content)
 
                     # Create new website with new methods
                     tmp = UrlToDatabase.URL(result.url, True)
@@ -186,7 +186,7 @@ class MyBase:
                     tmp.statisticScaledWeight = float(oldUrl.statisticScaledWeight)
 
                     # Replace old website in database by new website
-                    result.content = pickle.dumps(tmp)
+                    result.content = dumps(tmp)
                 self.session.commit()
 
                 del query
@@ -200,13 +200,13 @@ class MyBase:
                 # Load old wabsite data
                 contents = []
                 for result in query:
-                    contents.append(pickle.loads(result.content))
+                    contents.append(loads(result.content))
                 logger.info("Data from table {} loaded".format(str(table)))
 
                 ThreadPool().map(UrlToDatabase.URL.re_extract_non_request_features, contents)
                 logger.info("Data loaded from table {} transformed".format(str(table)))
                 for i in range(len(query)):
-                    query[i].content = pickle.dumps(contents[i])
+                    query[i].content = dumps(contents[i])
                 self.session.commit()
                 logger.info("Data loaded from table {} commited".format(str(table)))
 
