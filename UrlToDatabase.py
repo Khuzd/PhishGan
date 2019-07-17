@@ -943,10 +943,13 @@ class URL:
 
     def length_scaled_calculation(self):
         Base = ORMmanage.MyBase("DB/toto.db")
-        self.lengthScaledWeight = pickle.loads(
-            Base.session.query(Base.Scalers).filter(Base.Scalers.features == "url_len").first().content).transform(
-            [[len(self.hostname)]])[0][0]
-        pass
+        norm = pickle.loads((Base.session.query(Base.Normalization).filter(
+            Base.Normalization.feature == "url_length").first()).normalizer)
+        scaler = pickle.loads(
+            (Base.session.query(Base.Normalization).filter(Base.Normalization.feature == "url_length").first()).scaler)
+
+        result = norm.transform([[len(self.hostname)]])
+        self.lengthScaledWeight = scaler.transform(result.reshape(-1, 1))[0][0]
 
     def shortener_scaled_calculation(self):
         self.shorteningScaledWeight = (float(self.shorteningWeight) * 0.5) - 0.5
@@ -958,16 +961,84 @@ class URL:
         self.doubleSlashScaledWeight = (float(self.doubleSlashWeight) * 0.5) - 0.5
 
     def dash_scaled_calculation(self):
-        pass
+        Base = ORMmanage.MyBase("DB/toto.db")
+        norm = pickle.loads((Base.session.query(Base.Normalization).filter(
+            Base.Normalization.feature == "dash").first()).normalizer)
+        scaler = pickle.loads(
+            (Base.session.query(Base.Normalization).filter(Base.Normalization.feature == "dash").first()).scaler)
+
+        result = norm.transform([[self.url.count("-")]])
+        self.dashScaledWeight = scaler.transform(result.reshape(-1, 1))[0][0]
 
     def sub_domain_scaled_calculation(self):
-        pass
+        Base = ORMmanage.MyBase("DB/toto.db")
+        norm = pickle.loads((Base.session.query(Base.Normalization).filter(
+            Base.Normalization.feature == "sub_domain").first()).normalizer)
+        scaler = pickle.loads(
+            (Base.session.query(Base.Normalization).filter(Base.Normalization.feature == "sub_domain").first()).scaler)
+
+        psl = PublicSuffixList()
+        domain = self.hostname
+
+        if domain is None:
+            domain = ""
+        else:
+            domain = domain[:len(domain) - (len(psl.publicsuffix(domain)) + 1)]
+
+        result = norm.transform([[domain.count(".")]])
+        self.subDomainScaledWeight = scaler.transform(result.reshape(-1, 1))[0][0]
 
     def age_certificate_scaled_calculation(self):
-        pass
+        Base = ORMmanage.MyBase("DB/toto.db")
+        norm = pickle.loads((Base.session.query(Base.Normalization).filter(
+            Base.Normalization.feature == "age_certificate").first()).normalizer)
+        scaler = pickle.loads(
+            (Base.session.query(Base.Normalization).filter(
+                Base.Normalization.feature == "age_certificate").first()).scaler)
+
+        issuer = dict(x[0] for x in self.certificate['issuer'])["organizationName"].lower()
+        beginDate = datetime.datetime.strptime(self.certificate["notBefore"].split(' GMT')[0], '%b  %d %H:%M:%S %Y')
+        endDate = datetime.datetime.strptime(self.certificate["notAfter"].split(' GMT')[0], '%b  %d %H:%M:%S %Y')
+
+        delta = endDate - beginDate
+
+        isTrusted = False
+        for trusted in TRUSTED_ISSUERS:
+            if trusted in issuer:
+                isTrusted = True
+
+        if isTrusted:
+            lentgh = delta.days * 2
+        else:
+            lentgh = delta.days
+
+        result = norm.transform([[lentgh]])
+        self.certificateAgeScaledWeight = scaler.transform(result.reshape(-1, 1))[0][0]
 
     def expiration_domain_scaled_calculation(self):
-        pass
+        Base = ORMmanage.MyBase("DB/toto.db")
+        norm = pickle.loads((Base.session.query(Base.Normalization).filter(
+            Base.Normalization.feature == "expiration_domain").first()).normalizer)
+        scaler = pickle.loads(
+            (Base.session.query(Base.Normalization).filter(
+                Base.Normalization.feature == "expiration_domain").first()).scaler)
+
+        if self.whoisDomain is not None:
+            now = datetime.datetime.now()
+
+            expiration = self.whoisDomain.expiration_date
+            if type(expiration) == list:
+                expiration = expiration[0]
+
+            try:
+                delta = expiration - now
+            except:
+                logger.error("error expiration domain testing")
+                self.expirationScaledWeight = 0.5
+                return
+
+        result = norm.transform([[delta.days]])
+        self.expirationScaledWeight = scaler.transform(result.reshape(-1, 1))[0][0]
 
     def favicon_scaled_calculation(self):
         self.faviconScaledWeight = (float(self.faviconWeight) * 0.5) - 0.5
@@ -978,17 +1049,142 @@ class URL:
     def http_scaled_calculation(self):
         self.httpScaledWeight = (float(self.httpWeight) * 0.5) - 0.5
 
-    def requested_url(self):
-        pass
+    def requested_url_scaled_calculation(self):
+        Base = ORMmanage.MyBase("DB/toto.db")
+        norm = pickle.loads((Base.session.query(Base.Normalization).filter(
+            Base.Normalization.feature == "requested_url").first()).normalizer)
+        scaler = pickle.loads(
+            (Base.session.query(Base.Normalization).filter(
+                Base.Normalization.feature == "requested_url").first()).scaler)
+
+        totalLinks = 0
+        externalLinks = 0
+
+        m = []
+
+        for p in self.soup.find_all("img"):
+            if p.has_attr("src") and "http" in p.get("src")[:4]:
+                m.append(p.get('src'))
+
+        for p in self.soup.find_all("video"):
+            for q in p.find_all("source"):
+                if q.has_attr("src") and "http" in q.get("src")[:4]:
+                    m.append(q.get('src'))
+
+        for p in self.soup.find_all("audio"):
+            for q in p.find_all("source"):
+                if q.has_attr("src") and "http" in q.get("src")[:4]:
+                    m.append(q.get('src'))
+
+        for link in m:
+            if self.domain not in link:
+                externalLinks += 1
+            totalLinks += 1
+
+        if totalLinks != 0:
+            percentage = externalLinks / totalLinks
+
+            result = norm.transform([[percentage]])
+            self.requestedScaledWeight = scaler.transform(result.reshape(-1, 1))[0][0]
+        else:
+            self.requestedScaledWeight = 0
 
     def anchors_scaled_calculation(self):
-        pass
+        Base = ORMmanage.MyBase("DB/toto.db")
+        norm = pickle.loads((Base.session.query(Base.Normalization).filter(
+            Base.Normalization.feature == "anchor").first()).normalizer)
+        scaler = pickle.loads(
+            (Base.session.query(Base.Normalization).filter(Base.Normalization.feature == "anchor").first()).scaler)
+
+        tags = self.soup.findAll("a", href=True)
+        anchors = []
+        for tag in tags:
+            anchors.append(tag.get("href"))
+
+        totalLink = len(anchors)
+        externalLinks = 0
+
+        for anchor in anchors:
+            if self.domain not in anchor and "http":
+                if "www" in anchor[:3] or "http" in anchor[:4]:
+                    externalLinks += 1
+
+        if totalLink != 0:
+            percentage = externalLinks / totalLink
+
+            result = norm.transform([[percentage]])
+            self.anchorsScaledWeight = scaler.transform(result.reshape(-1, 1))[0][0]
+        else:
+            self.anchorsScaledWeight = 0
 
     def tags_links_scaled_calculation(self):
-        pass
+        Base = ORMmanage.MyBase("DB/toto.db")
+        norm = pickle.loads((Base.session.query(Base.Normalization).filter(
+            Base.Normalization.feature == "tags").first()).normalizer)
+        scaler = pickle.loads(
+            (Base.session.query(Base.Normalization).filter(Base.Normalization.feature == "tags").first()).scaler)
+
+        totalLinks = 0
+        externalLinks = 0
+
+        m = []
+
+        meta = self.soup.find_all("meta")
+        links = self.soup.find_all("link")
+        scripts = self.soup.find_all("script")
+
+        for tag in meta:
+            for link in re.findall(re.compile("\"http.*?\""), str(tag)):
+                m.append(link)
+
+        for tag in links:
+            if tag.has_attr("href") and "http" in tag.get("href")[:4]:
+                m.append(tag.get("href"))
+
+        for tag in scripts:
+            if tag.has_attr("href") and "http" in tag.get("href")[:4]:
+                m.append(tag.get("href"))
+
+        for link in m:
+            if self.domain not in link:
+                externalLinks += 1
+            totalLinks += 1
+
+        if totalLinks != 0:
+            percentage = externalLinks / totalLinks
+
+            result = norm.transform([[percentage]])
+            self.tagScaledWeight = scaler.transform(result.reshape(-1, 1))[0][0]
+        else:
+            self.tagScaledWeight = 0
 
     def sfh_scaled_calculation(self):
-        pass
+        Base = ORMmanage.MyBase("DB/toto.db")
+        norm = pickle.loads((Base.session.query(Base.Normalization).filter(
+            Base.Normalization.feature == "sfh").first()).normalizer)
+        scaler = pickle.loads(
+            (Base.session.query(Base.Normalization).filter(Base.Normalization.feature == "sfh").first()).scaler)
+
+        boolean = False
+        count = 0
+        for form in self.soup.find_all("form"):
+            if str(form.get("action")) == "":
+                boolean = True
+                count += 1
+
+            elif str(form.get("action")) == "about:blank":
+                boolean = True
+                count += 1
+
+
+            elif self.domain not in str(form.get("action")) and ("http" in str(form.get("action")) or "www" in str(
+                    form.get("action"))):
+                count += 1
+
+        if boolean:
+            count = count * 2
+        result = norm.transform([[count]])
+        self.SFHScaledWeight = scaler.transform(result.reshape(-1, 1))[0][0]
 
     def email_scaled_calculation(self):
         self.emailScaledWeight = (float(self.emailWeight) * 0.5) - 0.5
@@ -1006,28 +1202,105 @@ class URL:
         self.rightClickScaledWeight = (float(self.rightClickWeight) * 0.5) - 0.5
 
     def popup_scaled_calculation(self):
-        pass
+        Base = ORMmanage.MyBase("DB/toto.db")
+        norm = pickle.loads((Base.session.query(Base.Normalization).filter(
+            Base.Normalization.feature == "popup").first()).normalizer)
+        scaler = pickle.loads(
+            (Base.session.query(Base.Normalization).filter(Base.Normalization.feature == "popup").first()).scaler)
+
+        prompt = re.findall(r"prompt\(", str(self.html)) + re.findall(r"confirm\(", str(self.html)) + re.findall(
+            r"alert\(", str(self.html))
+
+        result = norm.transform([[len(prompt)]])
+        self.popupScaledWeight = scaler.transform(result.reshape(-1, 1))[0][0]
 
     def iframe_scaled_calculation(self):
         self.iFrameScaledWeight = (float(self.iFrameWeight) * 0.5) - 0.5
 
     def domain_age_scaled_calculation(self):
-        pass
+        Base = ORMmanage.MyBase("DB/toto.db")
+        norm = pickle.loads((Base.session.query(Base.Normalization).filter(
+            Base.Normalization.feature == "domain_age").first()).normalizer)
+        scaler = pickle.loads(
+            (Base.session.query(Base.Normalization).filter(Base.Normalization.feature == "domain_age").first()).scaler)
+
+        if self.whoisDomain is not None:
+            now = datetime.datetime.now()
+
+            creation = self.whoisDomain.creation_date
+
+            if type(creation) == list:
+                creation = creation[0]
+            try:
+                delta = now - creation
+            except:
+                self.domainAgeScaledWeight = 0.5
+                return
+
+        result = norm.transform([[delta.days]])
+        self.domainAgeScaledWeight = scaler.transform(result.reshape(-1, 1))[0][0]
 
     def dns_record_scaled_calculation(self):
         self.dnsScaledWeight = (float(self.dnsWeight) * 0.5) - 0.5
 
     def traffic_scaled_calculation(self):
-        pass
+        Base = ORMmanage.MyBase("DB/toto.db")
+        norm = pickle.loads((Base.session.query(Base.Normalization).filter(
+            Base.Normalization.feature == "traffic").first()).normalizer)
+        scaler = pickle.loads(
+            (Base.session.query(Base.Normalization).filter(Base.Normalization.feature == "traffic").first()).scaler)
+
+        try:
+            soup = BeautifulSoup(self.amazonAlexa, features="lxml")
+            rank = int((soup.find("aws:trafficdata").find("aws:rank").contents)[0])
+        except (AttributeError, IndexError):
+            try:
+                soup = BeautifulSoup(requests.get("https://www.alexa.com/siteinfo/" + self.domain).content,
+                                     features="lxml")
+                tag = soup.find(id="card_rank").find("", {"class": "rank-global"}).find("", {"class": "big data"})
+                rank = int("".join(re.findall('\d+', str(tag))))
+            except(AttributeError, IndexError):
+                self.trafficScaledWeight = 0.5
+                return
+
+        result = norm.transform([[rank]])
+        self.trafficScaledWeight = scaler.transform(result.reshape(-1, 1))[0][0]
 
     def page_rank_scaled_calculation(self):
-        pass
+        Base = ORMmanage.MyBase("DB/toto.db")
+        norm = pickle.loads((Base.session.query(Base.Normalization).filter(
+            Base.Normalization.feature == "pageRank").first()).normalizer)
+        scaler = pickle.loads(
+            (Base.session.query(Base.Normalization).filter(Base.Normalization.feature == "pageRank").first()).scaler)
+
+        result = norm.transform([[self.pageRank]])
+        self.pageRankScaledWeight = scaler.transform(result.reshape(-1, 1))[0][0]
 
     def google_index_scaled_calculation(self):
         self.indexingScaledWeight = (float(self.indexingWeight) * 0.5) - 0.5
 
     def links_pointing_to_scaled_calculation(self):
-        pass
+        Base = ORMmanage.MyBase("DB/toto.db")
+        norm = pickle.loads((Base.session.query(Base.Normalization).filter(
+            Base.Normalization.feature == "links_pointing").first()).normalizer)
+        scaler = pickle.loads(
+            (Base.session.query(Base.Normalization).filter(
+                Base.Normalization.feature == "links_pointing").first()).scaler)
+
+        soup = BeautifulSoup(self.amazonAlexa, features="lxml")
+        try:
+            countLinks = int(soup.find("aws:linksincount").contents[0])
+        except (AttributeError, IndexError):
+            try:
+                soup = BeautifulSoup(requests.get("https://www.alexa.com/siteinfo/" + self.url).content,
+                                     features="lxml")
+                countLinks = int(
+                    "".join(soup.find("", {"class": "linksin"}).find("", {"class": "big data"}).get_text().split(",")))
+            except(AttributeError, IndexError):
+                self.linksScaledWeight = 0.5
+                return
+        result = norm.transform([[countLinks]])
+        self.linksScaledWeight = scaler.transform(result.reshape(-1, 1))[0][0]
 
     def statistic_report_scaled_calculation(self):
         self.statisticScaledWeight = (float(self.statisticWeight) * 0.5) - 0.5
@@ -1134,7 +1407,7 @@ class URL:
 
         # testing request URL
         try:
-            self.requested_url()
+            self.requested_url_scaled_calculation()
         except Exception as e:
             logger.critical(e)
             self.requestedWeight = "error"
@@ -1367,7 +1640,7 @@ class URL:
 
         # calculation of request URL
         try:
-            self.requested_url()
+            self.requested_url_scaled_calculation()
         except Exception as e:
             logger.critical(e)
             self.requestedScaledWeight = "error"
@@ -1697,7 +1970,7 @@ class URL:
 
         # testing request URL
         try:
-            self.requested_url()
+            self.requested_url_scaled_calculation()
         except Exception as e:
             logger.critical(e)
             self.requestedWeight = "error"
