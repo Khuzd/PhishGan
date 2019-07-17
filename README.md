@@ -17,6 +17,13 @@ See :
 https://www.python.org/downloads/
 ```
 
+You will also need *Microsoft Visual C++ 2015 Redistributable Update 3*.
+
+See :
+```
+https://www.microsoft.com/en-us/download/details.aspx?id=53587
+```
+
 ### Installing
 
 To install all packages which are required :
