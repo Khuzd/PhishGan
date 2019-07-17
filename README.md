@@ -58,7 +58,7 @@ You have to store this API key in *openPageRank_key.txt* .
 
 Finally, you will need an access ID and a secret access key. To obtain it, go on [this website](https://aws.amazon.com) and create an account.
 
-Then, store the access ID in *awis_access_id.txt* and the secret access key in *awis_secret_access_key.twt* .
+Then, store the access ID in *awis_access_id.txt* and the secret access key in *awis_secret_access_key.txt* .
 
 
 ## Data format
