@@ -26,6 +26,41 @@ To install all packages which are required :
 pip install -r requirements.txt
 ```
 
+### API keys
+
+To use this program, you will need to get some external API keys.
+
+All these API keys have to be stored in the api_keys folder, in .txt files
+
+#### Google APIs
+
+First, you will need a cse ID. You can use it [here](http://www.google.com/cse/).
+
+This ID have to be stored in *google_cse_id_custom_search.txt* .
+
+Then, you will need 2 API keys for some Google services. 
+
+The first one for custom search service and have to be stored in *google_api_key_custom_search.txt* .
+
+The second one for safe browsing service and have to be stored in *google_api_key_safe_browsing.txt* .
+
+You can obtain these API [here](https://developers.google.com/api-client-library/python/guide/aaa_apikeys)
+
+
+#### OpenPageRank API
+
+You will also need a OpenPageRank API key. To do that, create an account on [this website](https://www.domcop.com/openpagerank/).
+
+You have to store this API key in *openPageRank_key.txt* .
+
+
+#### Amazon AWIS Alexa 
+
+Finally, you will need an access ID and a secret access key. To obtain it, go on [this website](https://aws.amazon.com) and create an account.
+
+Then, store the access ID in *awis_access_id.txt* and the secret access key in *awis_secret_access_key.twt* .
+
+
 ## Data format
 All date you would use with this program have to be stored in csv files with comma delimiter.
 
