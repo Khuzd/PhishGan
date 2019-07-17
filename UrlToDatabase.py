@@ -1313,6 +1313,8 @@ class URL:
 
         logger.info("Testing : " + self.url)
 
+        self.soup = BeautifulSoup(self.html.decode('utf-8', 'ignore'), features="lxml")
+
         # testing ip adress
         try:
             self.ip_testing()
@@ -1536,6 +1538,8 @@ class URL:
             logger.critical(e)
             self.statisticWeight = "error"
 
+        self.soup = None
+
         return self.get_features()
 
     def features_scaled_calculation(self):
@@ -1545,6 +1549,8 @@ class URL:
         """
 
         logger.info("Calculate : " + self.url)
+
+        self.soup = BeautifulSoup(self.html.decode('utf-8', 'ignore'), features="lxml")
 
         # calculation of ip adress
         try:
@@ -1768,6 +1774,8 @@ class URL:
         except Exception as e:
             logger.critical(e)
             self.statisticScaledWeight = "error"
+
+        self.soup = None
 
         return self.get_features()
 
