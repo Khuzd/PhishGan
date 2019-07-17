@@ -809,9 +809,8 @@ class URL:
         :return: -1,0 or 1
         """
         try:
-            soup = BeautifulSoup(requests.get("https://www.alexa.com/siteinfo/" + self.domain).content, features="lxml")
-            tag = soup.find(id="card_rank").find("", {"class": "rank-global"}).find("", {"class": "big data"})
-            rank = int("".join(re.findall('\d+', str(tag))))
+            soup = BeautifulSoup(self.amazonAlexa, features="lxml")
+            rank = int((soup.find("aws:trafficdata").find("aws:rank").contents)[0])
         except AttributeError:
             self.trafficWeight = 1
             return
@@ -880,10 +879,9 @@ class URL:
         collect the count of all sites which linked to the url on AWIS database and test if it is not abnormal
         :return: -1,0 or 1
         """
-        soup = BeautifulSoup(requests.get("https://www.alexa.com/siteinfo/" + self.url).content, features="lxml")
+        soup = BeautifulSoup(self.amazonAlexa, features="lxml")
         try:
-            countLinks = int(
-                "".join(soup.find("", {"class": "linksin"}).find("", {"class": "big data"}).get_text().split(",")))
+            countLinks = int(soup.find("aws:linksincount").contents[0])
         except AttributeError:
             self.linksWeight = 1
             return
