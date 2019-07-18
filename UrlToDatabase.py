@@ -134,19 +134,10 @@ class URL:
                     except:
                         logger.error("Can not get HTML content from : " + self.url)
                         # time.sleep(1.5)
-        if self.whoisDomain is not None:
-            self.domain = self.whoisDomain.domain
+            if self.whoisDomain is not None:
+                self.domain = self.whoisDomain.domain
 
-        if self.http == "https":
-            ctx = ssl.create_default_context()
-            ctx.check_hostname = False
-            ctx.verify_mode = ssl.CERT_NONE
-            s = ctx.wrap_socket(socket.socket(), server_hostname=self.hostname)
-            try:
-                s.connect((self.hostname, 443))
-                self.certificate = s.getpeercert()
-            except:
-
+            if self.http == "https":
                 ctx = ssl.create_default_context()
                 ctx.check_hostname = False
                 ctx.verify_mode = ssl.CERT_NONE
@@ -155,7 +146,16 @@ class URL:
                     s.connect((self.hostname, 443))
                     self.certificate = s.getpeercert()
                 except:
-                    self.certificate = None
+
+                    ctx = ssl.create_default_context()
+                    ctx.check_hostname = False
+                    ctx.verify_mode = ssl.CERT_NONE
+                    s = ctx.wrap_socket(socket.socket(), server_hostname=self.hostname)
+                    try:
+                        s.connect((self.hostname, 443))
+                        self.certificate = s.getpeercert()
+                    except:
+                        self.certificate = None
 
         # PageRank calculus
         try:
