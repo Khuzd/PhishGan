@@ -264,7 +264,7 @@ class GAN:
 
         ## Make prediction
         for i in cleanTestDataset + phishTestDataset:
-            prediction.append(self.discriminator.predict_on_batch(np.array(i).astype(np.int)[:].reshape(1, 30, 1)))
+            prediction.append(self.discriminator.predict_on_batch(np.array(i).astype(np.float)[:].reshape(1, 30, 1)))
 
         ## Calculate the best threshold
         self.thresHold = float(((sum(prediction[:len(cleanTestDataset)]) / len(cleanTestDataset)) + (
