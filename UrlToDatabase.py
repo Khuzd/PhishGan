@@ -939,7 +939,7 @@ class URL:
     #  Scaled weights calculation
     # ---------------------
     def ip_scaled_calculation(self):
-        self.ipScaledWeight = (float(self.ipWeight) * 0.5) - 0.5
+        self.ipScaledWeight = (float(self.ipWeight) * 0.5) + 0.5
 
     def length_scaled_calculation(self):
         Base = ORMmanage.MyBase("DB/toto.db")
@@ -952,13 +952,13 @@ class URL:
         self.lengthScaledWeight = scaler.transform(result.reshape(-1, 1))[0][0]
 
     def shortener_scaled_calculation(self):
-        self.shorteningScaledWeight = (float(self.shorteningWeight) * 0.5) - 0.5
+        self.shorteningScaledWeight = (float(self.shorteningWeight) * 0.5) + 0.5
 
     def at_symbol_scaled_calculation(self):
-        self.atScaledWeight = (float(self.atWeight) * 0.5) - 0.5
+        self.atScaledWeight = (float(self.atWeight) * 0.5) + 0.5
 
     def double_slash_scaled_calculation(self):
-        self.doubleSlashScaledWeight = (float(self.doubleSlashWeight) * 0.5) - 0.5
+        self.doubleSlashScaledWeight = (float(self.doubleSlashWeight) * 0.5) + 0.5
 
     def dash_scaled_calculation(self):
         Base = ORMmanage.MyBase("DB/toto.db")
@@ -1041,13 +1041,13 @@ class URL:
         self.expirationScaledWeight = scaler.transform(result.reshape(-1, 1))[0][0]
 
     def favicon_scaled_calculation(self):
-        self.faviconScaledWeight = (float(self.faviconWeight) * 0.5) - 0.5
+        self.faviconScaledWeight = (float(self.faviconWeight) * 0.5) + 0.5
 
     def port_scaled_calculation(self):
-        self.portScaledWeight = (float(self.portWeight) * 0.5) - 0.5
+        self.portScaledWeight = (float(self.portWeight) * 0.5) + 0.5
 
     def http_scaled_calculation(self):
-        self.httpScaledWeight = (float(self.httpWeight) * 0.5) - 0.5
+        self.httpScaledWeight = (float(self.httpWeight) * 0.5) + 0.5
 
     def requested_url_scaled_calculation(self):
         Base = ORMmanage.MyBase("DB/toto.db")
@@ -1187,19 +1187,19 @@ class URL:
         self.SFHScaledWeight = scaler.transform(result.reshape(-1, 1))[0][0]
 
     def email_scaled_calculation(self):
-        self.emailScaledWeight = (float(self.emailWeight) * 0.5) - 0.5
+        self.emailScaledWeight = (float(self.emailWeight) * 0.5) + 0.5
 
     def abnormal_url_scaled_calculation(self):
-        self.abnormalScaledWeight = (float(self.abnormalWeight) * 0.5) - 0.5
+        self.abnormalScaledWeight = (float(self.abnormalWeight) * 0.5) + 0.5
 
     def forwarding_scaled_calculation(self):
-        self.forwardScaledWeight = (float(self.forwardWeight) * 0.5) - 0.5
+        self.forwardScaledWeight = (float(self.forwardWeight) * 0.5) + 0.5
 
     def bar_custom_scaled_calculation(self):
-        self.barCustomScaledWeight = (float(self.barCustomWeight) * 0.5) - 0.5
+        self.barCustomScaledWeight = (float(self.barCustomWeight) * 0.5) + 0.5
 
     def right_click_scaled_calculation(self):
-        self.rightClickScaledWeight = (float(self.rightClickWeight) * 0.5) - 0.5
+        self.rightClickScaledWeight = (float(self.rightClickWeight) * 0.5) + 0.5
 
     def popup_scaled_calculation(self):
         Base = ORMmanage.MyBase("DB/toto.db")
@@ -1215,7 +1215,7 @@ class URL:
         self.popupScaledWeight = scaler.transform(result.reshape(-1, 1))[0][0]
 
     def iframe_scaled_calculation(self):
-        self.iFrameScaledWeight = (float(self.iFrameWeight) * 0.5) - 0.5
+        self.iFrameScaledWeight = (float(self.iFrameWeight) * 0.5) + 0.5
 
     def domain_age_scaled_calculation(self):
         Base = ORMmanage.MyBase("DB/toto.db")
@@ -1241,7 +1241,7 @@ class URL:
         self.domainAgeScaledWeight = scaler.transform(result.reshape(-1, 1))[0][0]
 
     def dns_record_scaled_calculation(self):
-        self.dnsScaledWeight = (float(self.dnsWeight) * 0.5) - 0.5
+        self.dnsScaledWeight = (float(self.dnsWeight) * 0.5) + 0.5
 
     def traffic_scaled_calculation(self):
         Base = ORMmanage.MyBase("DB/toto.db")
@@ -1277,7 +1277,7 @@ class URL:
         self.pageRankScaledWeight = scaler.transform(result.reshape(-1, 1))[0][0]
 
     def google_index_scaled_calculation(self):
-        self.indexingScaledWeight = (float(self.indexingWeight) * 0.5) - 0.5
+        self.indexingScaledWeight = (float(self.indexingWeight) * 0.5) + 0.5
 
     def links_pointing_to_scaled_calculation(self):
         Base = ORMmanage.MyBase("DB/toto.db")
@@ -1303,7 +1303,7 @@ class URL:
         self.linksScaledWeight = scaler.transform(result.reshape(-1, 1))[0][0]
 
     def statistic_report_scaled_calculation(self):
-        self.statisticScaledWeight = (float(self.statisticWeight) * 0.5) - 0.5
+        self.statisticScaledWeight = (float(self.statisticWeight) * 0.5) + 0.5
 
     def features_extraction(self):
         """
