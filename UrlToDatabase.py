@@ -167,7 +167,7 @@ class URL:
             self.pageRank = 0
 
         # Get AWIS Alexa information
-        self.amazonAlexa = CallAwis(open("api_keys/awis_acces_id.txt").read(),
+        self.amazonAlexa = CallAwis(open("api_keys/awis_access_id.txt").read(),
                                     open("api_keys/awis_secret_access_key.txt").read()).urlinfo(self.domain)
 
         ## Weights
