@@ -157,18 +157,18 @@ class URL:
                     except:
                         self.certificate = None
 
-        # PageRank calculus
-        try:
-            self.pageRank = requests.get("https://openpagerank.com/api/v1.0/getPageRank?domains%5B0%5D=" + self.domain,
-                                         headers={"API-OPR": open("api_keys/openPageRank_key.txt").read()}).json()[
-                "response"][0]['page_rank_decimal']
-        except:
-            logger.error("domain pagerank not found")
-            self.pageRank = 0
+            # PageRank calculus
+            try:
+                self.pageRank = requests.get("https://openpagerank.com/api/v1.0/getPageRank?domains%5B0%5D=" + self.domain,
+                                             headers={"API-OPR": open("api_keys/openPageRank_key.txt").read()}).json()[
+                    "response"][0]['page_rank_decimal']
+            except:
+                logger.error("domain pagerank not found")
+                self.pageRank = 0
 
-        # Get AWIS Alexa information
-        self.amazonAlexa = CallAwis(open("api_keys/awis_access_id.txt").read(),
-                                    open("api_keys/awis_secret_access_key.txt").read()).urlinfo(self.domain)
+            # Get AWIS Alexa information
+            self.amazonAlexa = CallAwis(open("api_keys/awis_access_id.txt").read(),
+                                        open("api_keys/awis_secret_access_key.txt").read()).urlinfo(self.domain)
 
         ## Weights
         self.ipWeight = "error"
