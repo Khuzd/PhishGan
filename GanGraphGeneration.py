@@ -30,13 +30,13 @@ np.random.seed(seed_value)
 # 4. Set the `tensorflow` pseudo-random generator at a fixed value
 import tensorflow as tf
 
-tf.set_random_seed(seed_value)
+tf.compat.v1.set_random_seed(seed_value)
 
 # 5. Configure a new global `tensorflow` session
 from keras import backend as K
 
-session_conf = tf.ConfigProto(intra_op_parallelism_threads=1, inter_op_parallelism_threads=1, device_count={"CPU": 1})
-sess = tf.Session(graph=tf.get_default_graph(), config=session_conf)
+session_conf = tf.compat.v1.ConfigProto(intra_op_parallelism_threads=1, inter_op_parallelism_threads=1, device_count={"CPU": 1})
+sess = tf.compat.v1.Session(graph=tf.compat.v1.get_default_graph(), config=session_conf)
 K.set_session(sess)
 
 import matplotlib.pyplot as plt
@@ -126,10 +126,10 @@ def multi_graph(begin_lr, end_lr, step_lr, epochs, begin_sampleSize, end_SampleS
             # Set seeds
             random.seed(seed_value)
             np.random.seed(seed_value)
-            tf.set_random_seed(seed_value)
-            session_conf = tf.ConfigProto(intra_op_parallelism_threads=1, inter_op_parallelism_threads=1,
+            tf.compat.v1.set_random_seed(seed_value)
+            session_conf = tf.compat.v1.ConfigProto(intra_op_parallelism_threads=1, inter_op_parallelism_threads=1,
                                           device_count={"CPU": 1})
-            sess = tf.Session(graph=tf.get_default_graph(), config=session_conf)
+            sess = tf.compat.v1.Session(graph=tf.compat.v1.get_default_graph(), config=session_conf)
             K.set_session(sess)
 
             logger.info("sample : %f ; lr : %f" % (sample, lr))
