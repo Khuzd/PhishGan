@@ -15,6 +15,8 @@ import re
 import socket
 import ssl
 import struct
+from binascii import Error as hexErr
+from binascii import hexlify, unhexlify
 
 import dns.resolver
 import requests
@@ -159,9 +161,10 @@ class URL:
 
             # PageRank calculus
             try:
-                self.pageRank = requests.get("https://openpagerank.com/api/v1.0/getPageRank?domains%5B0%5D=" + self.domain,
-                                             headers={"API-OPR": open("api_keys/openPageRank_key.txt").read()}).json()[
-                    "response"][0]['page_rank_decimal']
+                self.pageRank = \
+                    requests.get("https://openpagerank.com/api/v1.0/getPageRank?domains%5B0%5D=" + self.domain,
+                                 headers={"API-OPR": open("api_keys/openPageRank_key.txt").read()}).json()[
+                        "response"][0]['page_rank_decimal']
             except:
                 logger.error("domain pagerank not found")
                 self.pageRank = 0
@@ -201,6 +204,22 @@ class URL:
         self.indexingWeight = "error"
         self.linksWeight = "error"
         self.statisticWeight = "error"
+        self.subDomainLengthWeight = "error"
+        self.wwwWeight = "error"
+        self.validTldWeight = "error"
+        self.singleCharacterSubDomainWeight = "error"
+        self.exclusivePrefixRepetitionWeight = "error"
+        self.tldSubDomainWeight = "error"
+        self.ratioDigitSubDomainWeight = "error"
+        self.ratioHexaSubDomainWeight = "error"
+        self.underscoreWeight = "error"
+        self.containDigitWeight = "error"
+        self.vowelRatioWeight = "error"
+        self.ratioDigitWeight = "error"
+        self.alphabetCardinalityWeight = "error"
+        self.ratioRepeatedCharacterWeight = "error"
+        self.ratioConsecutiveConsonantWeight = "error"
+        self.ratioConsecutiveDigitWeight = "error"
 
         ## ScaledWeights
         self.ipScaledWeight = "error"
@@ -233,6 +252,22 @@ class URL:
         self.indexingScaledWeight = "error"
         self.linksScaledWeight = "error"
         self.statisticScaledWeight = "error"
+        self.subDomainLengthScaledWeight = "error"
+        self.wwwScaledWeight = "error"
+        self.validTldScaledWeight = "error"
+        self.singleCharacterSubDomainScaledWeight = "error"
+        self.exclusivePrefixRepetitionScaledWeight = "error"
+        self.tldSubDomainScaledWeight = "error"
+        self.ratioDigitSubDomainScaledWeight = "error"
+        self.ratioHexaSubDomainScaledWeight = "error"
+        self.underscoreScaledWeight = "error"
+        self.containDigitScaledWeight = "error"
+        self.vowelRatioScaledWeight = "error"
+        self.ratioDigitScaledWeight = "error"
+        self.alphabetCardinalityScaledWeight = "error"
+        self.ratioRepeatedCharacterScaledWeight = "error"
+        self.ratioConsecutiveConsonantScaledWeight = "error"
+        self.ratioConsecutiveDigitScaledWeight = "error"
 
         return
 
@@ -323,6 +358,7 @@ class URL:
         :return: -1,0 or 1
         """
         psl = PublicSuffixList()
+        psl.accept_unknown = False
         domain = self.hostname
         if domain is None:
             domain = ""
@@ -935,6 +971,110 @@ class URL:
         self.statisticWeight = -1
         return
 
+    def sub_domain_length_testing(self):
+        return
+
+    def www_testing(self):
+        if "www" in self.url[:11]:
+            self.wwwWeight = -1
+            return
+        self.wwwWeight = 1
+
+    def valid_tld_testing(self):
+        psl = PublicSuffixList()
+        psl.accept_unknown = False
+        if psl.publicsuffix(self.hostname) is None:
+            self.validTldWeight = 1
+            return
+        self.validTldWeight = -1
+
+    def single_character_sub_domain_testing(self):
+        domain = self.hostname
+        psl = PublicSuffixList()
+        psl.accept_unknown = False
+        if domain is None:
+            domain = ""
+        else:
+            domain = domain[:len(domain) - (len(psl.publicsuffix(domain)) + 1)]
+
+        subdomains = domain.split(".")
+        for subdomain in subdomains:
+            if len(subdomain) == 1:
+                self.singleCharacterSubDomainWeight = 1
+                return
+        self.singleCharacterSubDomainWeight = -1
+
+    def exclusive_prefix_repetition_testing(self):
+        domain = self.hostname
+        repeat = list(filter(None, domain.split(domain.split(".")[-1])))
+        if len(repeat) == 1:
+            self.exclusivePrefixRepetitionWeight = -1
+            return
+        else:
+            for test in repeat:
+                if test != repeat[0]:
+                    self.exclusivePrefixRepetitionWeight = -1
+                    return
+        self.exclusivePrefixRepetitionWeight = 1
+
+    def tld_sub_domain_testing(self):
+        domain = self.hostname
+        psl = PublicSuffixList()
+        psl.accept_unknown = False
+        if domain is None:
+            domain = ""
+        else:
+            domain = domain[:len(domain) - (len(psl.publicsuffix(domain)) + 1)]
+
+        subdomains = domain.split(".")
+
+        for subdomain in subdomains:
+            if psl.publicsuffix("x." + subdomain) is not None:
+                self.tldSubDomainWeight = 1
+                return
+        self.tldSubDomainWeight = -1
+
+    def ratio_digit_sub_domain_testing(self):
+        return
+
+    def ratio_hexa_sub_domain_testing(self):
+        return
+
+    def underscore_testing(self):
+        return
+
+    def contain_digit_testing(self):
+        domain = self.hostname
+        psl = PublicSuffixList()
+        psl.accept_unknown = False
+        if domain is None:
+            domain = ""
+        else:
+            domain = domain[:len(domain) - (len(psl.publicsuffix(domain)) + 1)]
+
+        if sum(list(map(lambda x: 1 if x.isdigit() else 0, domain))) != 0:
+            self.containDigitWeight = 1
+            return
+        self.containDigitWeight = -1
+
+    def vowel_ratio_testing(self):
+        return
+
+    def ratio_digit_testing(self):
+        return
+
+    def alphabet_cardinality_testing(self):
+        return
+
+    def ratio_repeated_character_testing(self):
+        return
+
+    def ratio_consecutive_consonant_testing(self):
+        return
+
+    def ratio_consecutive_digit_testing(self):
+        return
+
     # ---------------------
     #  Scaled weights calculation
     # ---------------------
@@ -978,6 +1118,7 @@ class URL:
             (Base.session.query(Base.Normalization).filter(Base.Normalization.feature == "sub_domain").first()).scaler)
 
         psl = PublicSuffixList()
+        psl.accept_unknown = False
         domain = self.hostname
 
         if domain is None:
@@ -1304,6 +1445,207 @@ class URL:
 
     def statistic_report_scaled_calculation(self):
         self.statisticScaledWeight = (float(self.statisticWeight) * 0.5) + 0.5
+
+    def sub_domain_length_scaled_calculation(self):
+        domain = self.hostname
+        psl = PublicSuffixList()
+        psl.accept_unknown = False
+        if domain is None:
+            domain = ""
+        else:
+            domain = domain[:len(domain) - (len(psl.publicsuffix(domain)) + 1)]
+
+        subdomains = domain.split(".")
+        total = 0
+        for subdomain in subdomains:
+            total += len(subdomain)
+
+        self.subDomainLengthScaledWeight = total / len(subdomains)
+
+    def www_scaled_calculation(self):
+        self.wwwScaledWeight = (float(self.wwwWeight) * 0.5) + 0.5
+
+    def valid_tld_scaled_calculation(self):
+        self.validTldScaledWeight = (float(self.validTldWeight) * 0.5) + 0.5
+
+    def single_character_sub_domain_scaled_calculation(self):
+        self.singleCharacterSubDomainScaledWeight = (float(self.singleCharacterSubDomainWeight) * 0.5) + 0.5
+
+    def exclusive_prefix_repetition_scaled_calculation(self):
+        self.exclusivePrefixRepetitionScaledWeight = (float(self.exclusivePrefixRepetitionWeight) * 0.5) + 0.5
+
+    def tld_sub_domain_scaled_calculation(self):
+        self.tldSubDomainScaledWeight = (float(self.tldSubDomainWeight) * 0.5) + 0.5
+
+    def ratio_digit_sub_domain_scaled_calculation(self):
+        domain = self.hostname
+        psl = PublicSuffixList()
+        psl.accept_unknown = False
+        if domain is None:
+            domain = ""
+        else:
+            domain = domain[:len(domain) - (len(psl.publicsuffix(domain)) + 1)]
+
+        subdomains = domain.split(".")
+
+        exclusiveDigit = 0
+
+        for subdomain in subdomains:
+            if sum(list(map(lambda x: 1 if x.isdigit() else 0, subdomain))) == len(subdomain):
+                exclusiveDigit += 1
+
+        self.ratioDigitSubDomainScaledWeight = exclusiveDigit / len(subdomains)
+
+    def ratio_hexa_sub_domain_scaled_calculation(self):
+        domain = self.hostname
+        psl = PublicSuffixList()
+        psl.accept_unknown = False
+        if domain is None:
+            domain = ""
+        else:
+            domain = domain[:len(domain) - (len(psl.publicsuffix(domain)) + 1)]
+
+        subdomains = domain.split(".")
+
+        exclusiveHex = 0
+
+        for subdomain in subdomains:
+            try:
+                hexlify(unhexlify(subdomain))
+                exclusiveHex += 1
+            except hexErr:
+                pass
+        self.ratioHexaSubDomainScaledWeight = exclusiveHex / len(subdomains)
+
+    def underscore_scaled_calculation(self):
+        domain = self.hostname
+        psl = PublicSuffixList()
+        psl.accept_unknown = False
+        if domain is None:
+            domain = ""
+        else:
+            domain = domain[:len(domain) - (len(psl.publicsuffix(domain)) + 1)]
+
+        self.underscoreScaledWeight = domain.count("_") / len(domain)
+
+    def contain_digit_scaled_calculation(self):
+        self.containDigitScaledWeight = (float(self.containDigitWeight) * 0.5) + 0.5
+
+    def vowel_ratio_scaled_calculation(self):
+        domain = self.hostname
+        psl = PublicSuffixList()
+        psl.accept_unknown = False
+        if domain is None:
+            domain = ""
+        else:
+            domain = domain[:len(domain) - (len(psl.publicsuffix(domain)) + 1)]
+
+        domain.replace(".", "")
+        self.vowelRatioScaledWeight = sum(
+            list(map(lambda x: 1 if x in ["a", "e", "i", "o", "u", "y"] else 0, domain))) / len(domain)
+
+    def ratio_digit_scaled_calculation(self):
+        domain = self.hostname
+        psl = PublicSuffixList()
+        psl.accept_unknown = False
+        if domain is None:
+            domain = ""
+        else:
+            domain = domain[:len(domain) - (len(psl.publicsuffix(domain)) + 1)]
+
+        domain.replace(".", "")
+        self.vowelRatioScaledWeight = sum(list(map(lambda x: 1 if x.isdigit() else 0, domain))) / len(domain)
+
+    def alphabet_cardinality_scaled_calculation(self):
+        domain = self.hostname
+        psl = PublicSuffixList()
+        psl.accept_unknown = False
+        if domain is None:
+            domain = ""
+        else:
+            domain = domain[:len(domain) - (len(psl.publicsuffix(domain)) + 1)]
+
+        domain.replace(".", "")
+
+        self.alphabetCardinalityScaledWeight = sum(list(map(lambda x: 1 if x.isalpha() else 0, domain)))
+
+    def ratio_repeated_character_scaled_calculation(self):
+
+        if self.alphabetCardinalityScaledWeight in [None, 0, "error"] or type(
+                self.alphabetCardinalityScaledWeight) is not int:
+            self.ratioRepeatedCharacterScaledWeight = 1
+            return
+
+        domain = self.hostname
+        psl = PublicSuffixList()
+        psl.accept_unknown = False
+        if domain is None:
+            domain = ""
+        else:
+            domain = domain[:len(domain) - (len(psl.publicsuffix(domain)) + 1)]
+
+        domain.replace(".", "")
+
+        setDomain = list(set(domain))
+        countRepeated = 0
+
+        for character in setDomain:
+            if domain.count(character) > 1:
+                countRepeated += 1
+
+        self.ratioRepeatedCharacterScaledWeight = countRepeated / self.alphabetCardinalityScaledWeight
+
+    def ratio_consecutive_consonant_scaled_calculation(self):
+        domain = self.hostname
+        psl = PublicSuffixList()
+        psl.accept_unknown = False
+        if domain is None:
+            domain = ""
+        else:
+            domain = domain[:len(domain) - (len(psl.publicsuffix(domain)) + 1)]
+
+        domain.replace(".", "")
+        replaced = ""
+        for i in range(len(domain)):
+            if domain[i].isalpha():
+                replaced += domain[i]
+            else:
+                replaced += "a"
+
+        replaced = re.split("a|e|i|o|u|y", replaced)
+
+        countConsecutive = 0
+        for splitted in replaced:
+            if len(splitted) > 1:
+                countConsecutive += len(splitted)
+
+        self.ratioConsecutiveConsonantScaledWeight = countConsecutive / len(domain)
+
+    def ratio_consecutive_digit_scaled_calculation(self):
+        domain = self.hostname
+        psl = PublicSuffixList()
+        psl.accept_unknown = False
+        if domain is None:
+            domain = ""
+        else:
+            domain = domain[:len(domain) - (len(psl.publicsuffix(domain)) + 1)]
+
+        domain.replace(".", "")
+        replaced = ""
+        for i in range(len(domain)):
+            if domain[i].isdigit():
+                replaced += domain[i]
+            else:
+                replaced += "a"
+
+        replaced = replaced.split("a")
+
+        countConsecutive = 0
+        for splitted in replaced:
+            if len(splitted) > 1:
+                countConsecutive += len(splitted)
+
+        self.ratioConsecutiveDigitScaledWeight = countConsecutive / len(domain)
 
     def features_extraction(self):
         """
