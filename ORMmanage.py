@@ -1,3 +1,12 @@
+"""
+
+-----------
+Generative Adversarial Networks (GAN) research applied to the phishing detection.
+University of Gloucestershire
+Author : Pierrick ROBIC--BUTEZ
+2019
+"""
+
 import logging
 import pickle
 
@@ -15,6 +24,9 @@ logger = logging.getLogger('main')
 
 
 class MyBase:
+    """
+    Class used to get data from the Sqlite3 database
+    """
     Base = declarative_base()
 
     def __init__(self, path):
@@ -193,6 +205,10 @@ class MyBase:
         return
 
     def new_url_analysis(self):
+        """
+        Used to analyse again all URLs in database
+        :return: nothing
+        """
         for table in self.Base.metadata.tables.keys():
             if table.lower() != "normalization":
                 query = self.session.query(self.__getattribute__(table.capitalize())).all()

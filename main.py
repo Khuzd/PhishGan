@@ -82,6 +82,9 @@ logger.addHandler(stream_handler)
 
 
 class MyParser(argparse.ArgumentParser):
+    """
+    Parser for main function
+    """
     def print_help(self, file=None):
         """
         Redefine print help function to print the help of all subparsers when main -h

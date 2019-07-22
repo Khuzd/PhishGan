@@ -58,6 +58,10 @@ TRUSTED_ISSUERS = ["geotrust", "godaddy", "network solutions", "thawte", "comodo
 
 
 class URL:
+    """
+    URL Class to store all informations about a website
+    """
+
     def __init__(self, url, manualInit=False):
         # ---------------------
         #  Define attributes
@@ -821,7 +825,7 @@ class URL:
         """
         try:
             soup = BeautifulSoup(self.amazonAlexa, features="lxml")
-            rank = int((soup.find("aws:trafficdata").find("aws:rank").contents)[0])
+            rank = int(soup.find("aws:trafficdata").find("aws:rank").contents[0])
         except (AttributeError, IndexError):
             try:
                 soup = BeautifulSoup(requests.get("https://www.alexa.com/siteinfo/" + self.domain).content,
@@ -1441,7 +1445,7 @@ class URL:
 
         try:
             soup = BeautifulSoup(self.amazonAlexa, features="lxml")
-            rank = int((soup.find("aws:trafficdata").find("aws:rank").contents)[0])
+            rank = int(soup.find("aws:trafficdata").find("aws:rank").contents[0])
         except (AttributeError, IndexError):
             try:
                 soup = BeautifulSoup(requests.get("https://www.alexa.com/siteinfo/" + self.domain).content,
@@ -1735,7 +1739,7 @@ class URL:
             else:
                 replaced += "a"
 
-        replaced = re.split("a|e|i|o|u|y", replaced)
+        replaced = re.split("[aeiouy]", replaced)
 
         countConsecutive = 0
         for splitted in replaced:

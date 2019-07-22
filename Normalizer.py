@@ -1,3 +1,12 @@
+"""
+
+-----------
+Generative Adversarial Networks (GAN) research applied to the phishing detection.
+University of Gloucestershire
+Author : Pierrick ROBIC--BUTEZ
+2019
+"""
+
 import numpy as np
 from scipy import sparse
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -10,6 +19,11 @@ from sklearn.utils.validation import FLOAT_DTYPES
 
 
 class Normalizer(BaseEstimator, TransformerMixin):
+    """
+    Class Normalizer used to normalize data and store characteristics to normalize in the same way other data in the
+    future
+    """
+
     def __init__(self, norm='l2', axis=1, copy=True):
         self.norm = norm
         self.axis = axis
@@ -18,6 +32,11 @@ class Normalizer(BaseEstimator, TransformerMixin):
         self.sparse_format = None
 
     def fit(self, X):
+        """
+        Used to fit Noramlizer with data
+        :param X: list
+        :return: nothing
+        """
         if self.norm not in ('l1', 'l2', 'max'):
             raise ValueError("'%s' is not a supported norm" % self.norm)
 
@@ -50,6 +69,11 @@ class Normalizer(BaseEstimator, TransformerMixin):
             self.norms = _handle_zeros_in_scale(self.norms, copy=False)
 
     def transform(self, X):
+        """
+        Used to transform data after fiting
+        :param X: list
+        :return: list
+        """
         X = check_array(X, self.sparse_format, copy=self.copy,
                         estimator='the normalize function', dtype=FLOAT_DTYPES)
         if self.axis == 0:
@@ -72,5 +96,12 @@ class Normalizer(BaseEstimator, TransformerMixin):
         return X
 
     def fit_transform(self, X, y=None, **fit_params):
+        """
+        used to fit and then transform data
+        :param X: list
+        :param y:
+        :param fit_params:
+        :return: list
+        """
         self.fit(X)
         return self.transform(X)

@@ -64,6 +64,9 @@ CLEAN_PATH_TEST = "data/Amazon_top25000outtest.csv"
 
 
 class GAN:
+    """
+    GAN Classe used to predict if url is phishing or not
+    """
     def __init__(self, lr, sample):
         """
         :param lr: float (learning rate)
