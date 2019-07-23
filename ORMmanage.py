@@ -15,7 +15,9 @@ from sqlalchemy import Binary
 from sqlalchemy import Column, Integer, String
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, scoped_session
+
+from functools import partial
 
 import UrlToDatabase
 
@@ -23,9 +25,9 @@ import UrlToDatabase
 logger = logging.getLogger('main')
 
 
-class MyBase:
+class WebsiteBase:
     """
-    Class used to get data from the Sqlite3 database
+    Class used to get website data from the Sqlite3 database
     """
     Base = declarative_base()
 
@@ -84,7 +86,7 @@ class MyBase:
         Used to create different tables
         :return: nothing
         """
-        MyBase.Base.metadata.create_all(self.engine)
+        WebsiteBase.Base.metadata.create_all(self.engine)
         return
 
     def adding(self, website, table):
@@ -164,6 +166,22 @@ class MyBase:
                     tmp.indexingWeight = int(oldUrl.indexingWeight)
                     tmp.linksWeight = int(oldUrl.linksWeight)
                     tmp.statisticWeight = int(oldUrl.statisticWeight)
+                    # tmp.subDomainLengthWeight = int(oldUrl.subDomainLengthWeight)
+                    # tmp.wwwWeight = int(oldUrl.wwwWeight)
+                    # tmp.validTldWeight = int(oldUrl.validTldWeight)
+                    # tmp.singleCharacterSubDomainWeight = int(oldUrl.singleCharacterSubDomainWeight)
+                    # tmp.exclusivePrefixRepetitionWeight = int(oldUrl.exclusivePrefixRepetitionWeight)
+                    # tmp.tldSubDomainWeight = int(oldUrl.tldSubDomainWeight)
+                    # tmp.ratioDigitSubDomainWeight = int(oldUrl.ratioDigitSubDomainWeight)
+                    # tmp.ratioHexaSubDomainWeight = int(oldUrl.ratioHexaSubDomainWeight)
+                    # tmp.underscoreWeight = int(oldUrl.underscoreWeight)
+                    # tmp.containDigitWeight = int(oldUrl.containDigitWeight)
+                    # tmp.vowelRatioWeight = int(oldUrl.vowelRatioWeight)
+                    # tmp.ratioDigitWeight = int(oldUrl.ratioDigitWeight)
+                    # tmp.alphabetCardinalityWeight = int(oldUrl.alphabetCardinalityWeight)
+                    # tmp.ratioRepeatedCharacterWeight = int(oldUrl.ratioRepeatedCharacterWeight)
+                    # tmp.ratioConsecutiveConsonantWeight = int(oldUrl.ratioConsecutiveConsonantWeight)
+                    # tmp.ratioConsecutiveDigitWeight = int(oldUrl.ratioConsecutiveDigitWeight)
 
                     # Load scaled weights
                     tmp.ipScaledWeight = float(oldUrl.ipScaledWeight)
@@ -196,6 +214,22 @@ class MyBase:
                     tmp.indexingScaledWeight = float(oldUrl.indexingScaledWeight)
                     tmp.linksScaledWeight = float(oldUrl.linksScaledWeight)
                     tmp.statisticScaledWeight = float(oldUrl.statisticScaledWeight)
+                    # tmp.subDomainLengthScaledWeight = float(oldUrl.subDomainLengthScaledWeight)
+                    # tmp.wwwScaledWeight = float(oldUrl.wwwScaledWeight)
+                    # tmp.validTldScaledWeight = float(oldUrl.validTldScaledWeight)
+                    # tmp.singleCharacterSubDomainScaledWeight = float(oldUrl.singleCharacterSubDomainScaledWeight)
+                    # tmp.exclusivePrefixRepetitionScaledWeight = float(oldUrl.exclusivePrefixRepetitionScaledWeight)
+                    # tmp.tldSubDomainScaledWeight = float(oldUrl.tldSubDomainScaledWeight)
+                    # tmp.ratioDigitSubDomainScaledWeight = float(oldUrl.ratioDigitSubDomainScaledWeight)
+                    # tmp.ratioHexaSubDomainScaledWeight = float(oldUrl.ratioHexaSubDomainScaledWeight)
+                    # tmp.underscoreScaledWeight = float(oldUrl.underscoreScaledWeight)
+                    # tmp.containDigitScaledWeight = float(oldUrl.containDigitScaledWeight)
+                    # tmp.vowelRatioScaledWeight = float(oldUrl.vowelRatioScaledWeight)
+                    # tmp.ratioDigitScaledWeight = float(oldUrl.ratioDigitScaledWeight)
+                    # tmp.alphabetCardinalityScaledWeight = float(oldUrl.alphabetCardinalityScaledWeight)
+                    # tmp.ratioRepeatedCharacterScaledWeight = float(oldUrl.ratioRepeatedCharacterScaledWeight)
+                    # tmp.ratioConsecutiveConsonantScaledWeight = float(oldUrl.ratioConsecutiveConsonantScaledWeight)
+                    # tmp.ratioConsecutiveDigitScaledWeight = float(oldUrl.ratioConsecutiveDigitScaledWeight)
 
                     # Replace old website in database by new website
                     result.content = pickle.dumps(tmp)
@@ -218,12 +252,48 @@ class MyBase:
                 for result in query:
                     contents.append(pickle.loads(result.content))
                 logger.info("Data from table {} loaded".format(str(table)))
-
-                ThreadPool().map(UrlToDatabase.URL.re_extract_non_request_features, contents)
+                dBase = NormalizationBase("DB/norm.db")
+                fct = partial(UrlToDatabase.URL.re_extract_non_request_features, normDBsession=dBase.session)
+                ThreadPool().map(fct, contents)
                 logger.info("Data loaded from table {} transformed".format(str(table)))
                 for i in range(len(query)):
                     query[i].content = pickle.dumps(contents[i])
                 self.session.commit()
                 logger.info("Data loaded from table {} commited".format(str(table)))
 
-                del query, contents
+                # del query, contents
+
+
+class NormalizationBase:
+    """
+    Class used to get normalization data from the Sqlite3 database
+    """
+    Base = declarative_base()
+
+    def __init__(self, path):
+        # ---------------------
+        #  Define attributes
+        # ---------------------
+        self.path = path
+        self.engine = create_engine('sqlite:///' + self.path)
+        self.Session = sessionmaker(bind=self.engine)
+        self.session = scoped_session(self.Session)
+
+    class Normalization(Base):
+        """
+        Table for Normalization
+        """
+        __tablename__ = "normalization"
+        id = Column(Integer, primary_key=True)
+        feature = Column(String)
+        data = Column(Binary)
+        normalizer = Column(Binary)
+        scaler = Column(Binary)
+
+    def create_tables(self):
+        """
+        Used to create different tables
+        :return: nothing
+        """
+        NormalizationBase.Base.metadata.create_all(self.engine)
+        return
