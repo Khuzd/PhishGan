@@ -1450,8 +1450,8 @@ class URL:
                 self.expirationScaledWeight = 0.5
                 return
 
-        result = norm.transform([[delta.days]])
-        self.expirationScaledWeight = scaler.transform(result.reshape(-1, 1))[0][0]
+            result = norm.transform([[delta.days]])
+            self.expirationScaledWeight = scaler.transform(result.reshape(-1, 1))[0][0]
 
     def favicon_scaled_calculation(self):
         """
@@ -1708,8 +1708,8 @@ class URL:
                 self.domainAgeScaledWeight = 0.5
                 return
 
-        result = norm.transform([[delta.days]])
-        self.domainAgeScaledWeight = scaler.transform(result.reshape(-1, 1))[0][0]
+            result = norm.transform([[delta.days]])
+            self.domainAgeScaledWeight = scaler.transform(result.reshape(-1, 1))[0][0]
 
     def dns_record_scaled_calculation(self):
         """
@@ -2325,6 +2325,118 @@ class URL:
             logger.critical(e)
             self.statisticWeight = "error"
 
+        # testing subdomain lentgh mean
+        try:
+            self.sub_domain_length_testing()
+        except Exception as e:
+            logger.critical(e)
+            self.subDomainLengthWeight = "error"
+
+        # testing www
+        try:
+            self.www_testing()
+        except Exception as e:
+            logger.critical(e)
+            self.wwwWeight = "error"
+
+        # testing valid tld
+        try:
+            self.valid_tld_testing()
+        except Exception as e:
+            logger.critical(e)
+            self.validTldWeight = "error"
+
+        # testing single character as subdomain
+        try:
+            self.single_character_sub_domain_testing()
+        except Exception as e:
+            logger.critical(e)
+            self.singleCharacterSubDomainWeight = "error"
+
+        # testing exclusive prefix repetition
+        try:
+            self.exclusive_prefix_repetition_testing()
+        except Exception as e:
+            logger.critical(e)
+            self.exclusivePrefixRepetitionWeight = "error"
+
+        # testing tld as subdomain
+        try:
+            self.tld_sub_domain_testing()
+        except Exception as e:
+            logger.critical(e)
+            self.tldSubDomainWeight = "error"
+
+        # testing ratio of digit subdomain
+        try:
+            self.ratio_digit_sub_domain_testing()
+        except Exception as e:
+            logger.critical(e)
+            self.ratioDigitSubDomainWeight = "error"
+
+        # testing ratio of hexa subdomains
+        try:
+            self.ratio_hexa_sub_domain_testing()
+        except Exception as e:
+            logger.critical(e)
+            self.ratioHexaSubDomainWeight = "error"
+
+        # testing ratio of underscore
+        try:
+            self.underscore_testing()
+        except Exception as e:
+            logger.critical(e)
+            self.underscoreWeight = "error"
+
+        # testing digit in domain
+        try:
+            self.contain_digit_testing()
+        except Exception as e:
+            logger.critical(e)
+            self.containDigitWeight = "error"
+
+        # testing vowel ratio
+        try:
+            self.vowel_ratio_testing()
+        except Exception as e:
+            logger.critical(e)
+            self.vowelRatioWeight = "error"
+
+        # testing digit ratio
+        try:
+            self.ratio_digit_testing()
+        except Exception as e:
+            logger.critical(e)
+            self.ratioDigitWeight = "error"
+
+        # testing alphabet cardinality
+        try:
+            self.alphabet_cardinality_testing()
+        except Exception as e:
+            logger.critical(e)
+            self.alphabetCardinalityWeight = "error"
+
+        # testing ratio of repeated characters
+        try:
+            self.ratio_repeated_character_testing()
+        except Exception as e:
+            logger.critical(e)
+            self.ratioRepeatedCharacterWeight = "error"
+
+        # testing ratio of consecutive consonants
+        try:
+            self.ratio_consecutive_consonant_testing()
+        except Exception as e:
+            logger.critical(e)
+            self.ratioConsecutiveConsonantWeight = "error"
+
+        # testing ratio of consecutive digits
+        try:
+            self.ratio_consecutive_digit_testing()
+        except Exception as e:
+            logger.critical(e)
+            self.ratioConsecutiveDigitWeight = "error"
+
         self.soup = None
 
         return self.get_features()
@@ -2561,6 +2673,118 @@ class URL:
         except Exception as e:
             logger.critical(e)
             self.statisticScaledWeight = "error"
+
+        # testing scaled subdomain lentgh mean
+        try:
+            self.sub_domain_length_scaled_calculation()
+        except Exception as e:
+            logger.critical(e)
+            self.subDomainLengthScaledWeight = "error"
+
+        # testing scaled www
+        try:
+            self.www_scaled_calculation()
+        except Exception as e:
+            logger.critical(e)
+            self.wwwScaledWeight = "error"
+
+        # testing scaled valid tld
+        try:
+            self.valid_tld_scaled_calculation()
+        except Exception as e:
+            logger.critical(e)
+            self.validTldScaledWeight = "error"
+
+        # testing scaled single character as subdomain
+        try:
+            self.single_character_sub_domain_scaled_calculation()
+        except Exception as e:
+            logger.critical(e)
+            self.singleCharacterSubDomainScaledWeight = "error"
+
+        # testing scaled exclusive prefix repetition
+        try:
+            self.exclusive_prefix_repetition_scaled_calculation()
+        except Exception as e:
+            logger.critical(e)
+            self.exclusivePrefixRepetitionScaledWeight = "error"
+
+        # testing scaled tld as subdomain
+        try:
+            self.tld_sub_domain_scaled_calculation()
+        except Exception as e:
+            logger.critical(e)
+            self.tldSubDomainScaledWeight = "error"
+
+        # testing scaled ratio of digit subdomain
+        try:
+            self.ratio_digit_sub_domain_scaled_calculation()
+        except Exception as e:
+            logger.critical(e)
+            self.ratioDigitSubDomainScaledWeight = "error"
+
+        # testing scaled ratio of hexa subdomains
+        try:
+            self.ratio_hexa_sub_domain_scaled_calculation()
+        except Exception as e:
+            logger.critical(e)
+            self.ratioHexaSubDomainScaledWeight = "error"
+
+        # testing scaled ratio of underscore
+        try:
+            self.underscore_scaled_calculation()
+        except Exception as e:
+            logger.critical(e)
+            self.underscoreScaledWeight = "error"
+
+        # testing scaled digit in domain
+        try:
+            self.contain_digit_scaled_calculation()
+        except Exception as e:
+            logger.critical(e)
+            self.containDigitScaledWeight = "error"
+
+        # testing scaled vowel ratio
+        try:
+            self.vowel_ratio_scaled_calculation()
+        except Exception as e:
+            logger.critical(e)
+            self.vowelRatioScaledWeight = "error"
+
+        # testing scaled digit ratio
+        try:
+            self.ratio_digit_scaled_calculation()
+        except Exception as e:
+            logger.critical(e)
+            self.ratioDigitScaledWeight = "error"
+
+        # testing scaled alphabet cardinality
+        try:
+            self.alphabet_cardinality_scaled_calculation()
+        except Exception as e:
+            logger.critical(e)
+            self.alphabetCardinalityScaledWeight = "error"
+
+        # testing scaled ratio of repeated characters
+        try:
+            self.ratio_repeated_character_scaled_calculation()
+        except Exception as e:
+            logger.critical(e)
+            self.ratioRepeatedCharacterScaledWeight = "error"
+
+        # testing scaled ratio of consecutive consonants
+        try:
+            self.ratio_consecutive_consonant_scaled_calculation()
+        except Exception as e:
+            logger.critical(e)
+            self.ratioConsecutiveConsonantScaledWeight = "error"
+
+        # testing scaled ratio of consecutive digits
+        try:
+            self.ratio_consecutive_digit_scaled_calculation()
+        except Exception as e:
+            logger.critical(e)
+            self.ratioConsecutiveDigitScaledWeight = "error"
 
         self.soup = None
 
