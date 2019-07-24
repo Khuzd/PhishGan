@@ -9,16 +9,14 @@ Author : Pierrick ROBIC--BUTEZ
 
 import logging
 import pickle
-
-from pathos.pools import ThreadPool
+from functools import partial
 from multiprocessing import Pool
+
 from sqlalchemy import Binary
 from sqlalchemy import Column, Integer, String
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, scoped_session
-
-from functools import partial
+from sqlalchemy.orm import sessionmaker
 
 import UrlToDatabase
 

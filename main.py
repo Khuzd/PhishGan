@@ -37,7 +37,8 @@ tf.compat.v1.set_random_seed(seed_value)
 # 5. Configure a new global `tensorflow` session
 from keras import backend as K
 
-session_conf = tf.compat.v1.ConfigProto(intra_op_parallelism_threads=1, inter_op_parallelism_threads=1, device_count={"CPU": 1})
+session_conf = tf.compat.v1.ConfigProto(intra_op_parallelism_threads=1, inter_op_parallelism_threads=1,
+                                        device_count={"CPU": 1})
 sess = tf.compat.v1.Session(graph=tf.compat.v1.get_default_graph(), config=session_conf)
 K.set_session(sess)
 
@@ -85,6 +86,7 @@ class MyParser(argparse.ArgumentParser):
     """
     Parser for main function
     """
+
     def print_help(self, file=None):
         """
         Redefine print help function to print the help of all subparsers when main -h
@@ -340,18 +342,18 @@ def history_train(args):
         for i in range(args.division):
             lenght = len(X)
             GanGraphGeneration.graph_creation(X[i * (lenght // args.division):(i + 1) * (lenght // args.division)],
-                                             Dloss[i * (lenght // args.division):(i + 1) * (lenght // args.division)],
-                                             vDloss[i * (lenght // args.division):(i + 1) * (lenght // args.division)],
+                                              Dloss[i * (lenght // args.division):(i + 1) * (lenght // args.division)],
+                                              vDloss[i * (lenght // args.division):(i + 1) * (lenght // args.division)],
                                               gan.lr, gan.sampleSize, "loss",
                                               bestEpoch, bestReport["accuracy"],
-                                             Gloss[i * (lenght // args.division):(i + 1) * (lenght // args.division)],
-                                             vGloss[i * (lenght // args.division):(i + 1) * (lenght // args.division)],
+                                              Gloss[i * (lenght // args.division):(i + 1) * (lenght // args.division)],
+                                              vGloss[i * (lenght // args.division):(i + 1) * (lenght // args.division)],
                                               path=args.output,
                                               suffix="part" + str(i))
             GanGraphGeneration.graph_creation(X[i * (lenght // args.division):(i + 1) * (lenght // args.division)],
-                                             accuracy[
-                                             i * (lenght // args.division):(i + 1) * (lenght // args.division)],
-                                             vacc[i * (lenght // args.division):(i + 1) * (lenght // args.division)],
+                                              accuracy[
+                                              i * (lenght // args.division):(i + 1) * (lenght // args.division)],
+                                              vacc[i * (lenght // args.division):(i + 1) * (lenght // args.division)],
                                               gan.lr, gan.sampleSize, "accuracy",
                                               bestEpoch, bestReport["accuracy"],
                                               path=args.output, suffix="part" + str(i))
