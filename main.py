@@ -311,7 +311,7 @@ def history_train(args):
     gan.load(args.name[0], args.location[0])
 
     # Load database and extract features
-    Base = ORMmanage.MyBase("DB/database.db")
+    Base = ORMmanage.WebsiteBase("DB/database.db")
     features = []
     for website in Base.session.query(Base.History).all():
         url = pickle.loads(website.content)
@@ -373,7 +373,7 @@ def orm_extract(args):
         """
 
     # Load database
-    Base = ORMmanage.MyBase(args.database[0])
+    Base = ORMmanage.WebsiteBase(args.database[0])
     Base.create_tables()
 
     if type(args.thread) is list:
