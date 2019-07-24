@@ -11,6 +11,7 @@ import logging
 import pickle
 
 from pathos.pools import ThreadPool
+from multiprocessing import Pool
 from sqlalchemy import Binary
 from sqlalchemy import Column, Integer, String
 from sqlalchemy import create_engine
@@ -112,6 +113,7 @@ class WebsiteBase:
         :return:
         """
         for table in self.Base.metadata.tables.keys():
+            print("update table {}".format(str(table)))
             if table.lower() != "normalization":
                 query = self.session.query(self.__getattribute__(table.capitalize())).all()
 
@@ -253,15 +255,21 @@ class WebsiteBase:
                     contents.append(pickle.loads(result.content))
                 logger.info("Data from table {} loaded".format(str(table)))
                 dBase = NormalizationBase("DB/norm.db")
-                fct = partial(UrlToDatabase.URL.re_extract_non_request_features, normDBsession=dBase.session)
-                ThreadPool().map(fct, contents)
+                normDict = {}
+                for norm in dBase.session.query(dBase.Normalization).all():
+                    normDict[norm.feature] = {"data": norm.data, "normalizer": norm.normalizer, "scaler": norm.scaler}
+                dBase.session.close()
+                fct = partial(UrlToDatabase.URL.re_extract_non_request_features, normDict=normDict)
+                Pool().map(fct, contents)
                 logger.info("Data loaded from table {} transformed".format(str(table)))
+                del fct, normDict
                 for i in range(len(query)):
                     query[i].content = pickle.dumps(contents[i])
+                del contents
                 self.session.commit()
                 logger.info("Data loaded from table {} commited".format(str(table)))
 
-                # del query, contents
+                del query
 
 
 class NormalizationBase:
@@ -277,7 +285,7 @@ class NormalizationBase:
         self.path = path
         self.engine = create_engine('sqlite:///' + self.path)
         self.Session = sessionmaker(bind=self.engine)
-        self.session = scoped_session(self.Session)
+        self.session = self.Session()
 
     class Normalization(Base):
         """
