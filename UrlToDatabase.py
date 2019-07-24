@@ -26,7 +26,6 @@ from func_timeout import func_timeout, FunctionTimedOut
 from myawis import CallAwis
 from publicsuffixlist import PublicSuffixList
 
-import ORMmanage
 import googleApi
 from libs.whois import whois
 from libs.whois.parser import PywhoisError
@@ -1319,17 +1318,14 @@ class URL:
         """
         self.ipScaledWeight = (float(self.ipWeight) * 0.5) + 0.5
 
-    def length_scaled_calculation(self, session):
+    def length_scaled_calculation(self, normDict):
         """
         Get the length of hostname, normalize and scale it between 0 and 1
         :return: float between 0 and 1
         """
 
-        norm = pickle.loads((session.query(ORMmanage.NormalizationBase.Normalization).filter(
-            ORMmanage.NormalizationBase.Normalization.feature == "url_length").first()).normalizer)
-        scaler = pickle.loads(
-            (session.query(ORMmanage.NormalizationBase.Normalization).filter(
-                ORMmanage.NormalizationBase.Normalization.feature == "url_length").first()).scaler)
+        norm = pickle.loads(normDict["url_length"]["normalizer"])
+        scaler = pickle.loads(normDict["url_length"]["scaler"])
 
         result = norm.transform([[len(self.hostname)]])
         self.lengthScaledWeight = scaler.transform(result.reshape(-1, 1))[0][0]
@@ -1355,30 +1351,24 @@ class URL:
         """
         self.doubleSlashScaledWeight = (float(self.doubleSlashWeight) * 0.5) + 0.5
 
-    def dash_scaled_calculation(self, session):
+    def dash_scaled_calculation(self, normDict):
         """
         Count how many there are dash symbol in url, normalize and scale it between 0 and 1
         :return: float between 0 and 1
         """
-        norm = pickle.loads((session.query(ORMmanage.NormalizationBase.Normalization).filter(
-            ORMmanage.NormalizationBase.Normalization.feature == "dash").first()).normalizer)
-        scaler = pickle.loads(
-            (session.query(ORMmanage.NormalizationBase.Normalization).filter(
-                ORMmanage.NormalizationBase.Normalization.feature == "dash").first()).scaler)
+        norm = pickle.loads(normDict["dash"]["normalizer"])
+        scaler = pickle.loads(normDict["dash"]["scaler"])
 
         result = norm.transform([[self.url.count("-")]])
         self.dashScaledWeight = scaler.transform(result.reshape(-1, 1))[0][0]
 
-    def sub_domain_scaled_calculation(self, session):
+    def sub_domain_scaled_calculation(self, normDict):
         """
         Count the subdomains, normalize and scale it between 0 and 1
         :return: float between 0 and 1
         """
-        norm = pickle.loads((session.query(ORMmanage.NormalizationBase.Normalization).filter(
-            ORMmanage.NormalizationBase.Normalization.feature == "sub_domain").first()).normalizer)
-        scaler = pickle.loads(
-            (session.query(ORMmanage.NormalizationBase.Normalization).filter(
-                ORMmanage.NormalizationBase.Normalization.feature == "sub_domain").first()).scaler)
+        norm = pickle.loads(normDict["sub_domain"]["normalizer"])
+        scaler = pickle.loads(normDict["sub_domain"]["scaler"])
 
         psl = PublicSuffixList()
         psl.accept_unknown = False
@@ -1395,16 +1385,13 @@ class URL:
         result = norm.transform([[domain.count(".")]])
         self.subDomainScaledWeight = scaler.transform(result.reshape(-1, 1))[0][0]
 
-    def age_certificate_scaled_calculation(self, session):
+    def age_certificate_scaled_calculation(self, normDict):
         """
         Get the duration of the ssl certificate, test if delivered by a trusted issuer, normalize and scale it between 0 and 1
         :return: float between 0 and 1
         """
-        norm = pickle.loads((session.query(ORMmanage.NormalizationBase.Normalization).filter(
-            ORMmanage.NormalizationBase.Normalization.feature == "age_certificate").first()).normalizer)
-        scaler = pickle.loads(
-            (session.query(ORMmanage.NormalizationBase.Normalization).filter(
-                ORMmanage.NormalizationBase.Normalization.feature == "age_certificate").first()).scaler)
+        norm = pickle.loads(normDict["age_certificate"]["normalizer"])
+        scaler = pickle.loads(normDict["age_certificate"]["scaler"])
 
         issuer = dict(x[0] for x in self.certificate['issuer'])["organizationName"].lower()
         beginDate = datetime.datetime.strptime(self.certificate["notBefore"].split(' GMT')[0], '%b  %d %H:%M:%S %Y')
@@ -1425,16 +1412,13 @@ class URL:
         result = norm.transform([[lentgh]])
         self.certificateAgeScaledWeight = scaler.transform(result.reshape(-1, 1))[0][0]
 
-    def expiration_domain_scaled_calculation(self, session):
+    def expiration_domain_scaled_calculation(self, normDict):
         """
         Get the duration to expiration of the domain name, normalize and scale it between 0 and 1
         :return: float between 0 and 1
         """
-        norm = pickle.loads((session.query(ORMmanage.NormalizationBase.Normalization).filter(
-            ORMmanage.NormalizationBase.Normalization.feature == "expiration_domain").first()).normalizer)
-        scaler = pickle.loads(
-            (session.query(ORMmanage.NormalizationBase.Normalization).filter(
-                ORMmanage.NormalizationBase.Normalization.feature == "expiration_domain").first()).scaler)
+        norm = pickle.loads(normDict["expiration_domain"]["normalizer"])
+        scaler = pickle.loads(normDict["expiration_domain"]["scaler"])
 
         if self.whoisDomain is not None:
             now = datetime.datetime.now()
@@ -1474,16 +1458,13 @@ class URL:
         """
         self.httpScaledWeight = (float(self.httpWeight) * 0.5) + 0.5
 
-    def requested_url_scaled_calculation(self, session):
+    def requested_url_scaled_calculation(self, normDict):
         """
         Get the proportion of external url requested, normalize and scale it between 0 and 1
         :return: float between 0 and 1
         """
-        norm = pickle.loads((session.query(ORMmanage.NormalizationBase.Normalization).filter(
-            ORMmanage.NormalizationBase.Normalization.feature == "requested_url").first()).normalizer)
-        scaler = pickle.loads(
-            (session.query(ORMmanage.NormalizationBase.Normalization).filter(
-                ORMmanage.NormalizationBase.Normalization.feature == "requested_url").first()).scaler)
+        norm = pickle.loads(normDict["requested_url"]["normalizer"])
+        scaler = pickle.loads(normDict["requested_url"]["scaler"])
 
         totalLinks = 0
         externalLinks = 0
@@ -1517,16 +1498,13 @@ class URL:
         else:
             self.requestedScaledWeight = 0
 
-    def anchors_scaled_calculation(self, session):
+    def anchors_scaled_calculation(self, normDict):
         """
         Get the proportion of external url in anchors, normalize and scale it between 0 and 1
         :return: float between 0 and 1
         """
-        norm = pickle.loads((session.query(ORMmanage.NormalizationBase.Normalization).filter(
-            ORMmanage.NormalizationBase.Normalization.feature == "anchor").first()).normalizer)
-        scaler = pickle.loads(
-            (session.query(ORMmanage.NormalizationBase.Normalization).filter(
-                ORMmanage.NormalizationBase.Normalization.feature == "anchor").first()).scaler)
+        norm = pickle.loads(normDict["anchor"]["normalizer"])
+        scaler = pickle.loads(normDict["anchor"]["scaler"])
 
         tags = self.soup.findAll("a", href=True)
         anchors = []
@@ -1549,16 +1527,14 @@ class URL:
         else:
             self.anchorsScaledWeight = 0
 
-    def tags_links_scaled_calculation(self, session):
+    def tags_links_scaled_calculation(self, normDict):
         """
         Get the proportion of external url in tags, normalize and scale it between 0 and 1
         :return: float between 0 and 1
         """
 
-        norm = pickle.loads((session.query(ORMmanage.NormalizationBase.Normalization).filter(
-            ORMmanage.NormalizationBase.Normalization.feature == "tags").first()).normalizer)
-        scaler = pickle.loads((session.query(ORMmanage.NormalizationBase.Normalization).filter(
-            ORMmanage.NormalizationBase.Normalization.feature == "tags").first()).scaler)
+        norm = pickle.loads(normDict["tags"]["normalizer"])
+        scaler = pickle.loads(normDict["tags"]["scaler"])
 
         totalLinks = 0
         externalLinks = 0
@@ -1594,15 +1570,13 @@ class URL:
         else:
             self.tagScaledWeight = 0
 
-    def sfh_scaled_calculation(self, session):
+    def sfh_scaled_calculation(self, normDict):
         """
         Get the proportion of external url in forms, test blank forms, normalize and scale it between 0 and 1
         :return: float between 0 and 1
         """
-        norm = pickle.loads((session.query(ORMmanage.NormalizationBase.Normalization).filter(
-            ORMmanage.NormalizationBase.Normalization.feature == "sfh").first()).normalizer)
-        scaler = pickle.loads((session.query(ORMmanage.NormalizationBase.Normalization).filter(
-            ORMmanage.NormalizationBase.Normalization.feature == "sfh").first()).scaler)
+        norm = pickle.loads(normDict["sfh"]["normalizer"])
+        scaler = pickle.loads(normDict["sfh"]["scaler"])
 
         boolean = False
         count = 0
@@ -1660,16 +1634,13 @@ class URL:
         """
         self.rightClickScaledWeight = (float(self.rightClickWeight) * 0.5) + 0.5
 
-    def popup_scaled_calculation(self, session):
+    def popup_scaled_calculation(self, normDict):
         """
         Count the popup, normalize and scale it between 0 and 1
         :return: float between 0 and 1
         """
-        norm = pickle.loads((session.query(ORMmanage.NormalizationBase.Normalization).filter(
-            ORMmanage.NormalizationBase.Normalization.feature == "popup").first()).normalizer)
-        scaler = pickle.loads(
-            (session.query(ORMmanage.NormalizationBase.Normalization).filter(
-                ORMmanage.NormalizationBase.Normalization.feature == "popup").first()).scaler)
+        norm = pickle.loads(normDict["popup"]["normalizer"])
+        scaler = pickle.loads(normDict["popup"]["scaler"])
 
         prompt = re.findall(r"prompt\(", str(self.html)) + re.findall(r"confirm\(", str(self.html)) + re.findall(
             r"alert\(", str(self.html))
@@ -1684,16 +1655,13 @@ class URL:
         """
         self.iFrameScaledWeight = (float(self.iFrameWeight) * 0.5) + 0.5
 
-    def domain_age_scaled_calculation(self, session):
+    def domain_age_scaled_calculation(self, normDict):
         """
         Get the time to the first registration of the domain name, normalize and scale it between 0 and 1
         :return: float between 0 and 1
         """
-        norm = pickle.loads((session.query(ORMmanage.NormalizationBase.Normalization).filter(
-            ORMmanage.NormalizationBase.Normalization.feature == "domain_age").first()).normalizer)
-        scaler = pickle.loads(
-            (session.query(ORMmanage.NormalizationBase.Normalization).filter(
-                ORMmanage.NormalizationBase.Normalization.feature == "domain_age").first()).scaler)
+        norm = pickle.loads(normDict["domain_age"]["normalizer"])
+        scaler = pickle.loads(normDict["domain_age"]["scaler"])
 
         if self.whoisDomain is not None:
             now = datetime.datetime.now()
@@ -1718,16 +1686,13 @@ class URL:
         """
         self.dnsScaledWeight = (float(self.dnsWeight) * 0.5) + 0.5
 
-    def traffic_scaled_calculation(self, session):
+    def traffic_scaled_calculation(self, normDict):
         """
         Get the rank from alexa database, normalize and scale it between 0 and 1
         :return: float between 0 and 1
         """
-        norm = pickle.loads((session.query(ORMmanage.NormalizationBase.Normalization).filter(
-            ORMmanage.NormalizationBase.Normalization.feature == "traffic").first()).normalizer)
-        scaler = pickle.loads(
-            (session.query(ORMmanage.NormalizationBase.Normalization).filter(
-                ORMmanage.NormalizationBase.Normalization.feature == "traffic").first()).scaler)
+        norm = pickle.loads(normDict["traffic"]["normalizer"])
+        scaler = pickle.loads(normDict["traffic"]["scaler"])
 
         try:
             soup = BeautifulSoup(self.amazonAlexa, features="lxml")
@@ -1745,16 +1710,13 @@ class URL:
         result = norm.transform([[rank]])
         self.trafficScaledWeight = scaler.transform(result.reshape(-1, 1))[0][0]
 
-    def page_rank_scaled_calculation(self, session):
+    def page_rank_scaled_calculation(self, normDict):
         """
         Get the pageRank, normalize and scale it between 0 and 1
         :return: float between 0 and 1
         """
-        norm = pickle.loads((session.query(ORMmanage.NormalizationBase.Normalization).filter(
-            ORMmanage.NormalizationBase.Normalization.feature == "pageRank").first()).normalizer)
-        scaler = pickle.loads(
-            (session.query(ORMmanage.NormalizationBase.Normalization).filter(
-                ORMmanage.NormalizationBase.Normalization.feature == "pageRank").first()).scaler)
+        norm = pickle.loads(normDict["pageRank"]["normalizer"])
+        scaler = pickle.loads(normDict["pageRanl"]["scaler"])
 
         result = norm.transform([[self.pageRank]])
         self.pageRankScaledWeight = scaler.transform(result.reshape(-1, 1))[0][0]
@@ -1766,16 +1728,13 @@ class URL:
         """
         self.indexingScaledWeight = (float(self.indexingWeight) * 0.5) + 0.5
 
-    def links_pointing_to_scaled_calculation(self, session):
+    def links_pointing_to_scaled_calculation(self, normDict):
         """
         Count the links pointing to the domain, normalize and scale it between 0 and 1
         :return: float between 0 and 1
         """
-        norm = pickle.loads((session.query(ORMmanage.NormalizationBase.Normalization).filter(
-            ORMmanage.NormalizationBase.Normalization.feature == "links_pointing").first()).normalizer)
-        scaler = pickle.loads(
-            (session.query(ORMmanage.NormalizationBase.Normalization).filter(
-                ORMmanage.NormalizationBase.Normalization.feature == "links_pointing").first()).scaler)
+        norm = pickle.loads(normDict["links_pointing"]["normalizer"])
+        scaler = pickle.loads(normDict["links_pointing"]["scaler"])
 
         soup = BeautifulSoup(self.amazonAlexa, features="lxml")
         try:
@@ -2441,7 +2400,7 @@ class URL:
 
         return self.get_features()
 
-    def features_scaled_calculation(self, normDBsession):
+    def features_scaled_calculation(self, normDict):
         """
         Extract all features and set the values into the attribute weights
         :return: -1,-1, None or results into queue
@@ -2460,7 +2419,7 @@ class URL:
 
         # calculation of length of the url
         try:
-            self.length_scaled_calculation(normDBsession)
+            self.length_scaled_calculation(normDict)
         except Exception as e:
             logger.critical(e)
             self.lengthScaledWeight = "error"
@@ -2488,14 +2447,14 @@ class URL:
 
         # calculation of dash
         try:
-            self.dash_scaled_calculation(normDBsession)
+            self.dash_scaled_calculation(normDict)
         except Exception as e:
             logger.critical(e)
             self.dashScaledWeight = "error"
 
         # calculation of subdomain count
         try:
-            self.sub_domain_scaled_calculation(normDBsession)
+            self.sub_domain_scaled_calculation(normDict)
         except Exception as e:
             logger.critical(e)
             self.subDomainScaledWeight = "error"
@@ -2503,7 +2462,7 @@ class URL:
         # calculation of age of the domain certificate
         try:
             if self.http == "https" and self.certificate is not None:
-                self.age_certificate_scaled_calculation(normDBsession)
+                self.age_certificate_scaled_calculation(normDict)
             else:
                 self.certificateAgeScaledWeight = 1
         except Exception as e:
@@ -2512,7 +2471,7 @@ class URL:
 
         # calculation of expiration date of domain
         try:
-            self.expiration_domain_scaled_calculation(normDBsession)
+            self.expiration_domain_scaled_calculation(normDict)
             if self.expirationScaledWeight == -2:
                 return -1
         except Exception as e:
@@ -2545,28 +2504,28 @@ class URL:
 
         # calculation of request URL
         try:
-            self.requested_url_scaled_calculation(normDBsession)
+            self.requested_url_scaled_calculation(normDict)
         except Exception as e:
             logger.critical(e)
             self.requestedScaledWeight = "error"
 
         # calculation of anchors
         try:
-            self.anchors_scaled_calculation(normDBsession)
+            self.anchors_scaled_calculation(normDict)
         except Exception as e:
             logger.critical(e)
             self.anchorsScaledWeight = "error"
 
         # calculation of tags links
         try:
-            self.tags_links_scaled_calculation(normDBsession)
+            self.tags_links_scaled_calculation(normDict)
         except Exception as e:
             logger.critical(e)
             self.tagScaledWeight = "error"
 
         # calculation of SFH
         try:
-            self.sfh_scaled_calculation(normDBsession)
+            self.sfh_scaled_calculation(normDict)
         except Exception as e:
             logger.critical(e)
             self.SFHScaledWeight = "error"
@@ -2608,7 +2567,7 @@ class URL:
 
         # calculation of popup
         try:
-            self.popup_scaled_calculation(normDBsession)
+            self.popup_scaled_calculation(normDict)
         except Exception as e:
             logger.critical(e)
             self.popupScaledWeight = "error"
@@ -2622,7 +2581,7 @@ class URL:
 
         # calculation of domain age
         try:
-            self.domain_age_scaled_calculation(normDBsession)
+            self.domain_age_scaled_calculation(normDict)
             if self.domainAgeScaledWeight == -2:
                 return -1
         except Exception as e:
@@ -2638,14 +2597,14 @@ class URL:
 
         # calculation of traffic
         try:
-            self.traffic_scaled_calculation(normDBsession)
+            self.traffic_scaled_calculation(normDict)
         except Exception as e:
             logger.critical(e)
             self.trafficScaledWeight = "error"
 
         # calculation of page rank
         try:
-            self.page_rank_scaled_calculation(normDBsession)
+            self.page_rank_scaled_calculation(normDict)
         except Exception as e:
             logger.critical(e)
             self.pageRankScaledWeight = "error"
@@ -2662,7 +2621,7 @@ class URL:
 
         # calculation of links pointing to the webpage
         try:
-            self.links_pointing_to_scaled_calculation(normDBsession)
+            self.links_pointing_to_scaled_calculation(normDict)
         except Exception as e:
             logger.critical(e)
             self.linksScaledWeight = "error"
@@ -2904,7 +2863,9 @@ class URL:
         self.statisticScaledWeight = features[29]
         return
 
-    def re_extract_non_request_features(self, normDBsession):
+    def re_extract_non_request_features(self, normDict):
+        logger.debug("Extraction of {}".format(self.url))
+
         self.soup = BeautifulSoup(self.html.decode('utf-8', 'ignore'), features="lxml")
 
         # ---------------------
@@ -2912,164 +2873,164 @@ class URL:
         # ---------------------
 
         # testing ip in url
-        try:
-            self.ip_testing()
-        except Exception as e:
-            logger.critical(e)
-            self.ipWeight = "error"
-
-        # testing length of the url
-        try:
-            self.length_testing()
-        except Exception as e:
-            logger.critical(e)
-            self.lengthWeight = "error"
-
-        # testing shortener url
-        try:
-            self.shortener_testing()
-        except Exception as e:
-            logger.critical(e)
-            self.shorteningWeight = "error"
-
-        # testing at symbol
-        try:
-            self.at_symbol_testing()
-        except Exception as e:
-            logger.critical(e)
-            self.atWeight = "error"
-
-        # testing double slash
-        try:
-            self.double_slash_testing()
-        except Exception as e:
-            logger.critical(e)
-            self.doubleSlashWeight = "error"
-
-        # testing dash
-        try:
-            self.dash_testing()
-        except Exception as e:
-            logger.critical(e)
-            self.dashWeight = "error"
-
-        # testing subdomain count
-        try:
-            self.sub_domain_testing()
-        except Exception as e:
-            logger.critical(e)
-            self.subDomainWeight = "error"
-
-        # testing age of the domain certificate
-        try:
-            if self.http == "https" and self.certificate is not None:
-                self.age_certificate_testing()
-            else:
-                self.certificateAgeWeight = 1
-        except Exception as e:
-            logger.critical(e)
-            self.certificateAgeWeight = "error"
-
-        # testing expiration date of domain
-        try:
-            self.expiration_domain_testing()
-            if self.expirationWeight == -2:
-                return -1
-        except Exception as e:
-            logger.critical(e)
-            self.expirationWeight = "error"
-        # testing favicon href
-        try:
-            self.favicon_testing()
-        except Exception as e:
-            logger.critical(e)
-            self.faviconWeight = "error"
-
-        # testing http token
-        try:
-            self.http_testing()
-        except Exception as e:
-            logger.critical(e)
-            self.httpWeight = "error"
-
-        # testing request URL
-        try:
-            self.requested_url_testing()
-        except Exception as e:
-            logger.critical(e)
-            self.requestedWeight = "error"
-
-        # testing anchors
-        try:
-            self.anchors_testing()
-        except Exception as e:
-            logger.critical(e)
-            self.anchorsWeight = "error"
-
-        # testing tags links
-        try:
-            self.tags_links_testing()
-        except Exception as e:
-            logger.critical(e)
-            self.tagWeight = "error"
-
-        # testing SFH
-        try:
-            self.sfh_testing()
-        except Exception as e:
-            logger.critical(e)
-            self.SFHWeight = "error"
-
-        # testing email
-        try:
-            self.email_testing()
-        except Exception as e:
-            logger.critical(e)
-            self.emailWeight = "error"
-
-        # testing abnormal url
-        try:
-            self.abnormal_url_testing()
-        except Exception as e:
-            logger.critical(e)
-            self.abnormalWeight = "error"
-
-        # testing abnormal status bar
-        try:
-            self.bar_custom_testing()
-        except Exception as e:
-            logger.critical(e)
-            self.barCustomWeight = "error"
-
-        # testing right click disabling
-        try:
-            self.right_click_testing()
-        except Exception as e:
-            logger.critical(e)
-            self.rightClickWeight = "error"
-
-        # testing popup
-        try:
-            self.popup_testing()
-        except Exception as e:
-            logger.critical(e)
-            self.popupWeight = "error"
-
-        # testing IFrame
-        try:
-            self.iframe_testing()
-        except Exception as e:
-            logger.critical(e)
-            self.iFrameWeight = "error"
-
-        # testing domain age
-        try:
-            self.domain_age_testing()
-            if self.domainAgeWeight == -2:
-                return -1
-        except Exception as e:
-            logger.critical(e)
-            self.domainAgeWeight = "error"
+        # try:
+        #     self.ip_testing()
+        # except Exception as e:
+        #     logger.critical(e)
+        #     self.ipWeight = "error"
+        #
+        # # testing length of the url
+        # try:
+        #     self.length_testing()
+        # except Exception as e:
+        #     logger.critical(e)
+        #     self.lengthWeight = "error"
+        #
+        # # testing shortener url
+        # try:
+        #     self.shortener_testing()
+        # except Exception as e:
+        #     logger.critical(e)
+        #     self.shorteningWeight = "error"
+        #
+        # # testing at symbol
+        # try:
+        #     self.at_symbol_testing()
+        # except Exception as e:
+        #     logger.critical(e)
+        #     self.atWeight = "error"
+        #
+        # # testing double slash
+        # try:
+        #     self.double_slash_testing()
+        # except Exception as e:
+        #     logger.critical(e)
+        #     self.doubleSlashWeight = "error"
+        #
+        # # testing dash
+        # try:
+        #     self.dash_testing()
+        # except Exception as e:
+        #     logger.critical(e)
+        #     self.dashWeight = "error"
+        #
+        # # testing subdomain count
+        # try:
+        #     self.sub_domain_testing()
+        # except Exception as e:
+        #     logger.critical(e)
+        #     self.subDomainWeight = "error"
+        #
+        # # testing age of the domain certificate
+        # try:
+        #     if self.http == "https" and self.certificate is not None:
+        #         self.age_certificate_testing()
+        #     else:
+        #         self.certificateAgeWeight = 1
+        # except Exception as e:
+        #     logger.critical(e)
+        #     self.certificateAgeWeight = "error"
+        #
+        # # testing expiration date of domain
+        # try:
+        #     self.expiration_domain_testing()
+        #     if self.expirationWeight == -2:
+        #         return -1
+        # except Exception as e:
+        #     logger.critical(e)
+        #     self.expirationWeight = "error"
+        # # testing favicon href
+        # try:
+        #     self.favicon_testing()
+        # except Exception as e:
+        #     logger.critical(e)
+        #     self.faviconWeight = "error"
+        #
+        # # testing http token
+        # try:
+        #     self.http_testing()
+        # except Exception as e:
+        #     logger.critical(e)
+        #     self.httpWeight = "error"
+        #
+        # # testing request URL
+        # try:
+        #     self.requested_url_testing()
+        # except Exception as e:
+        #     logger.critical(e)
+        #     self.requestedWeight = "error"
+        #
+        # # testing anchors
+        # try:
+        #     self.anchors_testing()
+        # except Exception as e:
+        #     logger.critical(e)
+        #     self.anchorsWeight = "error"
+        #
+        # # testing tags links
+        # try:
+        #     self.tags_links_testing()
+        # except Exception as e:
+        #     logger.critical(e)
+        #     self.tagWeight = "error"
+        #
+        # # testing SFH
+        # try:
+        #     self.sfh_testing()
+        # except Exception as e:
+        #     logger.critical(e)
+        #     self.SFHWeight = "error"
+        #
+        # # testing email
+        # try:
+        #     self.email_testing()
+        # except Exception as e:
+        #     logger.critical(e)
+        #     self.emailWeight = "error"
+        #
+        # # testing abnormal url
+        # try:
+        #     self.abnormal_url_testing()
+        # except Exception as e:
+        #     logger.critical(e)
+        #     self.abnormalWeight = "error"
+        #
+        # # testing abnormal status bar
+        # try:
+        #     self.bar_custom_testing()
+        # except Exception as e:
+        #     logger.critical(e)
+        #     self.barCustomWeight = "error"
+        #
+        # # testing right click disabling
+        # try:
+        #     self.right_click_testing()
+        # except Exception as e:
+        #     logger.critical(e)
+        #     self.rightClickWeight = "error"
+        #
+        # # testing popup
+        # try:
+        #     self.popup_testing()
+        # except Exception as e:
+        #     logger.critical(e)
+        #     self.popupWeight = "error"
+        #
+        # # testing IFrame
+        # try:
+        #     self.iframe_testing()
+        # except Exception as e:
+        #     logger.critical(e)
+        #     self.iFrameWeight = "error"
+        #
+        # # testing domain age
+        # try:
+        #     self.domain_age_testing()
+        #     if self.domainAgeWeight == -2:
+        #         return -1
+        # except Exception as e:
+        #     logger.critical(e)
+        #     self.domainAgeWeight = "error"
 
         # testing subdomain lentgh mean
         try:
@@ -3188,164 +3149,164 @@ class URL:
         # ---------------------
 
         # testing scaled ip in url
-        try:
-            self.ip_scaled_calculation()
-        except Exception as e:
-            logger.critical(e)
-            self.ipScaledWeight = "error"
-
-        # testing scaled length of the url
-        try:
-            self.length_scaled_calculation(normDBsession)
-        except Exception as e:
-            logger.critical(e)
-            self.lengthScaledWeight = "error"
-
-        # testing scaled shortener url
-        try:
-            self.shortener_scaled_calculation()
-        except Exception as e:
-            logger.critical(e)
-            self.shorteningScaledWeight = "error"
-
-        # testing scaled at symbol
-        try:
-            self.at_symbol_scaled_calculation()
-        except Exception as e:
-            logger.critical(e)
-            self.atScaledWeight = "error"
-
-        # testing scaled double slash
-        try:
-            self.double_slash_scaled_calculation()
-        except Exception as e:
-            logger.critical(e)
-            self.doubleSlashScaledWeight = "error"
-
-        # testing scaled dash
-        try:
-            self.dash_scaled_calculation(normDBsession)
-        except Exception as e:
-            logger.critical(e)
-            self.dashScaledWeight = "error"
-
-        # testing scaled subdomain count
-        try:
-            self.sub_domain_scaled_calculation(normDBsession)
-        except Exception as e:
-            logger.critical(e)
-            self.subDomainScaledWeight = "error"
-
-        # testing scaled age of the domain certificate
-        try:
-            if self.http == "https" and self.certificate is not None:
-                self.age_certificate_scaled_calculation(normDBsession)
-            else:
-                self.certificateAgeScaledWeight = 1
-        except Exception as e:
-            logger.critical(e)
-            self.certificateAgeScaledWeight = "error"
-
-        # testing scaled expiration date of domain
-        try:
-            self.expiration_domain_scaled_calculation(normDBsession)
-            if self.expirationScaledWeight == -2:
-                return -1
-        except Exception as e:
-            logger.critical(e)
-            self.expirationScaledWeight = "error"
-        # testing scaled favicon href
-        try:
-            self.favicon_scaled_calculation()
-        except Exception as e:
-            logger.critical(e)
-            self.faviconScaledWeight = "error"
-
-        # testing scaled http token
-        try:
-            self.http_scaled_calculation()
-        except Exception as e:
-            logger.critical(e)
-            self.httpScaledWeight = "error"
-
-        # testing scaled request URL
-        try:
-            self.requested_url_scaled_calculation(normDBsession)
-        except Exception as e:
-            logger.critical(e)
-            self.requestedScaledWeight = "error"
-
-        # testing scaled anchors
-        try:
-            self.anchors_scaled_calculation(normDBsession)
-        except Exception as e:
-            logger.critical(e)
-            self.anchorsScaledWeight = "error"
-
-        # testing scaled tags links
-        try:
-            self.tags_links_scaled_calculation(normDBsession)
-        except Exception as e:
-            logger.critical(e)
-            self.tagScaledWeight = "error"
-
-        # testing scaled SFH
-        try:
-            self.sfh_scaled_calculation(normDBsession)
-        except Exception as e:
-            logger.critical(e)
-            self.SFHScaledWeight = "error"
-
-        # testing scaled email
-        try:
-            self.email_scaled_calculation()
-        except Exception as e:
-            logger.critical(e)
-            self.emailScaledWeight = "error"
-
-        # testing scaled abnormal url
-        try:
-            self.abnormal_url_scaled_calculation()
-        except Exception as e:
-            logger.critical(e)
-            self.abnormalScaledWeight = "error"
-
-        # testing scaled abnormal status bar
-        try:
-            self.bar_custom_scaled_calculation()
-        except Exception as e:
-            logger.critical(e)
-            self.barCustomScaledWeight = "error"
-
-        # testing scaled right click disabling
-        try:
-            self.right_click_scaled_calculation()
-        except Exception as e:
-            logger.critical(e)
-            self.rightClickScaledWeight = "error"
-
-        # testing scaled popup
-        try:
-            self.popup_scaled_calculation(normDBsession)
-        except Exception as e:
-            logger.critical(e)
-            self.popupScaledWeight = "error"
-
-        # testing scaled IFrame
-        try:
-            self.iframe_scaled_calculation()
-        except Exception as e:
-            logger.critical(e)
-            self.iFrameScaledWeight = "error"
-
-        # testing scaled domain age
-        try:
-            self.domain_age_scaled_calculation(normDBsession)
-            if self.domainAgeScaledWeight == -2:
-                return -1
-        except Exception as e:
-            logger.critical(e)
-            self.domainAgeScaledWeight = "error"
+        # try:
+        #     self.ip_scaled_calculation()
+        # except Exception as e:
+        #     logger.critical(e)
+        #     self.ipScaledWeight = "error"
+        #
+        # # testing scaled length of the url
+        # try:
+        #     self.length_scaled_calculation(normDict)
+        # except Exception as e:
+        #     logger.critical(e)
+        #     self.lengthScaledWeight = "error"
+        #
+        # # testing scaled shortener url
+        # try:
+        #     self.shortener_scaled_calculation()
+        # except Exception as e:
+        #     logger.critical(e)
+        #     self.shorteningScaledWeight = "error"
+        #
+        # # testing scaled at symbol
+        # try:
+        #     self.at_symbol_scaled_calculation()
+        # except Exception as e:
+        #     logger.critical(e)
+        #     self.atScaledWeight = "error"
+        #
+        # # testing scaled double slash
+        # try:
+        #     self.double_slash_scaled_calculation()
+        # except Exception as e:
+        #     logger.critical(e)
+        #     self.doubleSlashScaledWeight = "error"
+        #
+        # # testing scaled dash
+        # try:
+        #     self.dash_scaled_calculation(normDict)
+        # except Exception as e:
+        #     logger.critical(e)
+        #     self.dashScaledWeight = "error"
+        #
+        # # testing scaled subdomain count
+        # try:
+        #     self.sub_domain_scaled_calculation(normDict)
+        # except Exception as e:
+        #     logger.critical(e)
+        #     self.subDomainScaledWeight = "error"
+        #
+        # # testing scaled age of the domain certificate
+        # try:
+        #     if self.http == "https" and self.certificate is not None:
+        #         self.age_certificate_scaled_calculation(normDict)
+        #     else:
+        #         self.certificateAgeScaledWeight = 1
+        # except Exception as e:
+        #     logger.critical(e)
+        #     self.certificateAgeScaledWeight = "error"
+        #
+        # # testing scaled expiration date of domain
+        # try:
+        #     self.expiration_domain_scaled_calculation(normDict)
+        #     if self.expirationScaledWeight == -2:
+        #         return -1
+        # except Exception as e:
+        #     logger.critical(e)
+        #     self.expirationScaledWeight = "error"
+        # # testing scaled favicon href
+        # try:
+        #     self.favicon_scaled_calculation()
+        # except Exception as e:
+        #     logger.critical(e)
+        #     self.faviconScaledWeight = "error"
+        #
+        # # testing scaled http token
+        # try:
+        #     self.http_scaled_calculation()
+        # except Exception as e:
+        #     logger.critical(e)
+        #     self.httpScaledWeight = "error"
+        #
+        # # testing scaled request URL
+        # try:
+        #     self.requested_url_scaled_calculation(normDict)
+        # except Exception as e:
+        #     logger.critical(e)
+        #     self.requestedScaledWeight = "error"
+        #
+        # # testing scaled anchors
+        # try:
+        #     self.anchors_scaled_calculation(normDict)
+        # except Exception as e:
+        #     logger.critical(e)
+        #     self.anchorsScaledWeight = "error"
+        #
+        # # testing scaled tags links
+        # try:
+        #     self.tags_links_scaled_calculation(normDict)
+        # except Exception as e:
+        #     logger.critical(e)
+        #     self.tagScaledWeight = "error"
+        #
+        # # testing scaled SFH
+        # try:
+        #     self.sfh_scaled_calculation(normDict)
+        # except Exception as e:
+        #     logger.critical(e)
+        #     self.SFHScaledWeight = "error"
+        #
+        # # testing scaled email
+        # try:
+        #     self.email_scaled_calculation()
+        # except Exception as e:
+        #     logger.critical(e)
+        #     self.emailScaledWeight = "error"
+        #
+        # # testing scaled abnormal url
+        # try:
+        #     self.abnormal_url_scaled_calculation()
+        # except Exception as e:
+        #     logger.critical(e)
+        #     self.abnormalScaledWeight = "error"
+        #
+        # # testing scaled abnormal status bar
+        # try:
+        #     self.bar_custom_scaled_calculation()
+        # except Exception as e:
+        #     logger.critical(e)
+        #     self.barCustomScaledWeight = "error"
+        #
+        # # testing scaled right click disabling
+        # try:
+        #     self.right_click_scaled_calculation()
+        # except Exception as e:
+        #     logger.critical(e)
+        #     self.rightClickScaledWeight = "error"
+        #
+        # # testing scaled popup
+        # try:
+        #     self.popup_scaled_calculation(normDict)
+        # except Exception as e:
+        #     logger.critical(e)
+        #     self.popupScaledWeight = "error"
+        #
+        # # testing scaled IFrame
+        # try:
+        #     self.iframe_scaled_calculation()
+        # except Exception as e:
+        #     logger.critical(e)
+        #     self.iFrameScaledWeight = "error"
+        #
+        # # testing scaled domain age
+        # try:
+        #     self.domain_age_scaled_calculation(normDict)
+        #     if self.domainAgeScaledWeight == -2:
+        #         return -1
+        # except Exception as e:
+        #     logger.critical(e)
+        #     self.domainAgeScaledWeight = "error"
 
         # testing scaled subdomain lentgh mean
         try:
