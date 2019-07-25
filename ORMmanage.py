@@ -113,9 +113,8 @@ class WebsiteBase:
         for table in self.Base.metadata.tables.keys():
             print("update table {}".format(str(table)))
             if table.lower() != "normalization":
-                query = self.session.query(self.__getattribute__(table.capitalize())).all()
 
-                for result in query:
+                for result in self.session.query(self.__getattribute__(table.capitalize())).all():
                     # Load old wabsite data
                     oldUrl = pickle.loads(result.content)
 
@@ -235,7 +234,6 @@ class WebsiteBase:
                     result.content = pickle.dumps(tmp)
                 self.session.commit()
 
-                del query
         return
 
     def new_url_analysis(self):
@@ -245,29 +243,31 @@ class WebsiteBase:
         """
         for table in self.Base.metadata.tables.keys():
             if table.lower() != "normalization":
-                query = self.session.query(self.__getattribute__(table.capitalize())).all()
-
-                # Load old wabsite data
-                contents = []
-                for result in query:
-                    contents.append(pickle.loads(result.content))
-                logger.info("Data from table {} loaded".format(str(table)))
                 dBase = NormalizationBase("DB/norm.db")
                 normDict = {}
                 for norm in dBase.session.query(dBase.Normalization).all():
                     normDict[norm.feature] = {"data": norm.data, "normalizer": norm.normalizer, "scaler": norm.scaler}
-                dBase.session.close()
                 fct = partial(UrlToDatabase.URL.re_extract_non_request_features, normDict=normDict)
-                Pool().map(fct, contents)
-                logger.info("Data loaded from table {} transformed".format(str(table)))
-                del fct, normDict
-                for i in range(len(query)):
-                    query[i].content = pickle.dumps(contents[i])
-                del contents
+                for webs in [self.session.query(self.__getattribute__(table.capitalize())).yield_per(1000)[x:x + 500]
+                             for x in
+                             range(0, self.session.query(self.__getattribute__(table.capitalize())).count(),
+                                   500)]:
+                    content = []
+                    for web in webs:
+                        content.append(pickle.loads(web.content))
+                    pool = Pool()
+                    results = pool.map(fct, content)
+                    pool.close()
+                    for i in range(len(results)):
+                        webs[i].content = pickle.dumps(results[i])
+                    self.session.commit()
+                    logger.info("500 data from table {} commited".format(str(table)))
+                    del pool, results, content, webs
                 self.session.commit()
+                self.session.expunge_all()
                 logger.info("Data loaded from table {} commited".format(str(table)))
 
-                del query
+                del dBase, normDict, fct
 
 
 class NormalizationBase:
