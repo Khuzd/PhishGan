@@ -114,7 +114,7 @@ class WebsiteBase:
             print("update table {}".format(str(table)))
             if table.lower() != "normalization":
 
-                for result in self.session.query(self.__getattribute__(table.capitalize())).all():
+                for result in self.session.query(self.__getattribute__(table.capitalize())).yield_per(500):
                     # Load old wabsite data
                     oldUrl = pickle.loads(result.content)
 
@@ -165,22 +165,22 @@ class WebsiteBase:
                     tmp.indexingWeight = int(oldUrl.indexingWeight)
                     tmp.linksWeight = int(oldUrl.linksWeight)
                     tmp.statisticWeight = int(oldUrl.statisticWeight)
-                    # tmp.subDomainLengthWeight = int(oldUrl.subDomainLengthWeight)
-                    # tmp.wwwWeight = int(oldUrl.wwwWeight)
-                    # tmp.validTldWeight = int(oldUrl.validTldWeight)
-                    # tmp.singleCharacterSubDomainWeight = int(oldUrl.singleCharacterSubDomainWeight)
-                    # tmp.exclusivePrefixRepetitionWeight = int(oldUrl.exclusivePrefixRepetitionWeight)
-                    # tmp.tldSubDomainWeight = int(oldUrl.tldSubDomainWeight)
-                    # tmp.ratioDigitSubDomainWeight = int(oldUrl.ratioDigitSubDomainWeight)
-                    # tmp.ratioHexaSubDomainWeight = int(oldUrl.ratioHexaSubDomainWeight)
-                    # tmp.underscoreWeight = int(oldUrl.underscoreWeight)
-                    # tmp.containDigitWeight = int(oldUrl.containDigitWeight)
-                    # tmp.vowelRatioWeight = int(oldUrl.vowelRatioWeight)
-                    # tmp.ratioDigitWeight = int(oldUrl.ratioDigitWeight)
-                    # tmp.alphabetCardinalityWeight = int(oldUrl.alphabetCardinalityWeight)
-                    # tmp.ratioRepeatedCharacterWeight = int(oldUrl.ratioRepeatedCharacterWeight)
-                    # tmp.ratioConsecutiveConsonantWeight = int(oldUrl.ratioConsecutiveConsonantWeight)
-                    # tmp.ratioConsecutiveDigitWeight = int(oldUrl.ratioConsecutiveDigitWeight)
+                    tmp.subDomainLengthWeight = int(oldUrl.subDomainLengthWeight)
+                    tmp.wwwWeight = int(oldUrl.wwwWeight)
+                    tmp.validTldWeight = int(oldUrl.validTldWeight)
+                    tmp.singleCharacterSubDomainWeight = int(oldUrl.singleCharacterSubDomainWeight)
+                    tmp.exclusivePrefixRepetitionWeight = int(oldUrl.exclusivePrefixRepetitionWeight)
+                    tmp.tldSubDomainWeight = int(oldUrl.tldSubDomainWeight)
+                    tmp.ratioDigitSubDomainWeight = int(oldUrl.ratioDigitSubDomainWeight)
+                    tmp.ratioHexaSubDomainWeight = int(oldUrl.ratioHexaSubDomainWeight)
+                    tmp.underscoreWeight = int(oldUrl.underscoreWeight)
+                    tmp.containDigitWeight = int(oldUrl.containDigitWeight)
+                    tmp.vowelRatioWeight = int(oldUrl.vowelRatioWeight)
+                    tmp.ratioDigitWeight = int(oldUrl.ratioDigitWeight)
+                    tmp.alphabetCardinalityWeight = int(oldUrl.alphabetCardinalityWeight)
+                    tmp.ratioRepeatedCharacterWeight = int(oldUrl.ratioRepeatedCharacterWeight)
+                    tmp.ratioConsecutiveConsonantWeight = int(oldUrl.ratioConsecutiveConsonantWeight)
+                    tmp.ratioConsecutiveDigitWeight = int(oldUrl.ratioConsecutiveDigitWeight)
 
                     # Load scaled weights
                     tmp.ipScaledWeight = float(oldUrl.ipScaledWeight)
@@ -213,22 +213,22 @@ class WebsiteBase:
                     tmp.indexingScaledWeight = float(oldUrl.indexingScaledWeight)
                     tmp.linksScaledWeight = float(oldUrl.linksScaledWeight)
                     tmp.statisticScaledWeight = float(oldUrl.statisticScaledWeight)
-                    # tmp.subDomainLengthScaledWeight = float(oldUrl.subDomainLengthScaledWeight)
-                    # tmp.wwwScaledWeight = float(oldUrl.wwwScaledWeight)
-                    # tmp.validTldScaledWeight = float(oldUrl.validTldScaledWeight)
-                    # tmp.singleCharacterSubDomainScaledWeight = float(oldUrl.singleCharacterSubDomainScaledWeight)
-                    # tmp.exclusivePrefixRepetitionScaledWeight = float(oldUrl.exclusivePrefixRepetitionScaledWeight)
-                    # tmp.tldSubDomainScaledWeight = float(oldUrl.tldSubDomainScaledWeight)
-                    # tmp.ratioDigitSubDomainScaledWeight = float(oldUrl.ratioDigitSubDomainScaledWeight)
-                    # tmp.ratioHexaSubDomainScaledWeight = float(oldUrl.ratioHexaSubDomainScaledWeight)
-                    # tmp.underscoreScaledWeight = float(oldUrl.underscoreScaledWeight)
-                    # tmp.containDigitScaledWeight = float(oldUrl.containDigitScaledWeight)
-                    # tmp.vowelRatioScaledWeight = float(oldUrl.vowelRatioScaledWeight)
-                    # tmp.ratioDigitScaledWeight = float(oldUrl.ratioDigitScaledWeight)
-                    # tmp.alphabetCardinalityScaledWeight = float(oldUrl.alphabetCardinalityScaledWeight)
-                    # tmp.ratioRepeatedCharacterScaledWeight = float(oldUrl.ratioRepeatedCharacterScaledWeight)
-                    # tmp.ratioConsecutiveConsonantScaledWeight = float(oldUrl.ratioConsecutiveConsonantScaledWeight)
-                    # tmp.ratioConsecutiveDigitScaledWeight = float(oldUrl.ratioConsecutiveDigitScaledWeight)
+                    tmp.subDomainLengthScaledWeight = float(oldUrl.subDomainLengthScaledWeight)
+                    tmp.wwwScaledWeight = float(oldUrl.wwwScaledWeight)
+                    tmp.validTldScaledWeight = float(oldUrl.validTldScaledWeight)
+                    tmp.singleCharacterSubDomainScaledWeight = float(oldUrl.singleCharacterSubDomainScaledWeight)
+                    tmp.exclusivePrefixRepetitionScaledWeight = float(oldUrl.exclusivePrefixRepetitionScaledWeight)
+                    tmp.tldSubDomainScaledWeight = float(oldUrl.tldSubDomainScaledWeight)
+                    tmp.ratioDigitSubDomainScaledWeight = float(oldUrl.ratioDigitSubDomainScaledWeight)
+                    tmp.ratioHexaSubDomainScaledWeight = float(oldUrl.ratioHexaSubDomainScaledWeight)
+                    tmp.underscoreScaledWeight = float(oldUrl.underscoreScaledWeight)
+                    tmp.containDigitScaledWeight = float(oldUrl.containDigitScaledWeight)
+                    tmp.vowelRatioScaledWeight = float(oldUrl.vowelRatioScaledWeight)
+                    tmp.ratioDigitScaledWeight = float(oldUrl.ratioDigitScaledWeight)
+                    tmp.alphabetCardinalityScaledWeight = float(oldUrl.alphabetCardinalityScaledWeight)
+                    tmp.ratioRepeatedCharacterScaledWeight = float(oldUrl.ratioRepeatedCharacterScaledWeight)
+                    tmp.ratioConsecutiveConsonantScaledWeight = float(oldUrl.ratioConsecutiveConsonantScaledWeight)
+                    tmp.ratioConsecutiveDigitScaledWeight = float(oldUrl.ratioConsecutiveDigitScaledWeight)
 
                     # Replace old website in database by new website
                     result.content = pickle.dumps(tmp)
@@ -268,6 +268,10 @@ class WebsiteBase:
                 logger.info("Data loaded from table {} commited".format(str(table)))
 
                 del dBase, normDict, fct
+
+    def __del__(self):
+        self.session.close()
+        self.Session.close_all()
 
 
 class NormalizationBase:

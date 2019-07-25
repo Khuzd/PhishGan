@@ -1758,11 +1758,14 @@ class URL:
         """
         self.statisticScaledWeight = (float(self.statisticWeight) * 0.5) + 0.5
 
-    def sub_domain_length_scaled_calculation(self):
+    def sub_domain_length_scaled_calculation(self, normDict):
         """
         Get the lentgh mean of subdomains, normalize and scale it between 0 and 1
         :return: float between 0 and 1
         """
+        norm = pickle.loads(normDict["subDomainLength"]["normalizer"])
+        scaler = pickle.loads(normDict["subDomainLength"]["scaler"])
+
         domain = self.hostname
         psl = PublicSuffixList()
         psl.accept_unknown = False
@@ -1779,7 +1782,8 @@ class URL:
         for subdomain in subdomains:
             total += len(subdomain)
 
-        self.subDomainLengthScaledWeight = total / len(subdomains)
+        result = norm.transform([[total / len(subdomains)]])
+        self.subDomainLengthScaledWeight = scaler.transform(result.reshape(-1, 1))[0][0]
 
     def www_scaled_calculation(self):
         """
@@ -1816,11 +1820,13 @@ class URL:
         """
         self.tldSubDomainScaledWeight = (float(self.tldSubDomainWeight) * 0.5) + 0.5
 
-    def ratio_digit_sub_domain_scaled_calculation(self):
+    def ratio_digit_sub_domain_scaled_calculation(self, normDict):
         """
         Count the ratio of exclusive digit subdomains by count subdomains, normalize and scale it between 0 and 1
         :return: float between 0 and 1
         """
+        norm = pickle.loads(normDict["ratioDigitSubDomain"]["normalizer"])
+        scaler = pickle.loads(normDict["ratioDigitSubDomain"]["scaler"])
         domain = self.hostname
         psl = PublicSuffixList()
         psl.accept_unknown = False
@@ -1840,13 +1846,17 @@ class URL:
             if sum(list(map(lambda x: 1 if x.isdigit() else 0, subdomain))) == len(subdomain):
                 exclusiveDigit += 1
 
-        self.ratioDigitSubDomainScaledWeight = exclusiveDigit / len(subdomains)
+        result = norm.transform([[exclusiveDigit / len(subdomains)]])
+        self.ratioDigitSubDomainScaledWeight = scaler.transform(result.reshape(-1, 1))[0][0]
 
-    def ratio_hexa_sub_domain_scaled_calculation(self):
+    def ratio_hexa_sub_domain_scaled_calculation(self, normDict):
         """
         Count the ratio of exclusive hexadecimal subdomains by count subdomains, normalize and scale it between 0 and 1
         :return: float between 0 and 1
         """
+        norm = pickle.loads(normDict["ratioHexaSubDomain"]["normalizer"])
+        scaler = pickle.loads(normDict["ratioHexaSubDomain"]["scaler"])
+
         domain = self.hostname
         psl = PublicSuffixList()
         psl.accept_unknown = False
@@ -1868,9 +1878,13 @@ class URL:
                 exclusiveHex += 1
             except hexErr:
                 pass
-        self.ratioHexaSubDomainScaledWeight = exclusiveHex / len(subdomains)
 
-    def underscore_scaled_calculation(self):
+        result = norm.transform([[exclusiveHex / len(subdomains)]])
+        self.ratioHexaSubDomainScaledWeight = scaler.transform(result.reshape(-1, 1))[0][0]
+
+    def underscore_scaled_calculation(self, normDict):
+        norm = pickle.loads(normDict["underscore"]["normalizer"])
+        scaler = pickle.loads(normDict["underscore"]["scaler"])
         """
         Calculate the ratio of count underscore symbol by len of hostname, normalize and scale it between 0 and 1
         :return:
@@ -1886,7 +1900,8 @@ class URL:
             except TypeError:
                 pass
 
-        self.underscoreScaledWeight = domain.count("_") / len(domain)
+        result = norm.transform([[domain.count("_") / len(domain)]])
+        self.underscoreScaledWeight = scaler.transform(result.reshape(-1, 1))[0][0]
 
     def contain_digit_scaled_calculation(self):
         """
@@ -1895,11 +1910,13 @@ class URL:
         """
         self.containDigitScaledWeight = (float(self.containDigitWeight) * 0.5) + 0.5
 
-    def vowel_ratio_scaled_calculation(self):
+    def vowel_ratio_scaled_calculation(self, normDict):
         """
         Get ration of vowel in hostname by len hostname, normalize and scale it between 0 and 1
         :return: float between 0 and 1
         """
+        norm = pickle.loads(normDict["vowelRatio"]["normalizer"])
+        scaler = pickle.loads(normDict["vowelRatio"]["scaler"])
         domain = self.hostname
         psl = PublicSuffixList()
         psl.accept_unknown = False
@@ -1912,14 +1929,18 @@ class URL:
                 pass
 
         domain.replace(".", "")
-        self.vowelRatioScaledWeight = sum(
-            list(map(lambda x: 1 if x in ["a", "e", "i", "o", "u", "y"] else 0, domain))) / len(domain)
 
-    def ratio_digit_scaled_calculation(self):
+        result = norm.transform([[sum(
+            list(map(lambda x: 1 if x in ["a", "e", "i", "o", "u", "y"] else 0, domain))) / len(domain)]])
+        self.vowelRatioScaledWeight = scaler.transform(result.reshape(-1, 1))[0][0]
+
+    def ratio_digit_scaled_calculation(self, normDict):
         """
         Get ratio of digit in hostname by length of hostname, normalize and scale it between 0 and 1
         :return: float between 0 and 1
         """
+        norm = pickle.loads(normDict["ratioDigit"]["normalizer"])
+        scaler = pickle.loads(normDict["ratioDigit"]["scaler"])
         domain = self.hostname
         psl = PublicSuffixList()
         psl.accept_unknown = False
@@ -1932,13 +1953,17 @@ class URL:
                 pass
 
         domain.replace(".", "")
-        self.ratioDigitScaledWeight = sum(list(map(lambda x: 1 if x.isdigit() else 0, domain))) / len(domain)
 
-    def alphabet_cardinality_scaled_calculation(self):
+        result = norm.transform([[sum(list(map(lambda x: 1 if x.isdigit() else 0, domain))) / len(domain)]])
+        self.ratioDigitScaledWeight = scaler.transform(result.reshape(-1, 1))[0][0]
+
+    def alphabet_cardinality_scaled_calculation(self, normDict):
         """
         Get the cardinality of alpha characters in url, normalize and scale it between 0 and 1
         :return: float between 0 and 1
         """
+        norm = pickle.loads(normDict["alphabetCardinality"]["normalizer"])
+        scaler = pickle.loads(normDict["alphabetCardinality"]["scaler"])
         domain = self.hostname
         psl = PublicSuffixList()
         psl.accept_unknown = False
@@ -1952,13 +1977,16 @@ class URL:
 
         domain.replace(".", "")
 
-        self.alphabetCardinalityScaledWeight = sum(list(map(lambda x: 1 if x.isalpha() else 0, domain)))
+        result = norm.transform([[sum(list(map(lambda x: 1 if x.isalpha() else 0, domain)))]])
+        self.alphabetCardinalityScaledWeight = scaler.transform(result.reshape(-1, 1))[0][0]
 
-    def ratio_repeated_character_scaled_calculation(self):
+    def ratio_repeated_character_scaled_calculation(self, normDict):
         """
         Get ratio of repeated characters in domain by cardinality of url, normalize and scale it between 0 and 1
         :return: float between 0 and 1
         """
+        norm = pickle.loads(normDict["ratioRepeatedCharacter"]["normalizer"])
+        scaler = pickle.loads(normDict["ratioRepeatedCharacter"]["scaler"])
         domain = self.hostname
         psl = PublicSuffixList()
         psl.accept_unknown = False
@@ -1983,13 +2011,16 @@ class URL:
             if domain.count(character) > 1:
                 countRepeated += 1
 
-        self.ratioRepeatedCharacterScaledWeight = countRepeated / card
+        result = norm.transform([[countRepeated / card]])
+        self.ratioRepeatedCharacterScaledWeight = scaler.transform(result.reshape(-1, 1))[0][0]
 
-    def ratio_consecutive_consonant_scaled_calculation(self):
+    def ratio_consecutive_consonant_scaled_calculation(self, normDict):
         """
         Get ratio of consecutive consonants in domain by length of domain, normalize and scale it between 0 and 1
         :return: float between 0 and 1
         """
+        norm = pickle.loads(normDict["ratioConsecutiveConsonant"]["normalizer"])
+        scaler = pickle.loads(normDict["ratioConsecutiveConsonant"]["scaler"])
         domain = self.hostname
         psl = PublicSuffixList()
         psl.accept_unknown = False
@@ -2016,13 +2047,16 @@ class URL:
             if len(splitted) > 1:
                 countConsecutive += len(splitted)
 
-        self.ratioConsecutiveConsonantScaledWeight = countConsecutive / len(domain)
+        result = norm.transform([[countConsecutive / len(domain)]])
+        self.ratioConsecutiveConsonantScaledWeight = scaler.transform(result.reshape(-1, 1))[0][0]
 
-    def ratio_consecutive_digit_scaled_calculation(self):
+    def ratio_consecutive_digit_scaled_calculation(self, normDict):
         """
         Get ratio of consecutive digits in domain by length of domain, normalize and scale it between 0 and 1
         :return: float between 0 and 1
         """
+        norm = pickle.loads(normDict["ratioConsecutiveDigit"]["normalizer"])
+        scaler = pickle.loads(normDict["ratioConsecutiveDigit"]["scaler"])
         domain = self.hostname
         psl = PublicSuffixList()
         psl.accept_unknown = False
@@ -2049,7 +2083,8 @@ class URL:
             if len(splitted) > 1:
                 countConsecutive += len(splitted)
 
-        self.ratioConsecutiveDigitScaledWeight = countConsecutive / len(domain)
+        result = norm.transform([[countConsecutive / len(domain)]])
+        self.ratioConsecutiveDigitScaledWeight = scaler.transform(result.reshape(-1, 1))[0][0]
 
     def features_extraction(self):
         """
@@ -2635,7 +2670,7 @@ class URL:
 
         # testing scaled subdomain lentgh mean
         try:
-            self.sub_domain_length_scaled_calculation()
+            self.sub_domain_length_scaled_calculation(normDict)
         except Exception as e:
             logger.critical(e)
             self.subDomainLengthScaledWeight = "error"
@@ -2677,21 +2712,21 @@ class URL:
 
         # testing scaled ratio of digit subdomain
         try:
-            self.ratio_digit_sub_domain_scaled_calculation()
+            self.ratio_digit_sub_domain_scaled_calculation(normDict)
         except Exception as e:
             logger.critical(e)
             self.ratioDigitSubDomainScaledWeight = "error"
 
         # testing scaled ratio of hexa subdomains
         try:
-            self.ratio_hexa_sub_domain_scaled_calculation()
+            self.ratio_hexa_sub_domain_scaled_calculation(normDict)
         except Exception as e:
             logger.critical(e)
             self.ratioHexaSubDomainScaledWeight = "error"
 
         # testing scaled ratio of underscore
         try:
-            self.underscore_scaled_calculation()
+            self.underscore_scaled_calculation(normDict)
         except Exception as e:
             logger.critical(e)
             self.underscoreScaledWeight = "error"
@@ -2705,42 +2740,42 @@ class URL:
 
         # testing scaled vowel ratio
         try:
-            self.vowel_ratio_scaled_calculation()
+            self.vowel_ratio_scaled_calculation(normDict)
         except Exception as e:
             logger.critical(e)
             self.vowelRatioScaledWeight = "error"
 
         # testing scaled digit ratio
         try:
-            self.ratio_digit_scaled_calculation()
+            self.ratio_digit_scaled_calculation(normDict)
         except Exception as e:
             logger.critical(e)
             self.ratioDigitScaledWeight = "error"
 
         # testing scaled alphabet cardinality
         try:
-            self.alphabet_cardinality_scaled_calculation()
+            self.alphabet_cardinality_scaled_calculation(normDict)
         except Exception as e:
             logger.critical(e)
             self.alphabetCardinalityScaledWeight = "error"
 
         # testing scaled ratio of repeated characters
         try:
-            self.ratio_repeated_character_scaled_calculation()
+            self.ratio_repeated_character_scaled_calculation(normDict)
         except Exception as e:
             logger.critical(e)
             self.ratioRepeatedCharacterScaledWeight = "error"
 
         # testing scaled ratio of consecutive consonants
         try:
-            self.ratio_consecutive_consonant_scaled_calculation()
+            self.ratio_consecutive_consonant_scaled_calculation(normDict)
         except Exception as e:
             logger.critical(e)
             self.ratioConsecutiveConsonantScaledWeight = "error"
 
         # testing scaled ratio of consecutive digits
         try:
-            self.ratio_consecutive_digit_scaled_calculation()
+            self.ratio_consecutive_digit_scaled_calculation(normDict)
         except Exception as e:
             logger.critical(e)
             self.ratioConsecutiveDigitScaledWeight = "error"
@@ -3310,7 +3345,7 @@ class URL:
 
         # testing scaled subdomain lentgh mean
         try:
-            self.sub_domain_length_scaled_calculation()
+            self.sub_domain_length_scaled_calculation(normDict)
         except Exception as e:
             logger.critical(e)
             self.subDomainLengthScaledWeight = "error"
@@ -3352,21 +3387,21 @@ class URL:
 
         # testing scaled ratio of digit subdomain
         try:
-            self.ratio_digit_sub_domain_scaled_calculation()
+            self.ratio_digit_sub_domain_scaled_calculation(normDict)
         except Exception as e:
             logger.critical(e)
             self.ratioDigitSubDomainScaledWeight = "error"
 
         # testing scaled ratio of hexa subdomains
         try:
-            self.ratio_hexa_sub_domain_scaled_calculation()
+            self.ratio_hexa_sub_domain_scaled_calculation(normDict)
         except Exception as e:
             logger.critical(e)
             self.ratioHexaSubDomainScaledWeight = "error"
 
         # testing scaled ratio of underscore
         try:
-            self.underscore_scaled_calculation()
+            self.underscore_scaled_calculation(normDict)
         except Exception as e:
             logger.critical(e)
             self.underscoreScaledWeight = "error"
@@ -3380,42 +3415,42 @@ class URL:
 
         # testing scaled vowel ratio
         try:
-            self.vowel_ratio_scaled_calculation()
+            self.vowel_ratio_scaled_calculation(normDict)
         except Exception as e:
             logger.critical(e)
             self.vowelRatioScaledWeight = "error"
 
         # testing scaled digit ratio
         try:
-            self.ratio_digit_scaled_calculation()
+            self.ratio_digit_scaled_calculation(normDict)
         except Exception as e:
             logger.critical(e)
             self.ratioDigitScaledWeight = "error"
 
         # testing scaled alphabet cardinality
         try:
-            self.alphabet_cardinality_scaled_calculation()
+            self.alphabet_cardinality_scaled_calculation(normDict)
         except Exception as e:
             logger.critical(e)
             self.alphabetCardinalityScaledWeight = "error"
 
         # testing scaled ratio of repeated characters
         try:
-            self.ratio_repeated_character_scaled_calculation()
+            self.ratio_repeated_character_scaled_calculation(normDict)
         except Exception as e:
             logger.critical(e)
             self.ratioRepeatedCharacterScaledWeight = "error"
 
         # testing scaled ratio of consecutive consonants
         try:
-            self.ratio_consecutive_consonant_scaled_calculation()
+            self.ratio_consecutive_consonant_scaled_calculation(normDict)
         except Exception as e:
             logger.critical(e)
             self.ratioConsecutiveConsonantScaledWeight = "error"
 
         # testing scaled ratio of consecutive digits
         try:
-            self.ratio_consecutive_digit_scaled_calculation()
+            self.ratio_consecutive_digit_scaled_calculation(normDict)
         except Exception as e:
             logger.critical(e)
             self.ratioConsecutiveDigitScaledWeight = "error"
