@@ -231,7 +231,8 @@ def prediction(args):
         data = importData.csv_to_list(args.file[0])[1]
         for url in data.keys():
             # Make a prediction
-            results = gan.discriminator.predict_on_batch(np.array(data[url]).astype(np.float)[:].reshape(1, 30, 1))
+            results = gan.discriminator.predict_on_batch(
+                np.array(data[url]).astype(np.float)[:].reshape(1, gan.countData, 1))
 
             # Write results in the right place
             if args.verbose is True:

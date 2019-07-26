@@ -37,7 +37,8 @@ tf.compat.v1.set_random_seed(seed_value)
 # 5. Configure a new global `tensorflow` session
 from keras import backend as k
 
-session_conf = tf.compat.v1.ConfigProto(intra_op_parallelism_threads=1, inter_op_parallelism_threads=1, device_count={"CPU": 1})
+session_conf = tf.compat.v1.ConfigProto(intra_op_parallelism_threads=1, inter_op_parallelism_threads=1,
+                                        device_count={"CPU": 1})
 sess = tf.compat.v1.Session(graph=tf.compat.v1.get_default_graph(), config=session_conf)
 k.set_session(sess)
 
@@ -59,14 +60,15 @@ logger = logging.getLogger('main')
 # os.environ["PATH"] += os.pathsep + 'C:/Program Files (x86)/Graphviz2.38/bin'
 
 # Default datasets path
-PHIS_PATH_TEST = "data/Phishtank_outtest.csv"
-CLEAN_PATH_TEST = "data/Amazon_top25000outtest.csv"
+PHIS_PATH_TEST = "data/phish_test.csv"
+CLEAN_PATH_TEST = "data/total_test.csv"
 
 
 class GAN:
     """
     GAN Classe used to predict if url is phishing or not
     """
+
     def __init__(self, lr, sample):
         """
         :param lr: float (learning rate)
@@ -76,7 +78,8 @@ class GAN:
         #  Define attributes
         # ---------------------
         self.channels = 1
-        self.countData = 30
+        self.countData = 46
+        self.hiddenLayers = 65
         self.data_shape = (self.countData, self.channels)
         self.thresHold = None
         self.sampleSize = sample
@@ -118,13 +121,13 @@ class GAN:
         #  Define model of generator
         # ---------------------
         model = Sequential()
-        model.add(Dense(50, input_dim=self.countData))
+        model.add(Dense(self.hiddenLayers, input_dim=self.countData))
         model.add(LeakyReLU(alpha=0.2))
         model.add(BatchNormalization(momentum=0.8))
-        model.add(Dense(50))
+        model.add(Dense(self.hiddenLayers))
         model.add(LeakyReLU(alpha=0.2))
         model.add(BatchNormalization(momentum=0.8))
-        model.add(Dense(50))
+        model.add(Dense(self.hiddenLayers))
         model.add(LeakyReLU(alpha=0.2))
         model.add(BatchNormalization(momentum=0.8))
         model.add(Dense(np.prod(self.data_shape), activation='tanh'))
@@ -152,11 +155,11 @@ class GAN:
         # ---------------------
         model = Sequential()
         model.add(Flatten(input_shape=self.data_shape))
-        model.add(Dense(50))
+        model.add(Dense(self.hiddenLayers))
         model.add(LeakyReLU(alpha=0.2))
-        model.add(Dense(50))
+        model.add(Dense(self.hiddenLayers))
         model.add(LeakyReLU(alpha=0.2))
-        model.add(Dense(50))
+        model.add(Dense(self.hiddenLayers))
         model.add(LeakyReLU(alpha=0.2))
         model.add(Dense(1, activation='sigmoid'))
 
@@ -267,7 +270,8 @@ class GAN:
 
         ## Make prediction
         for i in cleanTestDataset + phishTestDataset:
-            prediction.append(self.discriminator.predict_on_batch(np.array(i).astype(np.float)[:].reshape(1, 30, 1)))
+            prediction.append(
+                self.discriminator.predict_on_batch(np.array(i).astype(np.float)[:].reshape(1, self.countData, 1)))
 
         ## Calculate the best threshold
         self.thresHold = float(((sum(prediction[:len(cleanTestDataset)]) / len(cleanTestDataset)) + (

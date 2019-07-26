@@ -2822,7 +2822,7 @@ class URL:
         :param features: list
         :return: nothing
         """
-        if type(features) is not list or len(features) != 30:
+        if type(features) is not list or len(features) != 46:
             logger.error("Bad argument for features setter")
             return
         self.ipWeight = features[0]
@@ -2863,7 +2863,7 @@ class URL:
         :param features: list
         :return: nothing
         """
-        if type(features) is not list or len(features) != 30:
+        if type(features) is not list or len(features) != 46:
             logger.error("Bad argument for features setter")
             return
         self.ipScaledWeight = features[0]
