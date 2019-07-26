@@ -333,11 +333,11 @@ class GAN:
             ## Select a random batch of images
             # for training
             idxt = np.random.randint(1, int(len(X_train) * 0.9), self.sampleSize)
-            imgst = np.array(X_train)[idxt]
+            imgst = np.vstack(np.array(X_train)[idxt])
 
             # for validation
             idxv = np.random.randint(int(len(X_train) * 0.9), len(X_train), self.sampleSize)
-            imgsv = np.array(X_train)[idxv]
+            imgsv = np.vstack(np.array(X_train)[idxv])
 
             #### Training
 
