@@ -1,26 +1,22 @@
+data/phishTank\.json
 
-venv/Lib/
+graphs/*
 
-venv/Scripts/
+!graphs/.gitkeep
 
-venv/data/phishTank\.json
-
-venv/graphs/*
-
-!venv/graphs/.gitkeep
-
-venv/__pycache__/
+__pycache__/
 
 \.idea/
 
-geckodriver\.log
+data/Unused/phishTank\.json
 
-venv/data/Unused/phishTank\.json
+libs/whois/__pycache__/
 
-venv/libs/whois/__pycache__/
-
-venv/DB/
+DB/
 
 *.log
 
-venv/api_keys/
+api_keys/*
+
+!api_keys/.gitkeep
+tmp/
