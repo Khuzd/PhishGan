@@ -19,3 +19,4 @@ DB/
 api_keys/*
 
 !api_keys/.gitkeep
+tmp/
