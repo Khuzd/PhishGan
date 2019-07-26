@@ -1,10 +1,11 @@
 """
-
+File used as interface with the sqlite3 database
 -----------
 Generative Adversarial Networks (GAN) research applied to the phishing detection.
 University of Gloucestershire
 Author : Pierrick ROBIC--BUTEZ
 2019
+Copyright (c) 2019 Khuzd
 """
 
 import logging

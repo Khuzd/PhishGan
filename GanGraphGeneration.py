@@ -1,10 +1,11 @@
 """
-
+File used to generate graphs during the training of a GAN
 -----------
 Generative Adversarial Networks (GAN) research applied to the phishing detection.
 University of Gloucestershire
 Author : Pierrick ROBIC--BUTEZ
 2019
+Copyright (c) 2019 Khuzd
 """
 # ---------------------
 #  Define different seeds to permit repeatability
