@@ -211,6 +211,7 @@ class WebsiteBase:
 
                     # Replace old website in database by new website
                     result.content = pickle.dumps(tmp)
+                    del oldUrl, tmp
                 self.session.commit()
 
         return
