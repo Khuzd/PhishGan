@@ -59,6 +59,7 @@ import logging
 from logging.handlers import RotatingFileHandler
 from func_timeout import func_timeout
 from pathos.pools import ThreadPool
+from functools import partial
 
 ## Default datasets
 UCI_PATH = 'data/UCI_dataset.csv'
@@ -147,8 +148,14 @@ def extraction(args):
     # ---------------------
     if args.URL is not None:
         website = UrlToDatabase.URL(args.URL[0])
+
+        dBase = ORMmanage.NormalizationBase("DB/norm.db")
+        normDict = {}
+        for norm in dBase.session.query(dBase.Normalization).all():
+            normDict[norm.feature] = {"data": norm.data, "normalizer": norm.normalizer, "scaler": norm.scaler}
+
         try:
-            results = func_timeout(50, website.features_extraction)
+            results = func_timeout(50, website.features_extraction, kwargs={'normDict': normDict})
         except Exception as e:
             results = " fail " + str(e)
 
@@ -172,8 +179,14 @@ def extraction(args):
     elif args.list is not None:
         for url in args.list:
             website = UrlToDatabase.URL(url)
+
+            dBase = ORMmanage.NormalizationBase("DB/norm.db")
+            normDict = {}
+            for norm in dBase.session.query(dBase.Normalization).all():
+                normDict[norm.feature] = {"data": norm.data, "normalizer": norm.normalizer, "scaler": norm.scaler}
+
             try:
-                results = func_timeout(50, website.features_extraction)
+                results = func_timeout(50, website.features_extraction, kwargs={'normDict': normDict})
             except Exception as e:
                 results = " fail " + str(e)
             if args.output == "console" or args.output[0] == "console":
@@ -412,7 +425,12 @@ def orm_extract(args):
 
     # ---------------------
     #  Add to the database
-    # ---------------------
+    # --------------------
+    dBase = ORMmanage.NormalizationBase("DB/norm.db")
+    normDict = {}
+    for norm in dBase.session.query(dBase.Normalization).all():
+        normDict[norm.feature] = {"data": norm.data, "normalizer": norm.normalizer, "scaler": norm.scaler}
+
     i = 1
     for url in URLs:
         logger.debug(str(i))
@@ -431,7 +449,8 @@ def orm_extract(args):
                 tmp.append(web)
         if args.extraction:
             # Extract features
-            ThreadPool().map(UrlToDatabase.URL.features_extraction, tmp)
+            fct = partial(UrlToDatabase.URL.features_extraction, normDict=normDict)
+            ThreadPool().map(fct, tmp)
             result2 += tmp
             for web in result2:
                 print(web)
