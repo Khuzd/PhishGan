@@ -51,6 +51,7 @@ import logging
 
 # Import logger
 logger = logging.getLogger('main')
+plt.set_loglevel("info")
 
 
 def graph_creation(X, YD, VYD, lr, sample, label, bestEpoch, bestAccu, YG=None, VYG=None, path="graphs", suffix=""):
@@ -193,7 +194,7 @@ def report_accuracy_graph(path):
 
             # Load data from classification reports
             for report in glob.glob(path + "/" + folder + "/" + "*.txt"):
-                file = open(report)
+                file = open(report, encoding="utf8")
                 content = file.read()
                 file.close()
                 accuracies.append(float(re.findall("\d+\.\d+", re.findall(r"}, 'accuracy': 0.\d*?,", content)[0])[0]))
