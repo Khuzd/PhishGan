@@ -1386,7 +1386,10 @@ class URL:
                 self.expirationScaledWeight = 0.5
                 return
 
-            result = norm.transform([[delta.days]])
+            if delta.days < 0:
+                result = norm.transform([[0]])
+            else:
+                result = norm.transform([[delta.days]])
             self.expirationScaledWeight = scaler.transform(result.reshape(-1, 1))[0][0]
 
     def requested_url_scaled_calculation(self, normDict):
