@@ -1440,7 +1440,8 @@ class URL:
             percentage = externalLinks / totalLinks
 
             result = norm.transform([[percentage]])
-            self.requestedScaledWeight = scaler.transform(result.reshape(-1, 1))[0][0]
+            # self.requestedScaledWeight = scaler.transform(result.reshape(-1, 1))[0][0]
+            self.requestedScaledWeight = percentage
         else:
             self.requestedScaledWeight = 0
 
@@ -1469,7 +1470,8 @@ class URL:
             percentage = externalLinks / totalLink
 
             result = norm.transform([[percentage]])
-            self.anchorsScaledWeight = scaler.transform(result.reshape(-1, 1))[0][0]
+            self.anchorsScaledWeight = percentage
+            # self.anchorsScaledWeight = scaler.transform(result.reshape(-1, 1))[0][0]
         else:
             self.anchorsScaledWeight = 0
 
@@ -1512,7 +1514,8 @@ class URL:
             percentage = externalLinks / totalLinks
 
             result = norm.transform([[percentage]])
-            self.tagScaledWeight = scaler.transform(result.reshape(-1, 1))[0][0]
+            self.tagScaledWeight = percentage
+            # self.tagScaledWeight = scaler.transform(result.reshape(-1, 1))[0][0]
         else:
             self.tagScaledWeight = 0
 
@@ -1695,7 +1698,8 @@ class URL:
                 exclusiveDigit += 1
 
         result = norm.transform([[exclusiveDigit / len(subdomains)]])
-        self.ratioDigitSubDomainScaledWeight = scaler.transform(result.reshape(-1, 1))[0][0]
+        # self.ratioDigitSubDomainScaledWeight = scaler.transform(result.reshape(-1, 1))[0][0]
+        self.ratioDigitSubDomainScaledWeight = exclusiveDigit / len(subdomains)
 
     def ratio_hexa_sub_domain_scaled_calculation(self, normDict):
         """
@@ -1728,7 +1732,8 @@ class URL:
                 pass
 
         result = norm.transform([[exclusiveHex / len(subdomains)]])
-        self.ratioHexaSubDomainScaledWeight = scaler.transform(result.reshape(-1, 1))[0][0]
+        # self.ratioHexaSubDomainScaledWeight = scaler.transform(result.reshape(-1, 1))[0][0]
+        self.ratioHexaSubDomainScaledWeight = exclusiveHex / len(subdomains)
 
     def underscore_scaled_calculation(self, normDict):
         norm = pickle.loads(normDict["underscore"]["normalizer"])
@@ -1749,7 +1754,8 @@ class URL:
                 pass
 
         result = norm.transform([[domain.count("_") / len(domain)]])
-        self.underscoreScaledWeight = scaler.transform(result.reshape(-1, 1))[0][0]
+        # self.underscoreScaledWeight = scaler.transform(result.reshape(-1, 1))[0][0]
+        self.underscoreScaledWeight = domain.count("_") / len(domain)
 
     def vowel_ratio_scaled_calculation(self, normDict):
         """
@@ -1773,7 +1779,9 @@ class URL:
 
         result = norm.transform([[sum(
             list(map(lambda x: 1 if x in ["a", "e", "i", "o", "u", "y"] else 0, domain))) / len(domain)]])
-        self.vowelRatioScaledWeight = scaler.transform(result.reshape(-1, 1))[0][0]
+        # self.vowelRatioScaledWeight = scaler.transform(result.reshape(-1, 1))[0][0]
+        self.vowelRatioScaledWeight = sum(
+            list(map(lambda x: 1 if x in ["a", "e", "i", "o", "u", "y"] else 0, domain))) / len(domain)
 
     def ratio_digit_scaled_calculation(self, normDict):
         """
@@ -1796,7 +1804,8 @@ class URL:
         domain.replace(".", "")
 
         result = norm.transform([[sum(list(map(lambda x: 1 if x.isdigit() else 0, domain))) / len(domain)]])
-        self.ratioDigitScaledWeight = scaler.transform(result.reshape(-1, 1))[0][0]
+        # self.ratioDigitScaledWeight = scaler.transform(result.reshape(-1, 1))[0][0]
+        self.ratioDigitScaledWeight = sum(list(map(lambda x: 1 if x.isdigit() else 0, domain))) / len(domain)
 
     def alphabet_cardinality_scaled_calculation(self, normDict):
         """
@@ -1853,7 +1862,8 @@ class URL:
                 countRepeated += 1
 
         result = norm.transform([[countRepeated / card]])
-        self.ratioRepeatedCharacterScaledWeight = scaler.transform(result.reshape(-1, 1))[0][0]
+        # self.ratioRepeatedCharacterScaledWeight = scaler.transform(result.reshape(-1, 1))[0][0]
+        self.ratioRepeatedCharacterScaledWeight = countRepeated / card
 
     def ratio_consecutive_consonant_scaled_calculation(self, normDict):
         """
@@ -1889,7 +1899,8 @@ class URL:
                 countConsecutive += len(splitted)
 
         result = norm.transform([[countConsecutive / len(domain)]])
-        self.ratioConsecutiveConsonantScaledWeight = scaler.transform(result.reshape(-1, 1))[0][0]
+        # self.ratioConsecutiveConsonantScaledWeight = scaler.transform(result.reshape(-1, 1))[0][0]
+        self.ratioConsecutiveConsonantScaledWeight = countConsecutive / len(domain)
 
     def ratio_consecutive_digit_scaled_calculation(self, normDict):
         """
@@ -1925,7 +1936,8 @@ class URL:
                 countConsecutive += len(splitted)
 
         result = norm.transform([[countConsecutive / len(domain)]])
-        self.ratioConsecutiveDigitScaledWeight = scaler.transform(result.reshape(-1, 1))[0][0]
+        # self.ratioConsecutiveDigitScaledWeight = scaler.transform(result.reshape(-1, 1))[0][0]
+        self.ratioConsecutiveDigitScaledWeight = countConsecutive / len(domain)
 
     def features_extraction(self, normDict):
         """
