@@ -278,10 +278,10 @@ class URL:
         :return: -1,0 or 1
         """
 
-        if len(self.hostname) <= 14:
+        if len(self.hostname) < 15:
             self.lengthWeight = 0
             return
-        elif 14 < len(self.hostname) < 19:
+        elif 15 < len(self.hostname) < 19:
             self.lengthWeight = 0.5
             return
         else:
@@ -580,7 +580,7 @@ class URL:
             if percentage >= 0.81:
                 self.tagWeight = 1
                 return
-            elif percentage >= 0.17:
+            elif percentage >= 0.05:
                 self.tagWeight = 0.5
                 return
 
@@ -720,10 +720,10 @@ class URL:
         prompt = re.findall(r"prompt\(", str(self.html)) + re.findall(r"confirm\(", str(self.html)) + re.findall(
             r"alert\(", str(self.html))
         if prompt:
-            if len(prompt) > 4:
+            if len(prompt) > 3:
                 self.popupWeight = 1
                 return
-            if len(prompt) > 2:
+            if len(prompt) >= 1:
                 self.popupWeight = 0.5
                 return
 
@@ -761,8 +761,11 @@ class URL:
                 self.domainAgeWeight = 0.5
                 return
 
-            if delta.days > 365 / 2:
+            if delta.days > 1095:
                 self.domainAgeWeight = 0
+                return
+            elif delta.days > 365:
+                self.domainAgeWeight = 0.5
                 return
             else:
                 self.domainAgeWeight = 1
@@ -833,6 +836,8 @@ class URL:
         if self.pageRank <= 2:
             self.pageRankWeight = 1
             return
+        elif self.pageRank <= 4:
+            self.pageRankWeight = 0.5
         else:
             self.pageRankWeight = 0
             return
@@ -865,10 +870,10 @@ class URL:
             except(AttributeError, IndexError):
                 self.linksWeight = 1
                 return
-        if countLinks == 0:
+        if countLinks < 5:
             self.linksWeight = 1
             return
-        elif countLinks <= 2:
+        elif countLinks < 30:
             self.linksWeight = 0.5
             return
 
@@ -922,10 +927,14 @@ class URL:
         for subdomain in subdomains:
             total += len(subdomain)
 
-        if total / len(subdomains) > 9:
+        if total / len(subdomains) > 15:
             self.subDomainLengthWeight = 1
             return
-        self.subDomainLengthWeight = 1
+        elif total / len(subdomains) > 9:
+            self.subDomainLengthWeight = 0.5
+            return
+
+        self.subDomainLengthWeight = 0
 
     def www_testing(self):
         """
@@ -1037,7 +1046,7 @@ class URL:
             if sum(list(map(lambda x: 1 if x.isdigit() else 0, subdomain))) == len(subdomain):
                 exclusiveDigit += 1
 
-        if exclusiveDigit / len(subdomains) > 0.0008:
+        if exclusiveDigit / len(subdomains) != 0:
             self.ratioDigitSubDomainWeight = 1
             return
         self.ratioDigitSubDomainWeight = 0
@@ -1068,7 +1077,7 @@ class URL:
                 exclusiveHex += 1
             except hexErr:
                 pass
-        if exclusiveHex / len(subdomains) > 0.0019:
+        if exclusiveHex / len(subdomains) != 0:
             self.ratioHexaSubDomainWeight = 1
             return
         self.ratioHexaSubDomainWeight = 0
@@ -1132,7 +1141,7 @@ class URL:
                 pass
 
         domain.replace(".", "")
-        if 0.355 < sum(map(lambda x: 1 if x in ["a", "e", "i", "o", "u", "y"] else 0, domain)) / len(domain) < 0.385:
+        if 0.27 < sum(map(lambda x: 1 if x in ["a", "e", "i", "o", "u", "y"] else 0, domain)) / len(domain):
             self.vowelRatioWeight = 0
             return
         self.vowelRatioWeight = 1
@@ -1154,7 +1163,7 @@ class URL:
                 pass
 
         domain.replace(".", "")
-        if sum(list(map(lambda x: 1 if x.isdigit() else 0, domain))) / len(domain) > 0.013:
+        if sum(list(map(lambda x: 1 if x.isdigit() else 0, domain))) / len(domain) > 0:
             self.ratioDigitWeight = 1
             return
         self.ratioDigitWeight = 0
@@ -1177,8 +1186,11 @@ class URL:
 
         domain.replace(".", "")
 
-        if sum(list(map(lambda x: 1 if x.isalpha() else 0, domain))) > 12:
+        if sum(list(map(lambda x: 1 if x.isalpha() else 0, domain))) > 14:
             self.alphabetCardinalityWeight = 1
+            return
+        elif sum(list(map(lambda x: 1 if x.isalpha() else 0, domain))) > 11:
+            self.alphabetCardinalityWeight = 0.5
             return
         self.alphabetCardinalityWeight = 0
 
@@ -1211,7 +1223,7 @@ class URL:
             if domain.count(character) > 1:
                 countRepeated += 1
 
-        if countRepeated / card > 0.212:
+        if countRepeated / card > 0.17:
             self.ratioRepeatedCharacterWeight = 1
             return
         self.ratioRepeatedCharacterWeight = 0
@@ -1247,7 +1259,7 @@ class URL:
             if len(splitted) > 1:
                 countConsecutive += len(splitted)
 
-        if countConsecutive / len(domain) > 0.4:
+        if countConsecutive / len(domain) > 0.05:
             self.ratioConsecutiveConsonantWeight = 1
             return
         self.ratioConsecutiveConsonantWeight = 0
@@ -1283,7 +1295,7 @@ class URL:
             if len(splitted) > 1:
                 countConsecutive += len(splitted)
 
-        if countConsecutive / len(domain) > 0.005:
+        if countConsecutive / len(domain) > 0.01:
             self.ratioConsecutiveDigitWeight = 1
             return
         self.ratioConsecutiveDigitWeight = 0
