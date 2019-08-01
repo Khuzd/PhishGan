@@ -2739,13 +2739,13 @@ class URL:
         #     logger.critical(e)
         #     self.ipWeight = "error"
         #
-        # # testing length of the url
-        # try:
-        #     self.length_testing()
-        # except Exception as e:
-        #     logger.critical(e)
-        #     self.lengthWeight = "error"
-        #
+        # testing length of the url
+        try:
+            self.length_testing()
+        except Exception as e:
+            logger.critical(e)
+            self.lengthWeight = "error"
+
         # # testing shortener url
         # try:
         #     self.shortener_testing()
@@ -2767,20 +2767,20 @@ class URL:
         #     logger.critical(e)
         #     self.doubleSlashWeight = "error"
         #
-        # # testing dash
-        # try:
-        #     self.dash_testing()
-        # except Exception as e:
-        #     logger.critical(e)
-        #     self.dashWeight = "error"
-        #
-        # # testing subdomain count
-        # try:
-        #     self.sub_domain_testing()
-        # except Exception as e:
-        #     logger.critical(e)
-        #     self.subDomainWeight = "error"
-        #
+        # testing dash
+        try:
+            self.dash_testing()
+        except Exception as e:
+            logger.critical(e)
+            self.dashWeight = "error"
+
+        # testing subdomain count
+        try:
+            self.sub_domain_testing()
+        except Exception as e:
+            logger.critical(e)
+            self.subDomainWeight = "error"
+
         # # testing age of the domain certificate
         # try:
         #     if self.http == "https" and self.certificate is not None:
@@ -2827,13 +2827,13 @@ class URL:
         #     logger.critical(e)
         #     self.anchorsWeight = "error"
         #
-        # # testing tags links
-        # try:
-        #     self.tags_links_testing()
-        # except Exception as e:
-        #     logger.critical(e)
-        #     self.tagWeight = "error"
-        #
+        # testing tags links
+        try:
+            self.tags_links_testing()
+        except Exception as e:
+            logger.critical(e)
+            self.tagWeight = "error"
+
         # # testing SFH
         # try:
         #     self.sfh_testing()
@@ -2869,13 +2869,13 @@ class URL:
         #     logger.critical(e)
         #     self.rightClickWeight = "error"
         #
-        # # testing popup
-        # try:
-        #     self.popup_testing()
-        # except Exception as e:
-        #     logger.critical(e)
-        #     self.popupWeight = "error"
-        #
+        # testing popup
+        try:
+            self.popup_testing()
+        except Exception as e:
+            logger.critical(e)
+            self.popupWeight = "error"
+
         # # testing IFrame
         # try:
         #     self.iframe_testing()
@@ -2883,14 +2883,34 @@ class URL:
         #     logger.critical(e)
         #     self.iFrameWeight = "error"
         #
-        # # testing domain age
+        # testing domain age
+        try:
+            self.domain_age_testing()
+            if self.domainAgeWeight == -2:
+                return -1
+        except Exception as e:
+            logger.critical(e)
+            self.domainAgeWeight = "error"
+
+        # testing pageRank
+        try:
+            self.page_rank_testing()
+        except Exception as e:
+            logger.critical(e)
+            self.pageRankWeight = "error"
+        # # testing traffic
         # try:
-        #     self.domain_age_testing()
-        #     if self.domainAgeWeight == -2:
-        #         return -1
+        #     self.traffic_testing()
         # except Exception as e:
         #     logger.critical(e)
-        #     self.domainAgeWeight = "error"
+        #     self.trafficWeight = "error"
+
+        # testing links pointing to
+        try:
+            self.links_pointing_to_testing()
+        except Exception as e:
+            logger.critical(e)
+            self.linksWeight = "error"
 
         # testing subdomain lentgh mean
         try:
@@ -2899,41 +2919,41 @@ class URL:
             logger.critical(e)
             self.subDomainLengthWeight = "error"
 
-        # testing www
-        try:
-            self.www_testing()
-        except Exception as e:
-            logger.critical(e)
-            self.wwwWeight = "error"
-
-        # testing valid tld
-        try:
-            self.valid_tld_testing()
-        except Exception as e:
-            logger.critical(e)
-            self.validTldWeight = "error"
-
-        # testing single character as subdomain
-        try:
-            self.single_character_sub_domain_testing()
-        except Exception as e:
-            logger.critical(e)
-            self.singleCharacterSubDomainWeight = "error"
-
-        # testing exclusive prefix repetition
-        try:
-            self.exclusive_prefix_repetition_testing()
-        except Exception as e:
-            logger.critical(e)
-            self.exclusivePrefixRepetitionWeight = "error"
-
-        # testing tld as subdomain
-        try:
-            self.tld_sub_domain_testing()
-        except Exception as e:
-            logger.critical(e)
-            self.tldSubDomainWeight = "error"
-
+        # # testing www
+        # try:
+        #     self.www_testing()
+        # except Exception as e:
+        #     logger.critical(e)
+        #     self.wwwWeight = "error"
+        #
+        # # testing valid tld
+        # try:
+        #     self.valid_tld_testing()
+        # except Exception as e:
+        #     logger.critical(e)
+        #     self.validTldWeight = "error"
+        #
+        # # testing single character as subdomain
+        # try:
+        #     self.single_character_sub_domain_testing()
+        # except Exception as e:
+        #     logger.critical(e)
+        #     self.singleCharacterSubDomainWeight = "error"
+        #
+        # # testing exclusive prefix repetition
+        # try:
+        #     self.exclusive_prefix_repetition_testing()
+        # except Exception as e:
+        #     logger.critical(e)
+        #     self.exclusivePrefixRepetitionWeight = "error"
+        #
+        # # testing tld as subdomain
+        # try:
+        #     self.tld_sub_domain_testing()
+        # except Exception as e:
+        #     logger.critical(e)
+        #     self.tldSubDomainWeight = "error"
+        #
         # testing ratio of digit subdomain
         try:
             self.ratio_digit_sub_domain_testing()
@@ -2948,20 +2968,20 @@ class URL:
             logger.critical(e)
             self.ratioHexaSubDomainWeight = "error"
 
-        # testing ratio of underscore
-        try:
-            self.underscore_testing()
-        except Exception as e:
-            logger.critical(e)
-            self.underscoreWeight = "error"
-
-        # testing digit in domain
-        try:
-            self.contain_digit_testing()
-        except Exception as e:
-            logger.critical(e)
-            self.containDigitWeight = "error"
-
+        # # testing ratio of underscore
+        # try:
+        #     self.underscore_testing()
+        # except Exception as e:
+        #     logger.critical(e)
+        #     self.underscoreWeight = "error"
+        #
+        # # testing digit in domain
+        # try:
+        #     self.contain_digit_testing()
+        # except Exception as e:
+        #     logger.critical(e)
+        #     self.containDigitWeight = "error"
+        #
         # testing vowel ratio
         try:
             self.vowel_ratio_testing()
@@ -3015,7 +3035,7 @@ class URL:
         #     logger.critical(e)
         #     self.ipScaledWeight = "error"
         #
-        # # testing scaled length of the url
+        # testing scaled length of the url
         # try:
         #     self.length_scaled_calculation(normDict)
         # except Exception as e:
@@ -3043,20 +3063,20 @@ class URL:
         #     logger.critical(e)
         #     self.doubleSlashScaledWeight = "error"
         #
-        # # testing scaled dash
+        # testing scaled dash
         # try:
         #     self.dash_scaled_calculation(normDict)
         # except Exception as e:
         #     logger.critical(e)
         #     self.dashScaledWeight = "error"
-        #
+
         # # testing scaled subdomain count
         # try:
         #     self.sub_domain_scaled_calculation(normDict)
         # except Exception as e:
         #     logger.critical(e)
         #     self.subDomainScaledWeight = "error"
-        #
+
         # # testing scaled age of the domain certificate
         # try:
         #     if self.http == "https" and self.certificate is not None:
@@ -3167,76 +3187,96 @@ class URL:
         # except Exception as e:
         #     logger.critical(e)
         #     self.domainAgeScaledWeight = "error"
+        #
+        #     # testing pageRank
+        #     try:
+        #         self.page_rank_scaled_calculation()
+        #     except Exception as e:
+        #         logger.critical(e)
+        #         self.pageRankScaledWeight = "error"
+        #     # testing traffic
+        #     try:
+        #         self.traffic_scaled_calculation()
+        #     except Exception as e:
+        #         logger.critical(e)
+        #         self.trafficScaledWeight = "error"
+        #
+        #     # testing links pointing to
+        #     try:
+        #         self.links_pointing_to_scaled_calculation()
+        #     except Exception as e:
+        #         logger.critical(e)
+        #         self.linksScaledWeight = "error"
 
-        # testing scaled subdomain lentgh mean
-        try:
-            self.sub_domain_length_scaled_calculation(normDict)
-        except Exception as e:
-            logger.critical(e)
-            self.subDomainLengthScaledWeight = "error"
-
-        # testing scaled ratio of digit subdomain
-        try:
-            self.ratio_digit_sub_domain_scaled_calculation(normDict)
-        except Exception as e:
-            logger.critical(e)
-            self.ratioDigitSubDomainScaledWeight = "error"
-
-        # testing scaled ratio of hexa subdomains
-        try:
-            self.ratio_hexa_sub_domain_scaled_calculation(normDict)
-        except Exception as e:
-            logger.critical(e)
-            self.ratioHexaSubDomainScaledWeight = "error"
-
-        # testing scaled ratio of underscore
-        try:
-            self.underscore_scaled_calculation(normDict)
-        except Exception as e:
-            logger.critical(e)
-            self.underscoreScaledWeight = "error"
-
-        # testing scaled vowel ratio
-        try:
-            self.vowel_ratio_scaled_calculation(normDict)
-        except Exception as e:
-            logger.critical(e)
-            self.vowelRatioScaledWeight = "error"
-
-        # testing scaled digit ratio
-        try:
-            self.ratio_digit_scaled_calculation(normDict)
-        except Exception as e:
-            logger.critical(e)
-            self.ratioDigitScaledWeight = "error"
-
-        # testing scaled alphabet cardinality
-        try:
-            self.alphabet_cardinality_scaled_calculation(normDict)
-        except Exception as e:
-            logger.critical(e)
-            self.alphabetCardinalityScaledWeight = "error"
-
-        # testing scaled ratio of repeated characters
-        try:
-            self.ratio_repeated_character_scaled_calculation(normDict)
-        except Exception as e:
-            logger.critical(e)
-            self.ratioRepeatedCharacterScaledWeight = "error"
-
-        # testing scaled ratio of consecutive consonants
-        try:
-            self.ratio_consecutive_consonant_scaled_calculation(normDict)
-        except Exception as e:
-            logger.critical(e)
-            self.ratioConsecutiveConsonantScaledWeight = "error"
-
-        # testing scaled ratio of consecutive digits
-        try:
-            self.ratio_consecutive_digit_scaled_calculation(normDict)
-        except Exception as e:
-            logger.critical(e)
-            self.ratioConsecutiveDigitScaledWeight = "error"
+        # # testing scaled subdomain lentgh mean
+        # try:
+        #     self.sub_domain_length_scaled_calculation(normDict)
+        # except Exception as e:
+        #     logger.critical(e)
+        #     self.subDomainLengthScaledWeight = "error"
+        #
+        # # testing scaled ratio of digit subdomain
+        # try:
+        #     self.ratio_digit_sub_domain_scaled_calculation(normDict)
+        # except Exception as e:
+        #     logger.critical(e)
+        #     self.ratioDigitSubDomainScaledWeight = "error"
+        #
+        # # testing scaled ratio of hexa subdomains
+        # try:
+        #     self.ratio_hexa_sub_domain_scaled_calculation(normDict)
+        # except Exception as e:
+        #     logger.critical(e)
+        #     self.ratioHexaSubDomainScaledWeight = "error"
+        #
+        # # testing scaled ratio of underscore
+        # try:
+        #     self.underscore_scaled_calculation(normDict)
+        # except Exception as e:
+        #     logger.critical(e)
+        #     self.underscoreScaledWeight = "error"
+        #
+        # # testing scaled vowel ratio
+        # try:
+        #     self.vowel_ratio_scaled_calculation(normDict)
+        # except Exception as e:
+        #     logger.critical(e)
+        #     self.vowelRatioScaledWeight = "error"
+        #
+        # # testing scaled digit ratio
+        # try:
+        #     self.ratio_digit_scaled_calculation(normDict)
+        # except Exception as e:
+        #     logger.critical(e)
+        #     self.ratioDigitScaledWeight = "error"
+        #
+        # # testing scaled alphabet cardinality
+        # try:
+        #     self.alphabet_cardinality_scaled_calculation(normDict)
+        # except Exception as e:
+        #     logger.critical(e)
+        #     self.alphabetCardinalityScaledWeight = "error"
+        #
+        # # testing scaled ratio of repeated characters
+        # try:
+        #     self.ratio_repeated_character_scaled_calculation(normDict)
+        # except Exception as e:
+        #     logger.critical(e)
+        #     self.ratioRepeatedCharacterScaledWeight = "error"
+        #
+        # # testing scaled ratio of consecutive consonants
+        # try:
+        #     self.ratio_consecutive_consonant_scaled_calculation(normDict)
+        # except Exception as e:
+        #     logger.critical(e)
+        #     self.ratioConsecutiveConsonantScaledWeight = "error"
+        #
+        # # testing scaled ratio of consecutive digits
+        # try:
+        #     self.ratio_consecutive_digit_scaled_calculation(normDict)
+        # except Exception as e:
+        #     logger.critical(e)
+        #     self.ratioConsecutiveDigitScaledWeight = "error"
 
         self.soup = None
 
