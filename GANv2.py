@@ -314,6 +314,11 @@ class GAN:
             phisTest = list(phishData)
             cleanTest = list(cleanData)
 
+        if (len(cleanTest) > len(phisTest)):
+            cleanTest = cleanTest[:len(phisTest)]
+        else:
+            phisTest = phisTest[len(cleanTest)]
+
         # Adversarial ground truths
         valid = np.ones((self.sampleSize, 1))
         fake = np.zeros((self.sampleSize, 1))
@@ -329,7 +334,7 @@ class GAN:
         bestEpoch = -1
         bestClass = {"accuracy": 0}
 
-        for epoch in range(epochs):
+        for epoch in range(1, epochs + 1):
 
             ## Select a random batch of images
             # for training
