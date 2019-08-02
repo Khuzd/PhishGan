@@ -83,6 +83,9 @@ stream_handler.setLevel(logging.WARNING)
 
 logger.addHandler(stream_handler)
 
+logger2 = logging.getLogger('chardet.charsetprober')
+logger2.setLevel(logging.INFO)
+
 
 class MyParser(argparse.ArgumentParser):
     """
