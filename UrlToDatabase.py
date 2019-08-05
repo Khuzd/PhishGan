@@ -281,7 +281,7 @@ class URL:
         if len(self.hostname) < 15:
             self.lengthWeight = 0
             return
-        elif 15 < len(self.hostname) < 19:
+        elif 15 <= len(self.hostname) < 19:
             self.lengthWeight = 0.5
             return
         else:
