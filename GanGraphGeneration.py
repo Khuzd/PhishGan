@@ -36,7 +36,8 @@ tf.compat.v1.set_random_seed(seed_value)
 # 5. Configure a new global `tensorflow` session
 from keras import backend as K
 
-session_conf = tf.compat.v1.ConfigProto(intra_op_parallelism_threads=1, inter_op_parallelism_threads=1, device_count={"CPU": 1})
+session_conf = tf.compat.v1.ConfigProto(intra_op_parallelism_threads=1, inter_op_parallelism_threads=1,
+                                        device_count={"CPU": 1})
 sess = tf.compat.v1.Session(graph=tf.compat.v1.get_default_graph(), config=session_conf)
 K.set_session(sess)
 
@@ -98,7 +99,7 @@ def graph_creation(X, YD, VYD, lr, sample, label, bestEpoch, bestAccu, YG=None, 
 
 
 def multi_graph(begin_lr, end_lr, step_lr, epochs, begin_sampleSize, end_SampleSize, step_sampleSize, plotFrequency,
-                datasetPath, outPath="graphs", divide=1, dataType="phish"):
+                datasetPath, cleanPath, phishPath, outPath="graphs", divide=1, dataType="phish"):
     """
     Create multiple graph for the GAN to analyse parameters efficiency
     :param begin_lr: float (first learning rate)
@@ -116,6 +117,10 @@ def multi_graph(begin_lr, end_lr, step_lr, epochs, begin_sampleSize, end_SampleS
     :return:
     """
 
+    data = importData.csv_to_list(datasetPath)[1].values()
+    phish = importData.csv_to_list(phishPath)[1].values()
+    clean = importData.csv_to_list(cleanPath)[1].values()
+
     for sample in range(begin_sampleSize, end_SampleSize, step_sampleSize):
         try:
             os.mkdir(outPath + "/" + str(sample))
@@ -130,7 +135,7 @@ def multi_graph(begin_lr, end_lr, step_lr, epochs, begin_sampleSize, end_SampleS
             np.random.seed(seed_value)
             tf.compat.v1.set_random_seed(seed_value)
             session_conf = tf.compat.v1.ConfigProto(intra_op_parallelism_threads=1, inter_op_parallelism_threads=1,
-                                          device_count={"CPU": 1})
+                                                    device_count={"CPU": 1})
             sess = tf.compat.v1.Session(graph=tf.compat.v1.get_default_graph(), config=session_conf)
             K.set_session(sess)
 
@@ -143,7 +148,7 @@ def multi_graph(begin_lr, end_lr, step_lr, epochs, begin_sampleSize, end_SampleS
             # Train
             X, accuracy, Dloss, Gloss, vacc, vDloss, vGloss, bestReport, \
             bestEpoch = gan.train(epochs=epochs, plotFrequency=plotFrequency,
-                                  data=importData.csv_to_list(datasetPath)[1].values(), predict=True)
+                                  data=data, predict=True)
 
             # ---------------------
             #  Plot graph(s)
@@ -157,15 +162,15 @@ def multi_graph(begin_lr, end_lr, step_lr, epochs, begin_sampleSize, end_SampleS
                 for i in range(divide):
                     lenght = len(X)
                     graph_creation(X[i * (lenght // divide):(i + 1) * (lenght // divide)],
-                                  Dloss[i * (lenght // divide):(i + 1) * (lenght // divide)],
-                                  vDloss[i * (lenght // divide):(i + 1) * (lenght // divide)], lr, sample, "loss",
+                                   Dloss[i * (lenght // divide):(i + 1) * (lenght // divide)],
+                                   vDloss[i * (lenght // divide):(i + 1) * (lenght // divide)], lr, sample, "loss",
                                    bestEpoch, bestReport["accuracy"],
-                                  Gloss[i * (lenght // divide):(i + 1) * (lenght // divide)],
-                                  vGloss[i * (lenght // divide):(i + 1) * (lenght // divide)], path=outPath,
+                                   Gloss[i * (lenght // divide):(i + 1) * (lenght // divide)],
+                                   vGloss[i * (lenght // divide):(i + 1) * (lenght // divide)], path=outPath,
                                    suffix="part" + str(i))
                     graph_creation(X[i * (lenght // divide):(i + 1) * (lenght // divide)],
-                                  accuracy[i * (lenght // divide):(i + 1) * (lenght // divide)],
-                                  vacc[i * (lenght // divide):(i + 1) * (lenght // divide)], lr, sample, "accuracy",
+                                   accuracy[i * (lenght // divide):(i + 1) * (lenght // divide)],
+                                   vacc[i * (lenght // divide):(i + 1) * (lenght // divide)], lr, sample, "accuracy",
                                    bestEpoch, bestReport["accuracy"],
                                    path=outPath, suffix="part" + str(i))
 

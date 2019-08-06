@@ -135,7 +135,8 @@ def graph(args):
     if type(args.division) == list:
         args.division = args.division[0]
     GanGraphGeneration.multi_graph(args.beginLR[0], args.endLR[0], args.stepLR[0], args.epochs[0], args.beginSample[0],
-                                   args.endSample[0], args.stepSample[0], args.pltFrequency[0], dataset,
+                                   args.endSample[0], args.stepSample[0], args.pltFrequency[0], dataset, args.clean[0],
+                                   args.phish[0],
                                    outPath=''.join(args.output), divide=args.division, dataType=args.type[0])
     return
 
@@ -494,6 +495,10 @@ if __name__ == "__main__":
                              help="Frequency of the plots on graphs")
     graphParser.add_argument('-d', "--dataset", required=True, nargs=1, type=str,
                              help="Dataset used to train the GAN. Can be UCI, clean or path")
+    graphParser.add_argument('-c', "--clean", required=True, nargs=1, type=str,
+                             help="Clean dataset used to test the GAN.")
+    graphParser.add_argument('-p', "--phish", required=True, nargs=1, type=str,
+                             help="Phishing dataset used to test the GAN.")
     graphParser.add_argument('-o', "--output", default="graphs", nargs=1, type=str,
                              help="Output path where graphs will be stored")
     graphParser.add_argument('-di', "--division", default=1, nargs=1, type=int,
