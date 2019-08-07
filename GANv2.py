@@ -314,7 +314,7 @@ class GAN:
             phisTest = list(phishData)
             cleanTest = list(cleanData)
 
-        if (len(cleanTest) > len(phisTest)):
+        if len(cleanTest) > len(phisTest):
             cleanTest = cleanTest[:len(phisTest)]
         else:
             phisTest = phisTest[len(cleanTest)]
