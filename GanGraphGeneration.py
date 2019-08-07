@@ -111,6 +111,8 @@ def multi_graph(begin_lr, end_lr, step_lr, epochs, begin_sampleSize, end_SampleS
     :param step_sampleSize: int (step of the sample size increase)
     :param plotFrequency: int (number of epochs between two following points)
     :param datasetPath: string (path to the dataset used to train the GAN)
+    :param cleanPath: string (path to the clean test dataset)
+    :param phishPath: string (path to the phishing test dataset)
     :param outPath: string (path to the output files)
     :param divide: Into how many graphs the simulation is divided
     :param dataType: string (can be phish or clean)
@@ -148,7 +150,7 @@ def multi_graph(begin_lr, end_lr, step_lr, epochs, begin_sampleSize, end_SampleS
             # Train
             X, accuracy, Dloss, Gloss, vacc, vDloss, vGloss, bestReport, \
             bestEpoch = gan.train(epochs=epochs, plotFrequency=plotFrequency,
-                                  data=data, predict=True)
+                                  data=data, predict=True, phishData=phish, cleanData=clean)
 
             # ---------------------
             #  Plot graph(s)
