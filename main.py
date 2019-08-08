@@ -228,8 +228,11 @@ def creation(args):
     else:
         dataset = args.dataset[0]
 
+    clean = list(importData.csv_to_list(args.clean[0]))
+    phish = list(importData.csv_to_list(args.phish[0]))
+
     # Train then save
-    gan.train(args.epochs[0], importData.csv_to_list(dataset)[1].values())
+    gan.train(args.epochs[0], importData.csv_to_list(dataset)[1].values(), phishData=phish, cleanData=clean)
     gan.save(args.name[0], args.location[0])
     return
 
@@ -537,6 +540,10 @@ if __name__ == "__main__":
     creationParser.add_argument('-n', "--name", required=True, nargs=1, type=str, help="Name of the save")
     creationParser.add_argument('-d', "--dataset", required=True, nargs=1, type=str,
                                 help="Dataset used to train the GAN. Can be UCI, clean or path")
+    creationParser.add_argument('-c', "--clean", required=True, nargs=1, type=str,
+                                help="Clean dataset used to test the GAN.")
+    creationParser.add_argument('-p', "--phish", required=True, nargs=1, type=str,
+                                help="Phishing dataset used to test the GAN.")
     creationParser.set_defaults(func=creation)
 
     # ---------------------
