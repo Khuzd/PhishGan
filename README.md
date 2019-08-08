@@ -85,10 +85,10 @@ You can generate multiple graphs to determine the best parameters for the GAN on
 
 To do that:
 ```
-python main.py graph [-h] -blr BEGINLR -elr ENDLR -slr STEPLR -bs BEGINSAMPLE
+python main.py main.py graph [-h] -blr BEGINLR -elr ENDLR -slr STEPLR -bs BEGINSAMPLE
                      -es ENDSAMPLE -ss STEPSAMPLE -e EPOCHS -plt PLTFREQUENCY
-                     -d DATASET -c CLEAN -p PHISH [-o OUTPUT] [-di DIVISION]
-                     -t {phish,clean}
+                     -d DATASET [-c CLEAN] [-p PHISH] [-o OUTPUT]
+                     [-di DIVISION] -t {phish,clean}
 ```
 
 Example:
@@ -96,9 +96,9 @@ Example:
 python main.py graph --beginLR 0.005 --endLR 0.01 --stepLR 0.001
                      --beginSample 50 --endSample 100
                      --stepSample 10 --epochs 1500 --pltFrequency
-                     10 -d data/clean_train.csv -p data/phish_test.csv
-                     -c data/clean_test.csv -o graphs/clean -di 3 -t
-                     phish
+                     10 -d data/clean_train.csv -p phishtank
+                     -c total -o graphs/clean -di 2 -t
+                     clean
 ```
 
 If you need any help for this functionality: 
@@ -129,7 +129,7 @@ python main.py reportGraph [-h] -p PATH
 
 Example:
 ```
-python main.py reportGraph -p graphs/UCI
+python main.py reportGraph -p graphs/total
 ```
 
 If you need any help for this functionality: 
@@ -146,13 +146,13 @@ To do that:
 
 ```
 python main.py create [-h] -e EPOCHS -s SIZE -r LR -l LOCATION -n NAME -d
-                      DATASET -c CLEAN -p PHISH
+                      DATASET [-c CLEAN] [-p PHISH]
 ```
 
 Example:
 ```
-python main.py create -e 1500 -s 75 -r 0.005 -l saves -n clean_model -d data/clean_train.csv -c data/clean_test.csv 
-                      -p data/phish_test.csv
+python main.py create -e 1500 -s 75 -r 0.005 -l saves -n total_model -d data/clean_train.csv -c total 
+                      -p phishtank
 ```
 
 If you need any help for this functionality: 
@@ -200,7 +200,7 @@ python main.py predict [-h] -f FILE [-v] -l LOCATION -n NAME [-o OUTPUT]
 
 Example:
 ```
-python main.py predict -f data/Phishtank_outtest.csv -l saves -n UCI_model
+python main.py predict -f data/Phishtank_outtest.csv -l saves -n total_model
 ```
 
 If you need any help for this functionality: 
