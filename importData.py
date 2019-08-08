@@ -1,10 +1,11 @@
 """
-
+File used to import data
 -----------
 Generative Adversarial Networks (GAN) research applied to the phishing detection.
 University of Gloucestershire
 Author : Pierrick ROBIC--BUTEZ
 2019
+Copyright (c) 2019 Khuzd
 """
 
 import csv
@@ -19,7 +20,7 @@ def csv_to_list(path):
     features = {}
     with open(path, newline='', encoding='utf-8-sig', errors="ignore") as csvfile:
         for row in csv.reader(csvfile, delimiter=',', quotechar='|'):
-            features[row[0]] = row[1:]
+            features[row[0]] = list(map(float, row[1:]))
         csvfile.close()
 
     results = []

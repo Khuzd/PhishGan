@@ -1,10 +1,11 @@
 """
-
+File used as interface with the sqlite3 database
 -----------
 Generative Adversarial Networks (GAN) research applied to the phishing detection.
 University of Gloucestershire
 Author : Pierrick ROBIC--BUTEZ
 2019
+Copyright (c) 2019 Khuzd
 """
 
 import logging
@@ -183,46 +184,24 @@ class WebsiteBase:
                     tmp.ratioConsecutiveDigitWeight = int(oldUrl.ratioConsecutiveDigitWeight)
 
                     # Load scaled weights
-                    tmp.ipScaledWeight = float(oldUrl.ipScaledWeight)
                     tmp.lengthScaledWeight = float(oldUrl.lengthScaledWeight)
-                    tmp.shorteningScaledWeight = float(oldUrl.shorteningScaledWeight)
-                    tmp.atScaledWeight = float(oldUrl.atScaledWeight)
-                    tmp.doubleSlashScaledWeight = float(oldUrl.doubleSlashScaledWeight)
                     tmp.dashScaledWeight = float(oldUrl.dashScaledWeight)
                     tmp.subDomainScaledWeight = float(oldUrl.subDomainScaledWeight)
                     tmp.certificateAgeScaledWeight = float(oldUrl.certificateAgeScaledWeight)
                     tmp.expirationScaledWeight = float(oldUrl.expirationScaledWeight)
-                    tmp.faviconScaledWeight = float(oldUrl.faviconScaledWeight)
-                    tmp.portScaledWeight = float(oldUrl.portScaledWeight)
-                    tmp.httpScaledWeight = float(oldUrl.httpScaledWeight)
                     tmp.requestedScaledWeight = float(oldUrl.requestedScaledWeight)
                     tmp.anchorsScaledWeight = float(oldUrl.anchorsScaledWeight)
                     tmp.tagScaledWeight = float(oldUrl.tagScaledWeight)
                     tmp.SFHScaledWeight = float(oldUrl.SFHScaledWeight)
-                    tmp.emailScaledWeight = float(oldUrl.emailScaledWeight)
-                    tmp.abnormalScaledWeight = float(oldUrl.abnormalScaledWeight)
-                    tmp.forwardScaledWeight = float(oldUrl.forwardScaledWeight)
-                    tmp.barCustomScaledWeight = float(oldUrl.barCustomScaledWeight)
-                    tmp.rightClickScaledWeight = float(oldUrl.rightClickScaledWeight)
                     tmp.popupScaledWeight = float(oldUrl.popupScaledWeight)
-                    tmp.iFrameScaledWeight = float(oldUrl.iFrameScaledWeight)
                     tmp.domainAgeScaledWeight = float(oldUrl.domainAgeScaledWeight)
-                    tmp.dnsScaledWeight = float(oldUrl.dnsScaledWeight)
                     tmp.trafficScaledWeight = float(oldUrl.trafficScaledWeight)
                     tmp.pageRankScaledWeight = float(oldUrl.pageRankScaledWeight)
-                    tmp.indexingScaledWeight = float(oldUrl.indexingScaledWeight)
                     tmp.linksScaledWeight = float(oldUrl.linksScaledWeight)
-                    tmp.statisticScaledWeight = float(oldUrl.statisticScaledWeight)
                     tmp.subDomainLengthScaledWeight = float(oldUrl.subDomainLengthScaledWeight)
-                    tmp.wwwScaledWeight = float(oldUrl.wwwScaledWeight)
-                    tmp.validTldScaledWeight = float(oldUrl.validTldScaledWeight)
-                    tmp.singleCharacterSubDomainScaledWeight = float(oldUrl.singleCharacterSubDomainScaledWeight)
-                    tmp.exclusivePrefixRepetitionScaledWeight = float(oldUrl.exclusivePrefixRepetitionScaledWeight)
-                    tmp.tldSubDomainScaledWeight = float(oldUrl.tldSubDomainScaledWeight)
                     tmp.ratioDigitSubDomainScaledWeight = float(oldUrl.ratioDigitSubDomainScaledWeight)
                     tmp.ratioHexaSubDomainScaledWeight = float(oldUrl.ratioHexaSubDomainScaledWeight)
                     tmp.underscoreScaledWeight = float(oldUrl.underscoreScaledWeight)
-                    tmp.containDigitScaledWeight = float(oldUrl.containDigitScaledWeight)
                     tmp.vowelRatioScaledWeight = float(oldUrl.vowelRatioScaledWeight)
                     tmp.ratioDigitScaledWeight = float(oldUrl.ratioDigitScaledWeight)
                     tmp.alphabetCardinalityScaledWeight = float(oldUrl.alphabetCardinalityScaledWeight)
@@ -232,6 +211,7 @@ class WebsiteBase:
 
                     # Replace old website in database by new website
                     result.content = pickle.dumps(tmp)
+                    del oldUrl, tmp
                 self.session.commit()
 
         return

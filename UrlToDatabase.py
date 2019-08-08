@@ -1,10 +1,11 @@
 """
-
+File used to modelize URLs for phishing detection
 -----------
 Generative Adversarial Networks (GAN) research applied to the phishing detection.
 University of Gloucestershire
 Author : Pierrick ROBIC--BUTEZ
 2019
+Copyright (c) 2019 Khuzd
 """
 import csv
 import datetime
@@ -26,6 +27,7 @@ from func_timeout import func_timeout, FunctionTimedOut
 from myawis import CallAwis
 from publicsuffixlist import PublicSuffixList
 
+import ORMmanage
 import googleApi
 from libs.whois import whois
 from libs.whois.parser import PywhoisError
@@ -226,46 +228,24 @@ class URL:
         self.ratioConsecutiveDigitWeight = "error"
 
         ## ScaledWeights
-        self.ipScaledWeight = "error"
         self.lengthScaledWeight = "error"
-        self.shorteningScaledWeight = "error"
-        self.atScaledWeight = "error"
-        self.doubleSlashScaledWeight = "error"
         self.dashScaledWeight = "error"
         self.subDomainScaledWeight = "error"
         self.certificateAgeScaledWeight = "error"
         self.expirationScaledWeight = "error"
-        self.faviconScaledWeight = "error"
-        self.portScaledWeight = "error"
-        self.httpScaledWeight = "error"
         self.requestedScaledWeight = "error"
         self.anchorsScaledWeight = "error"
         self.tagScaledWeight = "error"
         self.SFHScaledWeight = "error"
-        self.emailScaledWeight = "error"
-        self.abnormalScaledWeight = "error"
-        self.forwardScaledWeight = "error"
-        self.barCustomScaledWeight = "error"
-        self.rightClickScaledWeight = "error"
         self.popupScaledWeight = "error"
-        self.iFrameScaledWeight = "error"
         self.domainAgeScaledWeight = "error"
-        self.dnsScaledWeight = "error"
         self.trafficScaledWeight = "error"
         self.pageRankScaledWeight = "error"
-        self.indexingScaledWeight = "error"
         self.linksScaledWeight = "error"
-        self.statisticScaledWeight = "error"
         self.subDomainLengthScaledWeight = "error"
-        self.wwwScaledWeight = "error"
-        self.validTldScaledWeight = "error"
-        self.singleCharacterSubDomainScaledWeight = "error"
-        self.exclusivePrefixRepetitionScaledWeight = "error"
-        self.tldSubDomainScaledWeight = "error"
         self.ratioDigitSubDomainScaledWeight = "error"
         self.ratioHexaSubDomainScaledWeight = "error"
         self.underscoreScaledWeight = "error"
-        self.containDigitScaledWeight = "error"
         self.vowelRatioScaledWeight = "error"
         self.ratioDigitScaledWeight = "error"
         self.alphabetCardinalityScaledWeight = "error"
@@ -289,7 +269,7 @@ class URL:
             self.ipWeight = 1
             return
         else:
-            self.ipWeight = -1
+            self.ipWeight = 0
             return
 
     def length_testing(self):
@@ -298,11 +278,11 @@ class URL:
         :return: -1,0 or 1
         """
 
-        if len(self.hostname) <= 14:
-            self.lengthWeight = -1
-            return
-        elif 14 < len(self.hostname) < 19:
+        if len(self.hostname) < 15:
             self.lengthWeight = 0
+            return
+        elif 15 <= len(self.hostname) < 19:
+            self.lengthWeight = 0.5
             return
         else:
             self.lengthWeight = 1
@@ -318,7 +298,7 @@ class URL:
                 self.shorteningWeight = 1
                 return
 
-        self.shorteningWeight = -1
+        self.shorteningWeight = 0
         return
 
     def at_symbol_testing(self):
@@ -329,7 +309,7 @@ class URL:
         if "@" in self.url:
             self.atWeight = 1
             return
-        self.atWeight = -1
+        self.atWeight = 0
         return
 
     def double_slash_testing(self):
@@ -340,7 +320,7 @@ class URL:
         if "//" in self.url:
             self.doubleSlashWeight = 1
             return
-        self.doubleSlashWeight = -1
+        self.doubleSlashWeight = 0
         return
 
     def dash_testing(self):
@@ -351,7 +331,7 @@ class URL:
         if "-" in self.url:
             self.dashWeight = 1
             return
-        self.dashWeight = -1
+        self.dashWeight = 0
         return
 
     def sub_domain_testing(self):
@@ -371,10 +351,10 @@ class URL:
                 pass
 
         if domain.count('.') <= 1:
-            self.subDomainWeight = -1
+            self.subDomainWeight = 0
             return
         elif domain.count('.') == 2:
-            self.subDomainWeight = 0
+            self.subDomainWeight = 0.5
             return
         else:
             self.subDomainWeight = 1
@@ -395,10 +375,10 @@ class URL:
         for trusted in TRUSTED_ISSUERS:
             if trusted in issuer:
                 if delta.days >= 365:
-                    self.certificateAgeWeight = -1
+                    self.certificateAgeWeight = 0
                     return
 
-        self.certificateAgeWeight = 0
+        self.certificateAgeWeight = 0.5
         return
 
     def expiration_domain_testing(self):
@@ -417,11 +397,11 @@ class URL:
                 delta = expiration - now
             except:
                 logger.error("error expiration domain testing")
-                self.expirationWeight = 0
+                self.expirationWeight = 0.5
                 return
 
             if delta.days > 330:
-                self.expirationWeight = -1
+                self.expirationWeight = 0
                 return
             else:
                 self.expirationWeight = 1
@@ -446,7 +426,7 @@ class URL:
                 self.faviconWeight = 1
                 return
 
-        self.faviconWeight = -1
+        self.faviconWeight = 0
         return
 
     def port_testing(self):
@@ -473,7 +453,7 @@ class URL:
                 elif result != 0 and port[1] is True:
                     self.portWeight = 1
                     return
-            self.portWeight = -1
+            self.portWeight = 0
             return
 
         except Exception as e:
@@ -489,7 +469,7 @@ class URL:
             self.httpWeight = 1
             return
 
-        self.httpWeight = -1
+        self.httpWeight = 0
         return
 
     def requested_url_testing(self):
@@ -528,10 +508,10 @@ class URL:
                 self.requestedWeight = 1
                 return
             elif percentage >= 0.22:
-                self.requestedWeight = 0
+                self.requestedWeight = 0.5
                 return
 
-        self.requestedWeight = -1
+        self.requestedWeight = 0
         return
 
     def anchors_testing(self):
@@ -554,11 +534,11 @@ class URL:
                     externalLinks += 1
 
         if externalLinks == 0 or externalLinks / totalLink < 0.31:
-            self.anchorsWeight = -1
+            self.anchorsWeight = 0
             return
 
         elif externalLinks / totalLink <= 0.67:
-            self.anchorsWeight = 0
+            self.anchorsWeight = 0.5
             return
 
         self.anchorsWeight = 1
@@ -600,11 +580,11 @@ class URL:
             if percentage >= 0.81:
                 self.tagWeight = 1
                 return
-            elif percentage >= 0.17:
-                self.tagWeight = 0
+            elif percentage >= 0.05:
+                self.tagWeight = 0.5
                 return
 
-        self.tagWeight = -1
+        self.tagWeight = 0
         return
 
     def sfh_testing(self):
@@ -624,9 +604,9 @@ class URL:
 
             elif self.domain not in str(form.get("action")) and ("http" in str(form.get("action")) or "www" in str(
                     form.get("action"))):
-                self.SFHWeight = 0
+                self.SFHWeight = 0.5
                 return
-        self.SFHWeight = -1
+        self.SFHWeight = 0
         return
 
     def email_testing(self):
@@ -642,7 +622,7 @@ class URL:
         elif "mailto:" in str(self.html).lower():
             self.emailWeight = 1
             return
-        self.emailWeight = -1
+        self.emailWeight = 0
         return
 
     def abnormal_url_testing(self):
@@ -657,12 +637,12 @@ class URL:
                     for org in self.whoisDomain["org"]:
                         for suborg in re.split(". | ", org):
                             if suborg.lower() in domain.lower():
-                                self.abnormalWeight = -1
+                                self.abnormalWeight = 0
                                 return
                 elif self.whoisDomain["org"] is not None:
                     for suborg in re.split(". | ", self.whoisDomain["org"]):
                         if suborg.lower() in domain.lower():
-                            self.abnormalWeight = -1
+                            self.abnormalWeight = 0
                             return
 
             if "org1" in self.whoisDomain:
@@ -670,12 +650,12 @@ class URL:
                     for org in self.whoisDomain["org1"]:
                         for suborg in re.split(". | ", org):
                             if suborg.lower() in domain.lower():
-                                self.abnormalWeight = -1
+                                self.abnormalWeight = 0
                                 return
                 elif self.whoisDomain["org1"] is not None:
                     for suborg in re.split(". | ", self.whoisDomain["org1"]):
                         if suborg.lower() in domain.lower():
-                            self.abnormalWeight = -1
+                            self.abnormalWeight = 0
                             return
 
         self.abnormalWeight = 1
@@ -694,11 +674,11 @@ class URL:
             except requests.exceptions.ConnectionError:
                 return
         if countForward <= 1:
-            self.forwardWeight = -1
+            self.forwardWeight = 0
             return
 
         if countForward < 4:
-            self.forwardWeight = 0
+            self.forwardWeight = 0.5
             return
 
         self.forwardWeight = 1
@@ -715,9 +695,9 @@ class URL:
                 self.barCustomWeight = 1
                 return
             else:
-                self.barCustomWeight = 0
+                self.barCustomWeight = 0.5
                 return
-        self.barCustomWeight = -1
+        self.barCustomWeight = 0
         return
 
     def right_click_testing(self):
@@ -730,7 +710,7 @@ class URL:
             self.rightClickWeight = 1
             return
 
-        self.rightClickWeight = -1
+        self.rightClickWeight = 0
 
     def popup_testing(self):
         """
@@ -740,14 +720,14 @@ class URL:
         prompt = re.findall(r"prompt\(", str(self.html)) + re.findall(r"confirm\(", str(self.html)) + re.findall(
             r"alert\(", str(self.html))
         if prompt:
-            if len(prompt) > 4:
+            if len(prompt) > 3:
                 self.popupWeight = 1
                 return
-            if len(prompt) > 2:
-                self.popupWeight = 0
+            if len(prompt) >= 1:
+                self.popupWeight = 0.5
                 return
 
-        self.popupWeight = -1
+        self.popupWeight = 0
 
     def iframe_testing(self):
         """
@@ -761,7 +741,7 @@ class URL:
                     self.iFrameWeight = 1
                     return
 
-        self.iFrameWeight = -1
+        self.iFrameWeight = 0
 
     def domain_age_testing(self):
         """
@@ -778,11 +758,14 @@ class URL:
             try:
                 delta = now - creation
             except:
-                self.domainAgeWeight = 0
+                self.domainAgeWeight = 0.5
                 return
 
-            if delta.days > 365 / 2:
-                self.domainAgeWeight = -1
+            if delta.days > 1095:
+                self.domainAgeWeight = 0
+                return
+            elif delta.days > 365:
+                self.domainAgeWeight = 0.5
                 return
             else:
                 self.domainAgeWeight = 1
@@ -815,7 +798,7 @@ class URL:
             return
 
         if not empty:
-            self.dnsWeight = -1
+            self.dnsWeight = 0
             return
 
         self.dnsWeight = 1
@@ -839,10 +822,10 @@ class URL:
                 return
 
         if rank > 100000:
-            self.trafficWeight = 0
+            self.trafficWeight = 0.5
             return
 
-        self.trafficWeight = -1
+        self.trafficWeight = 0
 
     def page_rank_testing(self):
         """
@@ -853,8 +836,10 @@ class URL:
         if self.pageRank <= 2:
             self.pageRankWeight = 1
             return
+        elif self.pageRank <= 4:
+            self.pageRankWeight = 0.5
         else:
-            self.pageRankWeight = -1
+            self.pageRankWeight = 0
             return
 
     def google_index_testing(self):
@@ -864,7 +849,7 @@ class URL:
         """
         index = googleApi.google_search("site:" + self.url)
         if index:
-            self.indexingWeight = -1
+            self.indexingWeight = 0
             return
         self.indexingWeight = 1
 
@@ -885,14 +870,14 @@ class URL:
             except(AttributeError, IndexError):
                 self.linksWeight = 1
                 return
-        if countLinks == 0:
+        if countLinks < 5:
             self.linksWeight = 1
             return
-        elif countLinks <= 2:
-            self.linksWeight = 0
+        elif countLinks < 30:
+            self.linksWeight = 0.5
             return
 
-        self.linksWeight = -1
+        self.linksWeight = 0
 
     def statistic_report_testing(self):
         """
@@ -902,7 +887,7 @@ class URL:
         try:
             IPdomain = socket.gethostbyname(self.hostname)
         except socket.gaierror:
-            self.statisticWeight = -1
+            self.statisticWeight = 0
             return
 
         jsonDictIP = json.loads(
@@ -919,7 +904,7 @@ class URL:
                 self.statisticWeight = 1
                 return
 
-        self.statisticWeight = -1
+        self.statisticWeight = 0
 
     def sub_domain_length_testing(self):
         """
@@ -942,10 +927,14 @@ class URL:
         for subdomain in subdomains:
             total += len(subdomain)
 
-        if total / len(subdomains) > 9:
+        if total / len(subdomains) > 15:
             self.subDomainLengthWeight = 1
             return
-        self.subDomainLengthWeight = 1
+        elif total / len(subdomains) > 9:
+            self.subDomainLengthWeight = 0.5
+            return
+
+        self.subDomainLengthWeight = 0
 
     def www_testing(self):
         """
@@ -953,7 +942,7 @@ class URL:
         :return:
         """
         if "www" in self.url[:11]:
-            self.wwwWeight = -1
+            self.wwwWeight = 0
             return
         self.wwwWeight = 1
 
@@ -967,7 +956,7 @@ class URL:
         if psl.publicsuffix(self.hostname) is None:
             self.validTldWeight = 1
             return
-        self.validTldWeight = -1
+        self.validTldWeight = 0
 
     def single_character_sub_domain_testing(self):
         """
@@ -990,7 +979,7 @@ class URL:
             if len(subdomain) == 1:
                 self.singleCharacterSubDomainWeight = 1
                 return
-        self.singleCharacterSubDomainWeight = -1
+        self.singleCharacterSubDomainWeight = 0
 
     def exclusive_prefix_repetition_testing(self):
         """
@@ -1000,12 +989,12 @@ class URL:
         domain = self.hostname
         repeat = list(filter(None, domain.split(domain.split(".")[-1])))
         if len(repeat) == 1:
-            self.exclusivePrefixRepetitionWeight = -1
+            self.exclusivePrefixRepetitionWeight = 0
             return
         else:
             for test in repeat:
                 if test != repeat[0]:
-                    self.exclusivePrefixRepetitionWeight = -1
+                    self.exclusivePrefixRepetitionWeight = 0
                     return
         self.exclusivePrefixRepetitionWeight = 1
 
@@ -1031,7 +1020,7 @@ class URL:
             if psl.publicsuffix("x." + subdomain) is not None:
                 self.tldSubDomainWeight = 1
                 return
-        self.tldSubDomainWeight = -1
+        self.tldSubDomainWeight = 0
 
     def ratio_digit_sub_domain_testing(self):
         """
@@ -1057,10 +1046,10 @@ class URL:
             if sum(list(map(lambda x: 1 if x.isdigit() else 0, subdomain))) == len(subdomain):
                 exclusiveDigit += 1
 
-        if exclusiveDigit / len(subdomains) > 0.0008:
+        if exclusiveDigit / len(subdomains) != 0:
             self.ratioDigitSubDomainWeight = 1
             return
-        self.ratioDigitSubDomainWeight = -1
+        self.ratioDigitSubDomainWeight = 0
 
     def ratio_hexa_sub_domain_testing(self):
         """
@@ -1088,10 +1077,10 @@ class URL:
                 exclusiveHex += 1
             except hexErr:
                 pass
-        if exclusiveHex / len(subdomains) > 0.0019:
+        if exclusiveHex / len(subdomains) != 0:
             self.ratioHexaSubDomainWeight = 1
             return
-        self.ratioHexaSubDomainWeight = -1
+        self.ratioHexaSubDomainWeight = 0
 
     def underscore_testing(self):
         """
@@ -1112,7 +1101,7 @@ class URL:
         if domain.count("_") / len(domain) > 0:
             self.underscoreWeight = 1
             return
-        self.underscoreWeight = -1
+        self.underscoreWeight = 0
 
     def contain_digit_testing(self):
         """
@@ -1133,7 +1122,7 @@ class URL:
         if sum(list(map(lambda x: 1 if x.isdigit() else 0, domain))) != 0:
             self.containDigitWeight = 1
             return
-        self.containDigitWeight = -1
+        self.containDigitWeight = 0
 
     def vowel_ratio_testing(self):
         """
@@ -1152,8 +1141,8 @@ class URL:
                 pass
 
         domain.replace(".", "")
-        if 0.355 < sum(map(lambda x: 1 if x in ["a", "e", "i", "o", "u", "y"] else 0, domain)) / len(domain) < 0.385:
-            self.vowelRatioWeight = -1
+        if 0.27 < sum(map(lambda x: 1 if x in ["a", "e", "i", "o", "u", "y"] else 0, domain)) / len(domain):
+            self.vowelRatioWeight = 0
             return
         self.vowelRatioWeight = 1
 
@@ -1174,10 +1163,10 @@ class URL:
                 pass
 
         domain.replace(".", "")
-        if sum(list(map(lambda x: 1 if x.isdigit() else 0, domain))) / len(domain) > 0.013:
+        if sum(list(map(lambda x: 1 if x.isdigit() else 0, domain))) / len(domain) > 0:
             self.ratioDigitWeight = 1
             return
-        self.ratioDigitWeight = -1
+        self.ratioDigitWeight = 0
 
     def alphabet_cardinality_testing(self):
         """
@@ -1197,10 +1186,13 @@ class URL:
 
         domain.replace(".", "")
 
-        if sum(list(map(lambda x: 1 if x.isalpha() else 0, domain))) > 12:
+        if sum(list(map(lambda x: 1 if x.isalpha() else 0, domain))) > 14:
             self.alphabetCardinalityWeight = 1
             return
-        self.alphabetCardinalityWeight = -1
+        elif sum(list(map(lambda x: 1 if x.isalpha() else 0, domain))) > 11:
+            self.alphabetCardinalityWeight = 0.5
+            return
+        self.alphabetCardinalityWeight = 0
 
     def ratio_repeated_character_testing(self):
         """
@@ -1231,10 +1223,10 @@ class URL:
             if domain.count(character) > 1:
                 countRepeated += 1
 
-        if countRepeated / card > 0.212:
+        if countRepeated / card > 0.17:
             self.ratioRepeatedCharacterWeight = 1
             return
-        self.ratioRepeatedCharacterWeight = -1
+        self.ratioRepeatedCharacterWeight = 0
 
     def ratio_consecutive_consonant_testing(self):
         """
@@ -1267,10 +1259,10 @@ class URL:
             if len(splitted) > 1:
                 countConsecutive += len(splitted)
 
-        if countConsecutive / len(domain) > 0.4:
+        if countConsecutive / len(domain) > 0.05:
             self.ratioConsecutiveConsonantWeight = 1
             return
-        self.ratioConsecutiveConsonantWeight = -1
+        self.ratioConsecutiveConsonantWeight = 0
 
     def ratio_consecutive_digit_testing(self):
         """
@@ -1303,24 +1295,18 @@ class URL:
             if len(splitted) > 1:
                 countConsecutive += len(splitted)
 
-        if countConsecutive / len(domain) > 0.005:
+        if countConsecutive / len(domain) > 0.01:
             self.ratioConsecutiveDigitWeight = 1
             return
-        self.ratioConsecutiveDigitWeight = -1
+        self.ratioConsecutiveDigitWeight = 0
 
     # ---------------------
     #  Scaled weights calculation
     # ---------------------
-    def ip_scaled_calculation(self):
-        """
-        test if ip address is in url
-        :return: 0 or 1
-        """
-        self.ipScaledWeight = (float(self.ipWeight) * 0.5) + 0.5
-
     def length_scaled_calculation(self, normDict):
         """
         Get the length of hostname, normalize and scale it between 0 and 1
+        :param normDict: dict (dictonnary which contains all normalizer and scalers for features)
         :return: float between 0 and 1
         """
 
@@ -1330,30 +1316,10 @@ class URL:
         result = norm.transform([[len(self.hostname)]])
         self.lengthScaledWeight = scaler.transform(result.reshape(-1, 1))[0][0]
 
-    def shortener_scaled_calculation(self):
-        """
-        test if a shortener of url is used
-        :return: 0 or 1
-        """
-        self.shorteningScaledWeight = (float(self.shorteningWeight) * 0.5) + 0.5
-
-    def at_symbol_scaled_calculation(self):
-        """
-        test if there is a at symbol in url
-        :return: 0 or 1
-        """
-        self.atScaledWeight = (float(self.atWeight) * 0.5) + 0.5
-
-    def double_slash_scaled_calculation(self):
-        """
-        test if there is a doucble slash in url
-        :return: 0 or 1
-        """
-        self.doubleSlashScaledWeight = (float(self.doubleSlashWeight) * 0.5) + 0.5
-
     def dash_scaled_calculation(self, normDict):
         """
         Count how many there are dash symbol in url, normalize and scale it between 0 and 1
+        :param normDict: dict (dictonnary which contains all normalizer and scalers for features)
         :return: float between 0 and 1
         """
         norm = pickle.loads(normDict["dash"]["normalizer"])
@@ -1365,6 +1331,7 @@ class URL:
     def sub_domain_scaled_calculation(self, normDict):
         """
         Count the subdomains, normalize and scale it between 0 and 1
+        :param normDict: dict (dictonnary which contains all normalizer and scalers for features)
         :return: float between 0 and 1
         """
         norm = pickle.loads(normDict["sub_domain"]["normalizer"])
@@ -1388,6 +1355,7 @@ class URL:
     def age_certificate_scaled_calculation(self, normDict):
         """
         Get the duration of the ssl certificate, test if delivered by a trusted issuer, normalize and scale it between 0 and 1
+        :param normDict: dict (dictonnary which contains all normalizer and scalers for features)
         :return: float between 0 and 1
         """
         norm = pickle.loads(normDict["age_certificate"]["normalizer"])
@@ -1415,6 +1383,7 @@ class URL:
     def expiration_domain_scaled_calculation(self, normDict):
         """
         Get the duration to expiration of the domain name, normalize and scale it between 0 and 1
+        :param normDict: dict (dictonnary which contains all normalizer and scalers for features)
         :return: float between 0 and 1
         """
         norm = pickle.loads(normDict["expiration_domain"]["normalizer"])
@@ -1434,37 +1403,17 @@ class URL:
                 self.expirationScaledWeight = 0.5
                 return
 
-            result = norm.transform([[delta.days]])
+            if delta.days < 0:
+                result = norm.transform([[0]])
+            else:
+                result = norm.transform([[delta.days]])
             self.expirationScaledWeight = scaler.transform(result.reshape(-1, 1))[0][0]
 
-    def favicon_scaled_calculation(self):
+    def requested_url_scaled_calculation(self):
         """
-        test usage of favicon
-        :return: 0, 0.5 or 1
-        """
-        self.faviconScaledWeight = (float(self.faviconWeight) * 0.5) + 0.5
-
-    def port_scaled_calculation(self):
-        """
-        test opened ports
-        :return: 0 or 1
-        """
-        self.portScaledWeight = (float(self.portWeight) * 0.5) + 0.5
-
-    def http_scaled_calculation(self):
-        """
-        test if there are 'http' tokens in url
-        :return: 0 or 1
-        """
-        self.httpScaledWeight = (float(self.httpWeight) * 0.5) + 0.5
-
-    def requested_url_scaled_calculation(self, normDict):
-        """
-        Get the proportion of external url requested, normalize and scale it between 0 and 1
+        Get the proportion of external url requested
         :return: float between 0 and 1
         """
-        norm = pickle.loads(normDict["requested_url"]["normalizer"])
-        scaler = pickle.loads(normDict["requested_url"]["scaler"])
 
         totalLinks = 0
         externalLinks = 0
@@ -1493,18 +1442,15 @@ class URL:
         if totalLinks != 0:
             percentage = externalLinks / totalLinks
 
-            result = norm.transform([[percentage]])
-            self.requestedScaledWeight = scaler.transform(result.reshape(-1, 1))[0][0]
+            self.requestedScaledWeight = percentage
         else:
             self.requestedScaledWeight = 0
 
-    def anchors_scaled_calculation(self, normDict):
+    def anchors_scaled_calculation(self):
         """
-        Get the proportion of external url in anchors, normalize and scale it between 0 and 1
+        Get the proportion of external url in anchors
         :return: float between 0 and 1
         """
-        norm = pickle.loads(normDict["anchor"]["normalizer"])
-        scaler = pickle.loads(normDict["anchor"]["scaler"])
 
         tags = self.soup.findAll("a", href=True)
         anchors = []
@@ -1522,19 +1468,15 @@ class URL:
         if totalLink != 0:
             percentage = externalLinks / totalLink
 
-            result = norm.transform([[percentage]])
-            self.anchorsScaledWeight = scaler.transform(result.reshape(-1, 1))[0][0]
+            self.anchorsScaledWeight = percentage
         else:
             self.anchorsScaledWeight = 0
 
-    def tags_links_scaled_calculation(self, normDict):
+    def tags_links_scaled_calculation(self):
         """
-        Get the proportion of external url in tags, normalize and scale it between 0 and 1
+        Get the proportion of external url in tags
         :return: float between 0 and 1
         """
-
-        norm = pickle.loads(normDict["tags"]["normalizer"])
-        scaler = pickle.loads(normDict["tags"]["scaler"])
 
         totalLinks = 0
         externalLinks = 0
@@ -1565,14 +1507,14 @@ class URL:
         if totalLinks != 0:
             percentage = externalLinks / totalLinks
 
-            result = norm.transform([[percentage]])
-            self.tagScaledWeight = scaler.transform(result.reshape(-1, 1))[0][0]
+            self.tagScaledWeight = percentage
         else:
             self.tagScaledWeight = 0
 
     def sfh_scaled_calculation(self, normDict):
         """
         Get the proportion of external url in forms, test blank forms, normalize and scale it between 0 and 1
+        :param normDict: dict (dictonnary which contains all normalizer and scalers for features)
         :return: float between 0 and 1
         """
         norm = pickle.loads(normDict["sfh"]["normalizer"])
@@ -1599,44 +1541,10 @@ class URL:
         result = norm.transform([[count]])
         self.SFHScaledWeight = scaler.transform(result.reshape(-1, 1))[0][0]
 
-    def email_scaled_calculation(self):
-        """
-        test if email usage in html
-        :return: 0 or 1
-        """
-        self.emailScaledWeight = (float(self.emailWeight) * 0.5) + 0.5
-
-    def abnormal_url_scaled_calculation(self):
-        """
-        Test if abnormal url
-        :return: 0 or 1
-        """
-        self.abnormalScaledWeight = (float(self.abnormalWeight) * 0.5) + 0.5
-
-    def forwarding_scaled_calculation(self):
-        """
-        test formawrding
-        :return: 0, 0.5 or 1
-        """
-        self.forwardScaledWeight = (float(self.forwardWeight) * 0.5) + 0.5
-
-    def bar_custom_scaled_calculation(self):
-        """
-        test if the custom bar is modified
-        :return: 0, 0.5 or 1
-        """
-        self.barCustomScaledWeight = (float(self.barCustomWeight) * 0.5) + 0.5
-
-    def right_click_scaled_calculation(self):
-        """
-        Test if right click is disabled
-        :return: 0 or 1
-        """
-        self.rightClickScaledWeight = (float(self.rightClickWeight) * 0.5) + 0.5
-
     def popup_scaled_calculation(self, normDict):
         """
         Count the popup, normalize and scale it between 0 and 1
+        :param normDict: dict (dictonnary which contains all normalizer and scalers for features)
         :return: float between 0 and 1
         """
         norm = pickle.loads(normDict["popup"]["normalizer"])
@@ -1648,16 +1556,10 @@ class URL:
         result = norm.transform([[len(prompt)]])
         self.popupScaledWeight = scaler.transform(result.reshape(-1, 1))[0][0]
 
-    def iframe_scaled_calculation(self):
-        """
-        Test iFrame usage
-        :return: 0 or 1
-        """
-        self.iFrameScaledWeight = (float(self.iFrameWeight) * 0.5) + 0.5
-
     def domain_age_scaled_calculation(self, normDict):
         """
         Get the time to the first registration of the domain name, normalize and scale it between 0 and 1
+        :param normDict: dict (dictonnary which contains all normalizer and scalers for features)
         :return: float between 0 and 1
         """
         norm = pickle.loads(normDict["domain_age"]["normalizer"])
@@ -1679,16 +1581,10 @@ class URL:
             result = norm.transform([[delta.days]])
             self.domainAgeScaledWeight = scaler.transform(result.reshape(-1, 1))[0][0]
 
-    def dns_record_scaled_calculation(self):
-        """
-        Test if dns know the url
-        :return: 0 or 1
-        """
-        self.dnsScaledWeight = (float(self.dnsWeight) * 0.5) + 0.5
-
     def traffic_scaled_calculation(self, normDict):
         """
         Get the rank from alexa database, normalize and scale it between 0 and 1
+        :param normDict: dict (dictonnary which contains all normalizer and scalers for features)
         :return: float between 0 and 1
         """
         norm = pickle.loads(normDict["traffic"]["normalizer"])
@@ -1713,6 +1609,7 @@ class URL:
     def page_rank_scaled_calculation(self, normDict):
         """
         Get the pageRank, normalize and scale it between 0 and 1
+        :param normDict: dict (dictonnary which contains all normalizer and scalers for features)
         :return: float between 0 and 1
         """
         norm = pickle.loads(normDict["pageRank"]["normalizer"])
@@ -1721,16 +1618,10 @@ class URL:
         result = norm.transform([[self.pageRank]])
         self.pageRankScaledWeight = scaler.transform(result.reshape(-1, 1))[0][0]
 
-    def google_index_scaled_calculation(self):
-        """
-        Test if url is indexed by Google
-        :return: 0 or 1
-        """
-        self.indexingScaledWeight = (float(self.indexingWeight) * 0.5) + 0.5
-
     def links_pointing_to_scaled_calculation(self, normDict):
         """
         Count the links pointing to the domain, normalize and scale it between 0 and 1
+        :param normDict: dict (dictonnary which contains all normalizer and scalers for features)
         :return: float between 0 and 1
         """
         norm = pickle.loads(normDict["links_pointing"]["normalizer"])
@@ -1751,16 +1642,10 @@ class URL:
         result = norm.transform([[countLinks]])
         self.linksScaledWeight = scaler.transform(result.reshape(-1, 1))[0][0]
 
-    def statistic_report_scaled_calculation(self):
-        """
-        Test if the url is known as phishing
-        :return: 0 or 1
-        """
-        self.statisticScaledWeight = (float(self.statisticWeight) * 0.5) + 0.5
-
     def sub_domain_length_scaled_calculation(self, normDict):
         """
         Get the lentgh mean of subdomains, normalize and scale it between 0 and 1
+        :param normDict: dict (dictonnary which contains all normalizer and scalers for features)
         :return: float between 0 and 1
         """
         norm = pickle.loads(normDict["subDomainLength"]["normalizer"])
@@ -1785,48 +1670,11 @@ class URL:
         result = norm.transform([[total / len(subdomains)]])
         self.subDomainLengthScaledWeight = scaler.transform(result.reshape(-1, 1))[0][0]
 
-    def www_scaled_calculation(self):
+    def ratio_digit_sub_domain_scaled_calculation(self):
         """
-        test if www is at the beginning of url
-        :return: 0 or 1
-        """
-        self.wwwScaledWeight = (float(self.wwwWeight) * 0.5) + 0.5
-
-    def valid_tld_scaled_calculation(self):
-        """
-        test if a valid tld is used
-        :return: 0 or 1
-        """
-        self.validTldScaledWeight = (float(self.validTldWeight) * 0.5) + 0.5
-
-    def single_character_sub_domain_scaled_calculation(self):
-        """
-        Test if there are single character subdomains
-        :return: 0 or 1
-        """
-        self.singleCharacterSubDomainScaledWeight = (float(self.singleCharacterSubDomainWeight) * 0.5) + 0.5
-
-    def exclusive_prefix_repetition_scaled_calculation(self):
-        """
-        Test if the domain is repetition of a prefix
-        :return: 0 or 1
-        """
-        self.exclusivePrefixRepetitionScaledWeight = (float(self.exclusivePrefixRepetitionWeight) * 0.5) + 0.5
-
-    def tld_sub_domain_scaled_calculation(self):
-        """
-        test if tld is used as subdomain
-        :return: 0 or 1
-        """
-        self.tldSubDomainScaledWeight = (float(self.tldSubDomainWeight) * 0.5) + 0.5
-
-    def ratio_digit_sub_domain_scaled_calculation(self, normDict):
-        """
-        Count the ratio of exclusive digit subdomains by count subdomains, normalize and scale it between 0 and 1
+        Count the ratio of exclusive digit subdomains by count subdomains
         :return: float between 0 and 1
         """
-        norm = pickle.loads(normDict["ratioDigitSubDomain"]["normalizer"])
-        scaler = pickle.loads(normDict["ratioDigitSubDomain"]["scaler"])
         domain = self.hostname
         psl = PublicSuffixList()
         psl.accept_unknown = False
@@ -1846,16 +1694,13 @@ class URL:
             if sum(list(map(lambda x: 1 if x.isdigit() else 0, subdomain))) == len(subdomain):
                 exclusiveDigit += 1
 
-        result = norm.transform([[exclusiveDigit / len(subdomains)]])
-        self.ratioDigitSubDomainScaledWeight = scaler.transform(result.reshape(-1, 1))[0][0]
+        self.ratioDigitSubDomainScaledWeight = exclusiveDigit / len(subdomains)
 
-    def ratio_hexa_sub_domain_scaled_calculation(self, normDict):
+    def ratio_hexa_sub_domain_scaled_calculation(self):
         """
-        Count the ratio of exclusive hexadecimal subdomains by count subdomains, normalize and scale it between 0 and 1
+        Count the ratio of exclusive hexadecimal subdomains by count subdomains
         :return: float between 0 and 1
         """
-        norm = pickle.loads(normDict["ratioHexaSubDomain"]["normalizer"])
-        scaler = pickle.loads(normDict["ratioHexaSubDomain"]["scaler"])
 
         domain = self.hostname
         psl = PublicSuffixList()
@@ -1879,12 +1724,13 @@ class URL:
             except hexErr:
                 pass
 
-        result = norm.transform([[exclusiveHex / len(subdomains)]])
-        self.ratioHexaSubDomainScaledWeight = scaler.transform(result.reshape(-1, 1))[0][0]
+        self.ratioHexaSubDomainScaledWeight = exclusiveHex / len(subdomains)
 
-    def underscore_scaled_calculation(self, normDict):
-        norm = pickle.loads(normDict["underscore"]["normalizer"])
-        scaler = pickle.loads(normDict["underscore"]["scaler"])
+    def underscore_scaled_calculation(self):
+        """
+        calculate the ratio of underscore
+        :return:
+        """
         """
         Calculate the ratio of count underscore symbol by len of hostname, normalize and scale it between 0 and 1
         :return:
@@ -1900,23 +1746,13 @@ class URL:
             except TypeError:
                 pass
 
-        result = norm.transform([[domain.count("_") / len(domain)]])
-        self.underscoreScaledWeight = scaler.transform(result.reshape(-1, 1))[0][0]
+        self.underscoreScaledWeight = domain.count("_") / len(domain)
 
-    def contain_digit_scaled_calculation(self):
+    def vowel_ratio_scaled_calculation(self):
         """
-        Test if digits are in url
-        :return: 0 or 1
-        """
-        self.containDigitScaledWeight = (float(self.containDigitWeight) * 0.5) + 0.5
-
-    def vowel_ratio_scaled_calculation(self, normDict):
-        """
-        Get ration of vowel in hostname by len hostname, normalize and scale it between 0 and 1
+        Get ration of vowel in hostname by len hostname
         :return: float between 0 and 1
         """
-        norm = pickle.loads(normDict["vowelRatio"]["normalizer"])
-        scaler = pickle.loads(normDict["vowelRatio"]["scaler"])
         domain = self.hostname
         psl = PublicSuffixList()
         psl.accept_unknown = False
@@ -1930,17 +1766,14 @@ class URL:
 
         domain.replace(".", "")
 
-        result = norm.transform([[sum(
-            list(map(lambda x: 1 if x in ["a", "e", "i", "o", "u", "y"] else 0, domain))) / len(domain)]])
-        self.vowelRatioScaledWeight = scaler.transform(result.reshape(-1, 1))[0][0]
+        self.vowelRatioScaledWeight = sum(
+            list(map(lambda x: 1 if x in ["a", "e", "i", "o", "u", "y"] else 0, domain))) / len(domain)
 
-    def ratio_digit_scaled_calculation(self, normDict):
+    def ratio_digit_scaled_calculation(self):
         """
-        Get ratio of digit in hostname by length of hostname, normalize and scale it between 0 and 1
+        Get ratio of digit in hostname by length of hostname
         :return: float between 0 and 1
         """
-        norm = pickle.loads(normDict["ratioDigit"]["normalizer"])
-        scaler = pickle.loads(normDict["ratioDigit"]["scaler"])
         domain = self.hostname
         psl = PublicSuffixList()
         psl.accept_unknown = False
@@ -1954,12 +1787,12 @@ class URL:
 
         domain.replace(".", "")
 
-        result = norm.transform([[sum(list(map(lambda x: 1 if x.isdigit() else 0, domain))) / len(domain)]])
-        self.ratioDigitScaledWeight = scaler.transform(result.reshape(-1, 1))[0][0]
+        self.ratioDigitScaledWeight = sum(list(map(lambda x: 1 if x.isdigit() else 0, domain))) / len(domain)
 
     def alphabet_cardinality_scaled_calculation(self, normDict):
         """
         Get the cardinality of alpha characters in url, normalize and scale it between 0 and 1
+        :param normDict: dict (dictonnary which contains all normalizer and scalers for features)
         :return: float between 0 and 1
         """
         norm = pickle.loads(normDict["alphabetCardinality"]["normalizer"])
@@ -1980,13 +1813,11 @@ class URL:
         result = norm.transform([[sum(list(map(lambda x: 1 if x.isalpha() else 0, domain)))]])
         self.alphabetCardinalityScaledWeight = scaler.transform(result.reshape(-1, 1))[0][0]
 
-    def ratio_repeated_character_scaled_calculation(self, normDict):
+    def ratio_repeated_character_scaled_calculation(self):
         """
-        Get ratio of repeated characters in domain by cardinality of url, normalize and scale it between 0 and 1
+        Get ratio of repeated characters in domain by cardinality of url
         :return: float between 0 and 1
         """
-        norm = pickle.loads(normDict["ratioRepeatedCharacter"]["normalizer"])
-        scaler = pickle.loads(normDict["ratioRepeatedCharacter"]["scaler"])
         domain = self.hostname
         psl = PublicSuffixList()
         psl.accept_unknown = False
@@ -2011,16 +1842,13 @@ class URL:
             if domain.count(character) > 1:
                 countRepeated += 1
 
-        result = norm.transform([[countRepeated / card]])
-        self.ratioRepeatedCharacterScaledWeight = scaler.transform(result.reshape(-1, 1))[0][0]
+        self.ratioRepeatedCharacterScaledWeight = countRepeated / card
 
-    def ratio_consecutive_consonant_scaled_calculation(self, normDict):
+    def ratio_consecutive_consonant_scaled_calculation(self):
         """
-        Get ratio of consecutive consonants in domain by length of domain, normalize and scale it between 0 and 1
+        Get ratio of consecutive consonants in domain by length of domain
         :return: float between 0 and 1
         """
-        norm = pickle.loads(normDict["ratioConsecutiveConsonant"]["normalizer"])
-        scaler = pickle.loads(normDict["ratioConsecutiveConsonant"]["scaler"])
         domain = self.hostname
         psl = PublicSuffixList()
         psl.accept_unknown = False
@@ -2047,16 +1875,13 @@ class URL:
             if len(splitted) > 1:
                 countConsecutive += len(splitted)
 
-        result = norm.transform([[countConsecutive / len(domain)]])
-        self.ratioConsecutiveConsonantScaledWeight = scaler.transform(result.reshape(-1, 1))[0][0]
+        self.ratioConsecutiveConsonantScaledWeight = countConsecutive / len(domain)
 
-    def ratio_consecutive_digit_scaled_calculation(self, normDict):
+    def ratio_consecutive_digit_scaled_calculation(self):
         """
-        Get ratio of consecutive digits in domain by length of domain, normalize and scale it between 0 and 1
+        Get ratio of consecutive digits in domain by length of domain
         :return: float between 0 and 1
         """
-        norm = pickle.loads(normDict["ratioConsecutiveDigit"]["normalizer"])
-        scaler = pickle.loads(normDict["ratioConsecutiveDigit"]["scaler"])
         domain = self.hostname
         psl = PublicSuffixList()
         psl.accept_unknown = False
@@ -2083,12 +1908,12 @@ class URL:
             if len(splitted) > 1:
                 countConsecutive += len(splitted)
 
-        result = norm.transform([[countConsecutive / len(domain)]])
-        self.ratioConsecutiveDigitScaledWeight = scaler.transform(result.reshape(-1, 1))[0][0]
+        self.ratioConsecutiveDigitScaledWeight = countConsecutive / len(domain)
 
-    def features_extraction(self):
+    def features_extraction(self, normDict):
         """
         Extract all features and set the values into the attribute weights
+        :param normDict: dict (dictonnary which contains all normalizer and scalers for features)
         :return: -1,-1, None or results into queue
         """
 
@@ -2431,6 +2256,127 @@ class URL:
             logger.critical(e)
             self.ratioConsecutiveDigitWeight = "error"
 
+        try:
+            self.length_scaled_calculation(normDict)
+        except Exception as e:
+            logger.critical(e)
+            self.lengthScaledWeight = "error"
+        try:
+            self.dash_scaled_calculation(normDict)
+        except Exception as e:
+            logger.critical(e)
+            self.dashScaledWeight = "error"
+        try:
+            self.sub_domain_scaled_calculation(normDict)
+        except Exception as e:
+            logger.critical(e)
+            self.subDomainScaledWeight = "error"
+        try:
+            self.age_certificate_scaled_calculation(normDict)
+        except Exception as e:
+            logger.critical(e)
+            self.certificateAgeScaledWeight = "error"
+        try:
+            self.expiration_domain_scaled_calculation(normDict)
+        except Exception as e:
+            logger.critical(e)
+            self.expirationScaledWeight = "error"
+        try:
+            self.requested_url_scaled_calculation()
+        except Exception as e:
+            logger.critical(e)
+            self.requestedScaledWeight = "error"
+        try:
+            self.anchors_scaled_calculation()
+        except Exception as e:
+            logger.critical(e)
+            self.anchorsScaledWeight = "error"
+        try:
+            self.tags_links_scaled_calculation()
+        except Exception as e:
+            logger.critical(e)
+            self.tagScaledWeight = "error"
+        try:
+            self.sfh_scaled_calculation(normDict)
+        except Exception as e:
+            logger.critical(e)
+            self.SFHScaledWeight = "error"
+        try:
+            self.popup_scaled_calculation(normDict)
+        except Exception as e:
+            logger.critical(e)
+            self.popupScaledWeight = "error"
+        try:
+            self.domain_age_scaled_calculation(normDict)
+        except Exception as e:
+            logger.critical(e)
+            self.domainAgeScaledWeight = "error"
+        try:
+            self.traffic_scaled_calculation(normDict)
+        except Exception as e:
+            logger.critical(e)
+            self.trafficScaledWeight = "error"
+        try:
+            self.page_rank_scaled_calculation(normDict)
+        except Exception as e:
+            logger.critical(e)
+            self.pageRankScaledWeight = "error"
+        try:
+            self.links_pointing_to_scaled_calculation(normDict)
+        except Exception as e:
+            logger.critical(e)
+            self.linksScaledWeight = "error"
+        try:
+            self.sub_domain_length_scaled_calculation(normDict)
+        except Exception as e:
+            logger.critical(e)
+            self.subDomainLengthScaledWeight = "error"
+        try:
+            self.ratio_digit_sub_domain_scaled_calculation()
+        except Exception as e:
+            logger.critical(e)
+            self.ratioDigitSubDomainScaledWeight = "error"
+        try:
+            self.ratio_hexa_sub_domain_scaled_calculation()
+        except Exception as e:
+            logger.critical(e)
+            self.ratioHexaSubDomainScaledWeight = "error"
+        try:
+            self.underscore_scaled_calculation()
+        except Exception as e:
+            logger.critical(e)
+            self.underscoreScaledWeight = "error"
+        try:
+            self.vowel_ratio_scaled_calculation()
+        except Exception as e:
+            logger.critical(e)
+            self.vowelRatioScaledWeight = "error"
+        try:
+            self.ratio_digit_scaled_calculation()
+        except Exception as e:
+            logger.critical(e)
+            self.ratioDigitScaledWeight = "error"
+        try:
+            self.alphabet_cardinality_scaled_calculation(normDict)
+        except Exception as e:
+            logger.critical(e)
+            self.alphabetCardinalityScaledWeight = "error"
+        try:
+            self.ratio_repeated_character_scaled_calculation()
+        except Exception as e:
+            logger.critical(e)
+            self.ratioRepeatedCharacterScaledWeight = "error"
+        try:
+            self.ratio_consecutive_consonant_scaled_calculation()
+        except Exception as e:
+            logger.critical(e)
+            self.ratioConsecutiveConsonantScaledWeight = "error"
+        try:
+            self.ratio_consecutive_digit_scaled_calculation()
+        except Exception as e:
+            logger.critical(e)
+            self.ratioConsecutiveDigitScaledWeight = "error"
+
         self.soup = None
 
         return self.get_features()
@@ -2438,6 +2384,7 @@ class URL:
     def features_scaled_calculation(self, normDict):
         """
         Extract all features and set the values into the attribute weights
+        :param normDict: dict (dictonnary which contains all normalizer and scalers for features)
         :return: -1,-1, None or results into queue
         """
 
@@ -2445,40 +2392,12 @@ class URL:
 
         self.soup = BeautifulSoup(self.html.decode('utf-8', 'ignore'), features="lxml")
 
-        # calculation of ip adress
-        try:
-            self.ip_scaled_calculation()
-        except Exception as e:
-            logger.critical(e)
-            self.ipScaledWeight = "error"
-
         # calculation of length of the url
         try:
             self.length_scaled_calculation(normDict)
         except Exception as e:
             logger.critical(e)
             self.lengthScaledWeight = "error"
-
-        # calculation of shortener url
-        try:
-            self.shortener_scaled_calculation()
-        except Exception as e:
-            logger.critical(e)
-            self.shorteningScaledWeight = "error"
-
-        # calculation of at symbol
-        try:
-            self.at_symbol_testing()
-        except Exception as e:
-            logger.critical(e)
-            self.atScaledWeight = "error"
-
-        # calculation of double slash
-        try:
-            self.double_slash_scaled_calculation()
-        except Exception as e:
-            logger.critical(e)
-            self.doubleSlashScaledWeight = "error"
 
         # calculation of dash
         try:
@@ -2512,48 +2431,24 @@ class URL:
         except Exception as e:
             logger.critical(e)
             self.expirationScaledWeight = "error"
-        # calculation of favicon href
-        try:
-            self.favicon_scaled_calculation()
-        except Exception as e:
-            logger.critical(e)
-            self.faviconScaledWeight = "error"
-
-        # calculation of ports
-        try:
-            self.port_scaled_calculation()
-
-            if self.portScaledWeight == -2:
-                logger.error("port testing error")
-                return -1
-        except Exception as e:
-            logger.critical(e)
-            self.portScaledWeight = "error"
-
-        # calculation of http token
-        try:
-            self.http_scaled_calculation()
-        except Exception as e:
-            logger.critical(e)
-            self.httpScaledWeight = "error"
 
         # calculation of request URL
         try:
-            self.requested_url_scaled_calculation(normDict)
+            self.requested_url_scaled_calculation()
         except Exception as e:
             logger.critical(e)
             self.requestedScaledWeight = "error"
 
         # calculation of anchors
         try:
-            self.anchors_scaled_calculation(normDict)
+            self.anchors_scaled_calculation()
         except Exception as e:
             logger.critical(e)
             self.anchorsScaledWeight = "error"
 
         # calculation of tags links
         try:
-            self.tags_links_scaled_calculation(normDict)
+            self.tags_links_scaled_calculation()
         except Exception as e:
             logger.critical(e)
             self.tagScaledWeight = "error"
@@ -2565,54 +2460,12 @@ class URL:
             logger.critical(e)
             self.SFHScaledWeight = "error"
 
-        # calculation of email
-        try:
-            self.email_scaled_calculation()
-        except Exception as e:
-            logger.critical(e)
-            self.emailScaledWeight = "error"
-
-        # calculation of abnormal url
-        try:
-            self.abnormal_url_scaled_calculation()
-        except Exception as e:
-            logger.critical(e)
-            self.abnormalScaledWeight = "error"
-
-        # calculation of forwarding
-        try:
-            self.forwarding_scaled_calculation()
-        except Exception as e:
-            logger.critical(e)
-            self.forwardScaledWeight = "error"
-
-        # calculation of abnormal status bar
-        try:
-            self.bar_custom_scaled_calculation()
-        except Exception as e:
-            logger.critical(e)
-            self.barCustomScaledWeight = "error"
-
-        # calculation of right click disabling
-        try:
-            self.right_click_scaled_calculation()
-        except Exception as e:
-            logger.critical(e)
-            self.rightClickScaledWeight = "error"
-
         # calculation of popup
         try:
             self.popup_scaled_calculation(normDict)
         except Exception as e:
             logger.critical(e)
             self.popupScaledWeight = "error"
-
-        # calculation of IFrame
-        try:
-            self.iframe_scaled_calculation()
-        except Exception as e:
-            logger.critical(e)
-            self.iFrameScaledWeight = "error"
 
         # calculation of domain age
         try:
@@ -2622,13 +2475,6 @@ class URL:
         except Exception as e:
             logger.critical(e)
             self.domainAgeScaledWeight = "error"
-
-        # calculation of DNS record
-        try:
-            self.dns_record_scaled_calculation()
-        except Exception as e:
-            logger.critical(e)
-            self.dnsScaledWeight = "error"
 
         # calculation of traffic
         try:
@@ -2644,29 +2490,12 @@ class URL:
             logger.critical(e)
             self.pageRankScaledWeight = "error"
 
-        # testo google indexing
-        try:
-            self.google_index_scaled_calculation()
-
-            if self.indexingScaledWeight == -2:
-                return -2
-        except Exception as e:
-            logger.critical(e)
-            self.indexingScaledWeight = "error"
-
         # calculation of links pointing to the webpage
         try:
             self.links_pointing_to_scaled_calculation(normDict)
         except Exception as e:
             logger.critical(e)
             self.linksScaledWeight = "error"
-
-        # calculation of statistics
-        try:
-            self.statistic_report_scaled_calculation()
-        except Exception as e:
-            logger.critical(e)
-            self.statisticScaledWeight = "error"
 
         # testing scaled subdomain lentgh mean
         try:
@@ -2675,79 +2504,37 @@ class URL:
             logger.critical(e)
             self.subDomainLengthScaledWeight = "error"
 
-        # testing scaled www
-        try:
-            self.www_scaled_calculation()
-        except Exception as e:
-            logger.critical(e)
-            self.wwwScaledWeight = "error"
-
-        # testing scaled valid tld
-        try:
-            self.valid_tld_scaled_calculation()
-        except Exception as e:
-            logger.critical(e)
-            self.validTldScaledWeight = "error"
-
-        # testing scaled single character as subdomain
-        try:
-            self.single_character_sub_domain_scaled_calculation()
-        except Exception as e:
-            logger.critical(e)
-            self.singleCharacterSubDomainScaledWeight = "error"
-
-        # testing scaled exclusive prefix repetition
-        try:
-            self.exclusive_prefix_repetition_scaled_calculation()
-        except Exception as e:
-            logger.critical(e)
-            self.exclusivePrefixRepetitionScaledWeight = "error"
-
-        # testing scaled tld as subdomain
-        try:
-            self.tld_sub_domain_scaled_calculation()
-        except Exception as e:
-            logger.critical(e)
-            self.tldSubDomainScaledWeight = "error"
-
         # testing scaled ratio of digit subdomain
         try:
-            self.ratio_digit_sub_domain_scaled_calculation(normDict)
+            self.ratio_digit_sub_domain_scaled_calculation()
         except Exception as e:
             logger.critical(e)
             self.ratioDigitSubDomainScaledWeight = "error"
 
         # testing scaled ratio of hexa subdomains
         try:
-            self.ratio_hexa_sub_domain_scaled_calculation(normDict)
+            self.ratio_hexa_sub_domain_scaled_calculation()
         except Exception as e:
             logger.critical(e)
             self.ratioHexaSubDomainScaledWeight = "error"
 
         # testing scaled ratio of underscore
         try:
-            self.underscore_scaled_calculation(normDict)
+            self.underscore_scaled_calculation()
         except Exception as e:
             logger.critical(e)
             self.underscoreScaledWeight = "error"
 
-        # testing scaled digit in domain
-        try:
-            self.contain_digit_scaled_calculation()
-        except Exception as e:
-            logger.critical(e)
-            self.containDigitScaledWeight = "error"
-
         # testing scaled vowel ratio
         try:
-            self.vowel_ratio_scaled_calculation(normDict)
+            self.vowel_ratio_scaled_calculation()
         except Exception as e:
             logger.critical(e)
             self.vowelRatioScaledWeight = "error"
 
         # testing scaled digit ratio
         try:
-            self.ratio_digit_scaled_calculation(normDict)
+            self.ratio_digit_scaled_calculation()
         except Exception as e:
             logger.critical(e)
             self.ratioDigitScaledWeight = "error"
@@ -2761,21 +2548,21 @@ class URL:
 
         # testing scaled ratio of repeated characters
         try:
-            self.ratio_repeated_character_scaled_calculation(normDict)
+            self.ratio_repeated_character_scaled_calculation()
         except Exception as e:
             logger.critical(e)
             self.ratioRepeatedCharacterScaledWeight = "error"
 
         # testing scaled ratio of consecutive consonants
         try:
-            self.ratio_consecutive_consonant_scaled_calculation(normDict)
+            self.ratio_consecutive_consonant_scaled_calculation()
         except Exception as e:
             logger.critical(e)
             self.ratioConsecutiveConsonantScaledWeight = "error"
 
         # testing scaled ratio of consecutive digits
         try:
-            self.ratio_consecutive_digit_scaled_calculation(normDict)
+            self.ratio_consecutive_digit_scaled_calculation()
         except Exception as e:
             logger.critical(e)
             self.ratioConsecutiveDigitScaledWeight = "error"
@@ -2795,26 +2582,31 @@ class URL:
                  self.tagWeight, self.SFHWeight, self.emailWeight, self.abnormalWeight, self.forwardWeight,
                  self.barCustomWeight, self.rightClickWeight, self.popupWeight, self.iFrameWeight, self.domainAgeWeight,
                  self.dnsWeight, self.trafficWeight, self.pageRankWeight, self.indexingWeight, self.linksWeight,
-                 self.statisticWeight])
+                 self.statisticWeight, self.subDomainLengthWeight, self.wwwWeight, self.validTldWeight,
+                 self.singleCharacterSubDomainWeight, self.exclusivePrefixRepetitionWeight, self.tldSubDomainWeight,
+                 self.ratioDigitSubDomainWeight, self.ratioHexaSubDomainWeight, self.underscoreWeight,
+                 self.containDigitWeight, self.vowelRatioWeight, self.ratioDigitWeight, self.alphabetCardinalityWeight,
+                 self.ratioRepeatedCharacterWeight, self.ratioConsecutiveConsonantWeight,
+                 self.ratioConsecutiveDigitWeight])
 
     def get_scaled_features(self):
         """
         Get all scaled features
         :return: list
         """
-        return ([self.ipScaledWeight, self.lengthScaledWeight, self.shorteningScaledWeight, self.atScaledWeight,
-                 self.doubleSlashScaledWeight,
+        return ([self.ipWeight, self.lengthScaledWeight, self.shorteningWeight, self.atWeight, self.doubleSlashWeight,
                  self.dashScaledWeight, self.subDomainScaledWeight, self.certificateAgeScaledWeight,
-                 self.expirationScaledWeight,
-                 self.faviconScaledWeight, self.portScaledWeight, self.httpScaledWeight, self.requestedScaledWeight,
-                 self.anchorsScaledWeight,
-                 self.tagScaledWeight, self.SFHScaledWeight, self.emailScaledWeight, self.abnormalScaledWeight,
-                 self.forwardScaledWeight,
-                 self.barCustomScaledWeight, self.rightClickScaledWeight, self.popupScaledWeight,
-                 self.iFrameScaledWeight, self.domainAgeScaledWeight,
-                 self.dnsScaledWeight, self.trafficScaledWeight, self.pageRankScaledWeight, self.indexingScaledWeight,
-                 self.linksScaledWeight,
-                 self.statisticScaledWeight])
+                 self.expirationScaledWeight, self.faviconWeight, self.portWeight, self.httpWeight,
+                 self.requestedScaledWeight, self.anchorsScaledWeight, self.tagScaledWeight, self.SFHScaledWeight,
+                 self.emailWeight, self.abnormalWeight, self.forwardWeight, self.barCustomWeight, self.rightClickWeight,
+                 self.popupScaledWeight, self.iFrameWeight, self.domainAgeScaledWeight, self.dnsWeight,
+                 self.trafficScaledWeight, self.pageRankScaledWeight, self.indexingWeight, self.linksScaledWeight,
+                 self.statisticWeight, self.subDomainLengthScaledWeight, self.wwwWeight, self.validTldWeight,
+                 self.singleCharacterSubDomainWeight, self.exclusivePrefixRepetitionWeight, self.tldSubDomainWeight,
+                 self.ratioDigitSubDomainScaledWeight, self.ratioHexaSubDomainScaledWeight, self.underscoreScaledWeight,
+                 self.containDigitWeight, self.vowelRatioScaledWeight, self.ratioDigitScaledWeight,
+                 self.alphabetCardinalityScaledWeight, self.ratioRepeatedCharacterScaledWeight,
+                 self.ratioConsecutiveConsonantScaledWeight, self.ratioConsecutiveDigitScaledWeight])
 
     def set_features(self, features):
         """
@@ -2822,7 +2614,7 @@ class URL:
         :param features: list
         :return: nothing
         """
-        if type(features) is not list or len(features) != 46:
+        if type(features) is not list or len(features) != 70:
             logger.error("Bad argument for features setter")
             return
         self.ipWeight = features[0]
@@ -2855,50 +2647,54 @@ class URL:
         self.indexingWeight = features[27]
         self.linksWeight = features[28]
         self.statisticWeight = features[29]
-        return
-
-    def set_scaled_features(self, features):
-        """
-        Set the scaled features from a list
-        :param features: list
-        :return: nothing
-        """
-        if type(features) is not list or len(features) != 46:
-            logger.error("Bad argument for features setter")
-            return
-        self.ipScaledWeight = features[0]
-        self.lengthScaledWeight = features[1]
-        self.shorteningScaledWeight = features[2]
-        self.atScaledWeight = features[3]
-        self.doubleSlashScaledWeight = features[4]
-        self.dashScaledWeight = features[5]
-        self.subDomainScaledWeight = features[6]
-        self.certificateAgeScaledWeight = features[7]
-        self.expirationScaledWeight = features[8]
-        self.faviconScaledWeight = features[9]
-        self.portScaledWeight = features[10]
-        self.httpScaledWeight = features[11]
-        self.requestedScaledWeight = features[12]
-        self.anchorsScaledWeight = features[13]
-        self.tagScaledWeight = features[14]
-        self.SFHScaledWeight = features[15]
-        self.emailScaledWeight = features[16]
-        self.abnormalScaledWeight = features[17]
-        self.forwardScaledWeight = features[18]
-        self.barCustomScaledWeight = features[19]
-        self.rightClickScaledWeight = features[20]
-        self.popupScaledWeight = features[21]
-        self.iFrameScaledWeight = features[22]
-        self.domainAgeScaledWeight = features[23]
-        self.dnsScaledWeight = features[24]
-        self.trafficScaledWeight = features[25]
-        self.pageRankScaledWeight = features[26]
-        self.indexingScaledWeight = features[27]
-        self.linksScaledWeight = features[28]
-        self.statisticScaledWeight = features[29]
+        self.subDomainLengthWeight = features[30]
+        self.wwwWeight = features[31]
+        self.validTldWeight = features[32]
+        self.singleCharacterSubDomainWeight = features[33]
+        self.exclusivePrefixRepetitionWeight = features[34]
+        self.tldSubDomainWeight = features[35]
+        self.ratioDigitSubDomainWeight = features[36]
+        self.ratioHexaSubDomainWeight = features[37]
+        self.underscoreWeight = features[38]
+        self.containDigitWeight = features[39]
+        self.vowelRatioWeight = features[40]
+        self.ratioDigitWeight = features[41]
+        self.alphabetCardinalityWeight = features[42]
+        self.ratioRepeatedCharacterWeight = features[43]
+        self.ratioConsecutiveConsonantWeight = features[44]
+        self.ratioConsecutiveDigitWeight = features[45]
+        self.lengthScaledWeight = features[46]
+        self.dashScaledWeight = features[47]
+        self.subDomainScaledWeight = features[48]
+        self.certificateAgeScaledWeight = features[49]
+        self.expirationScaledWeight = features[50]
+        self.requestedScaledWeight = features[51]
+        self.anchorsScaledWeight = features[52]
+        self.tagScaledWeight = features[53]
+        self.SFHScaledWeight = features[54]
+        self.popupScaledWeight = features[55]
+        self.domainAgeScaledWeight = features[56]
+        self.trafficScaledWeight = features[57]
+        self.pageRankScaledWeight = features[58]
+        self.linksScaledWeight = features[59]
+        self.subDomainLengthScaledWeight = features[60]
+        self.ratioDigitSubDomainScaledWeight = features[61]
+        self.ratioHexaSubDomainScaledWeight = features[62]
+        self.underscoreScaledWeight = features[63]
+        self.vowelRatioScaledWeight = features[64]
+        self.ratioDigitScaledWeight = features[65]
+        self.alphabetCardinalityScaledWeight = features[66]
+        self.ratioRepeatedCharacterScaledWeight = features[67]
+        self.ratioConsecutiveConsonantScaledWeight = features[68]
+        self.ratioConsecutiveDigitScaledWeight = features[69]
         return
 
     def re_extract_non_request_features(self, normDict):
+        """
+        Used to re_extract non requested features
+        :param normDict: dict (dictonnary which contains all normalizer and scalers for features)
+        :return:
+        """
         logger.debug("Extraction of {}".format(self.url))
 
         self.soup = BeautifulSoup(self.html.decode('utf-8', 'ignore'), features="lxml")
@@ -2908,164 +2704,184 @@ class URL:
         # ---------------------
 
         # testing ip in url
-        # try:
-        #     self.ip_testing()
-        # except Exception as e:
-        #     logger.critical(e)
-        #     self.ipWeight = "error"
-        #
-        # # testing length of the url
-        # try:
-        #     self.length_testing()
-        # except Exception as e:
-        #     logger.critical(e)
-        #     self.lengthWeight = "error"
-        #
+        try:
+            self.ip_testing()
+        except Exception as e:
+            logger.critical(e)
+            self.ipWeight = "error"
+
+        # testing length of the url
+        try:
+            self.length_testing()
+        except Exception as e:
+            logger.critical(e)
+            self.lengthWeight = "error"
+
         # # testing shortener url
-        # try:
-        #     self.shortener_testing()
-        # except Exception as e:
-        #     logger.critical(e)
-        #     self.shorteningWeight = "error"
-        #
-        # # testing at symbol
-        # try:
-        #     self.at_symbol_testing()
-        # except Exception as e:
-        #     logger.critical(e)
-        #     self.atWeight = "error"
-        #
-        # # testing double slash
-        # try:
-        #     self.double_slash_testing()
-        # except Exception as e:
-        #     logger.critical(e)
-        #     self.doubleSlashWeight = "error"
-        #
-        # # testing dash
-        # try:
-        #     self.dash_testing()
-        # except Exception as e:
-        #     logger.critical(e)
-        #     self.dashWeight = "error"
-        #
-        # # testing subdomain count
-        # try:
-        #     self.sub_domain_testing()
-        # except Exception as e:
-        #     logger.critical(e)
-        #     self.subDomainWeight = "error"
-        #
+        try:
+            self.shortener_testing()
+        except Exception as e:
+            logger.critical(e)
+            self.shorteningWeight = "error"
+
+        # testing at symbol
+        try:
+            self.at_symbol_testing()
+        except Exception as e:
+            logger.critical(e)
+            self.atWeight = "error"
+
+        # testing double slash
+        try:
+            self.double_slash_testing()
+        except Exception as e:
+            logger.critical(e)
+            self.doubleSlashWeight = "error"
+
+        # testing dash
+        try:
+            self.dash_testing()
+        except Exception as e:
+            logger.critical(e)
+            self.dashWeight = "error"
+
+        # testing subdomain count
+        try:
+            self.sub_domain_testing()
+        except Exception as e:
+            logger.critical(e)
+            self.subDomainWeight = "error"
+
         # # testing age of the domain certificate
-        # try:
-        #     if self.http == "https" and self.certificate is not None:
-        #         self.age_certificate_testing()
-        #     else:
-        #         self.certificateAgeWeight = 1
-        # except Exception as e:
-        #     logger.critical(e)
-        #     self.certificateAgeWeight = "error"
-        #
-        # # testing expiration date of domain
-        # try:
-        #     self.expiration_domain_testing()
-        #     if self.expirationWeight == -2:
-        #         return -1
-        # except Exception as e:
-        #     logger.critical(e)
-        #     self.expirationWeight = "error"
-        # # testing favicon href
-        # try:
-        #     self.favicon_testing()
-        # except Exception as e:
-        #     logger.critical(e)
-        #     self.faviconWeight = "error"
-        #
-        # # testing http token
-        # try:
-        #     self.http_testing()
-        # except Exception as e:
-        #     logger.critical(e)
-        #     self.httpWeight = "error"
-        #
-        # # testing request URL
-        # try:
-        #     self.requested_url_testing()
-        # except Exception as e:
-        #     logger.critical(e)
-        #     self.requestedWeight = "error"
-        #
-        # # testing anchors
-        # try:
-        #     self.anchors_testing()
-        # except Exception as e:
-        #     logger.critical(e)
-        #     self.anchorsWeight = "error"
-        #
-        # # testing tags links
-        # try:
-        #     self.tags_links_testing()
-        # except Exception as e:
-        #     logger.critical(e)
-        #     self.tagWeight = "error"
-        #
+        try:
+            if self.http == "https" and self.certificate is not None:
+                self.age_certificate_testing()
+            else:
+                self.certificateAgeWeight = 1
+        except Exception as e:
+            logger.critical(e)
+            self.certificateAgeWeight = "error"
+
+        # testing expiration date of domain
+        try:
+            self.expiration_domain_testing()
+            if self.expirationWeight == -2:
+                return -1
+        except Exception as e:
+            logger.critical(e)
+            self.expirationWeight = "error"
+        # testing favicon href
+        try:
+            self.favicon_testing()
+        except Exception as e:
+            logger.critical(e)
+            self.faviconWeight = "error"
+
+        # testing http token
+        try:
+            self.http_testing()
+        except Exception as e:
+            logger.critical(e)
+            self.httpWeight = "error"
+
+        # testing request URL
+        try:
+            self.requested_url_testing()
+        except Exception as e:
+            logger.critical(e)
+            self.requestedWeight = "error"
+
+        # testing anchors
+        try:
+            self.anchors_testing()
+        except Exception as e:
+            logger.critical(e)
+            self.anchorsWeight = "error"
+
+        # testing tags links
+        try:
+            self.tags_links_testing()
+        except Exception as e:
+            logger.critical(e)
+            self.tagWeight = "error"
+
         # # testing SFH
-        # try:
-        #     self.sfh_testing()
-        # except Exception as e:
-        #     logger.critical(e)
-        #     self.SFHWeight = "error"
-        #
-        # # testing email
-        # try:
-        #     self.email_testing()
-        # except Exception as e:
-        #     logger.critical(e)
-        #     self.emailWeight = "error"
-        #
-        # # testing abnormal url
-        # try:
-        #     self.abnormal_url_testing()
-        # except Exception as e:
-        #     logger.critical(e)
-        #     self.abnormalWeight = "error"
-        #
-        # # testing abnormal status bar
-        # try:
-        #     self.bar_custom_testing()
-        # except Exception as e:
-        #     logger.critical(e)
-        #     self.barCustomWeight = "error"
-        #
-        # # testing right click disabling
-        # try:
-        #     self.right_click_testing()
-        # except Exception as e:
-        #     logger.critical(e)
-        #     self.rightClickWeight = "error"
-        #
-        # # testing popup
-        # try:
-        #     self.popup_testing()
-        # except Exception as e:
-        #     logger.critical(e)
-        #     self.popupWeight = "error"
-        #
+        try:
+            self.sfh_testing()
+        except Exception as e:
+            logger.critical(e)
+            self.SFHWeight = "error"
+
+        # testing email
+        try:
+            self.email_testing()
+        except Exception as e:
+            logger.critical(e)
+            self.emailWeight = "error"
+
+        # testing abnormal url
+        try:
+            self.abnormal_url_testing()
+        except Exception as e:
+            logger.critical(e)
+            self.abnormalWeight = "error"
+
+        # testing abnormal status bar
+        try:
+            self.bar_custom_testing()
+        except Exception as e:
+            logger.critical(e)
+            self.barCustomWeight = "error"
+
+        # testing right click disabling
+        try:
+            self.right_click_testing()
+        except Exception as e:
+            logger.critical(e)
+            self.rightClickWeight = "error"
+
+        # testing popup
+        try:
+            self.popup_testing()
+        except Exception as e:
+            logger.critical(e)
+            self.popupWeight = "error"
+
         # # testing IFrame
-        # try:
-        #     self.iframe_testing()
-        # except Exception as e:
-        #     logger.critical(e)
-        #     self.iFrameWeight = "error"
-        #
-        # # testing domain age
-        # try:
-        #     self.domain_age_testing()
-        #     if self.domainAgeWeight == -2:
-        #         return -1
-        # except Exception as e:
-        #     logger.critical(e)
-        #     self.domainAgeWeight = "error"
+        try:
+            self.iframe_testing()
+        except Exception as e:
+            logger.critical(e)
+            self.iFrameWeight = "error"
+
+        # testing domain age
+        try:
+            self.domain_age_testing()
+            if self.domainAgeWeight == -2:
+                return -1
+        except Exception as e:
+            logger.critical(e)
+            self.domainAgeWeight = "error"
+
+        # testing pageRank
+        try:
+            self.page_rank_testing()
+        except Exception as e:
+            logger.critical(e)
+            self.pageRankWeight = "error"
+        # testing traffic
+        try:
+            self.traffic_testing()
+        except Exception as e:
+            logger.critical(e)
+            self.trafficWeight = "error"
+
+        # testing links pointing to
+        try:
+            self.links_pointing_to_testing()
+        except Exception as e:
+            logger.critical(e)
+            self.linksWeight = "error"
 
         # testing subdomain lentgh mean
         try:
@@ -3074,7 +2890,7 @@ class URL:
             logger.critical(e)
             self.subDomainLengthWeight = "error"
 
-        # testing www
+        # # testing www
         try:
             self.www_testing()
         except Exception as e:
@@ -3123,7 +2939,7 @@ class URL:
             logger.critical(e)
             self.ratioHexaSubDomainWeight = "error"
 
-        # testing ratio of underscore
+        # # testing ratio of underscore
         try:
             self.underscore_testing()
         except Exception as e:
@@ -3183,165 +2999,109 @@ class URL:
         #  Normal Weights
         # ---------------------
 
-        # testing scaled ip in url
-        # try:
-        #     self.ip_scaled_calculation()
-        # except Exception as e:
-        #     logger.critical(e)
-        #     self.ipScaledWeight = "error"
-        #
-        # # testing scaled length of the url
-        # try:
-        #     self.length_scaled_calculation(normDict)
-        # except Exception as e:
-        #     logger.critical(e)
-        #     self.lengthScaledWeight = "error"
-        #
-        # # testing scaled shortener url
-        # try:
-        #     self.shortener_scaled_calculation()
-        # except Exception as e:
-        #     logger.critical(e)
-        #     self.shorteningScaledWeight = "error"
-        #
-        # # testing scaled at symbol
-        # try:
-        #     self.at_symbol_scaled_calculation()
-        # except Exception as e:
-        #     logger.critical(e)
-        #     self.atScaledWeight = "error"
-        #
-        # # testing scaled double slash
-        # try:
-        #     self.double_slash_scaled_calculation()
-        # except Exception as e:
-        #     logger.critical(e)
-        #     self.doubleSlashScaledWeight = "error"
-        #
-        # # testing scaled dash
-        # try:
-        #     self.dash_scaled_calculation(normDict)
-        # except Exception as e:
-        #     logger.critical(e)
-        #     self.dashScaledWeight = "error"
-        #
-        # # testing scaled subdomain count
-        # try:
-        #     self.sub_domain_scaled_calculation(normDict)
-        # except Exception as e:
-        #     logger.critical(e)
-        #     self.subDomainScaledWeight = "error"
-        #
-        # # testing scaled age of the domain certificate
-        # try:
-        #     if self.http == "https" and self.certificate is not None:
-        #         self.age_certificate_scaled_calculation(normDict)
-        #     else:
-        #         self.certificateAgeScaledWeight = 1
-        # except Exception as e:
-        #     logger.critical(e)
-        #     self.certificateAgeScaledWeight = "error"
-        #
-        # # testing scaled expiration date of domain
-        # try:
-        #     self.expiration_domain_scaled_calculation(normDict)
-        #     if self.expirationScaledWeight == -2:
-        #         return -1
-        # except Exception as e:
-        #     logger.critical(e)
-        #     self.expirationScaledWeight = "error"
-        # # testing scaled favicon href
-        # try:
-        #     self.favicon_scaled_calculation()
-        # except Exception as e:
-        #     logger.critical(e)
-        #     self.faviconScaledWeight = "error"
-        #
-        # # testing scaled http token
-        # try:
-        #     self.http_scaled_calculation()
-        # except Exception as e:
-        #     logger.critical(e)
-        #     self.httpScaledWeight = "error"
-        #
-        # # testing scaled request URL
-        # try:
-        #     self.requested_url_scaled_calculation(normDict)
-        # except Exception as e:
-        #     logger.critical(e)
-        #     self.requestedScaledWeight = "error"
-        #
-        # # testing scaled anchors
-        # try:
-        #     self.anchors_scaled_calculation(normDict)
-        # except Exception as e:
-        #     logger.critical(e)
-        #     self.anchorsScaledWeight = "error"
-        #
-        # # testing scaled tags links
-        # try:
-        #     self.tags_links_scaled_calculation(normDict)
-        # except Exception as e:
-        #     logger.critical(e)
-        #     self.tagScaledWeight = "error"
-        #
-        # # testing scaled SFH
-        # try:
-        #     self.sfh_scaled_calculation(normDict)
-        # except Exception as e:
-        #     logger.critical(e)
-        #     self.SFHScaledWeight = "error"
-        #
-        # # testing scaled email
-        # try:
-        #     self.email_scaled_calculation()
-        # except Exception as e:
-        #     logger.critical(e)
-        #     self.emailScaledWeight = "error"
-        #
-        # # testing scaled abnormal url
-        # try:
-        #     self.abnormal_url_scaled_calculation()
-        # except Exception as e:
-        #     logger.critical(e)
-        #     self.abnormalScaledWeight = "error"
-        #
-        # # testing scaled abnormal status bar
-        # try:
-        #     self.bar_custom_scaled_calculation()
-        # except Exception as e:
-        #     logger.critical(e)
-        #     self.barCustomScaledWeight = "error"
-        #
-        # # testing scaled right click disabling
-        # try:
-        #     self.right_click_scaled_calculation()
-        # except Exception as e:
-        #     logger.critical(e)
-        #     self.rightClickScaledWeight = "error"
-        #
-        # # testing scaled popup
-        # try:
-        #     self.popup_scaled_calculation(normDict)
-        # except Exception as e:
-        #     logger.critical(e)
-        #     self.popupScaledWeight = "error"
-        #
-        # # testing scaled IFrame
-        # try:
-        #     self.iframe_scaled_calculation()
-        # except Exception as e:
-        #     logger.critical(e)
-        #     self.iFrameScaledWeight = "error"
-        #
-        # # testing scaled domain age
-        # try:
-        #     self.domain_age_scaled_calculation(normDict)
-        #     if self.domainAgeScaledWeight == -2:
-        #         return -1
-        # except Exception as e:
-        #     logger.critical(e)
-        #     self.domainAgeScaledWeight = "error"
+        # testing scaled length of the url
+        try:
+            self.length_scaled_calculation(normDict)
+        except Exception as e:
+            logger.critical(e)
+            self.lengthScaledWeight = "error"
+
+        # testing scaled dash
+        try:
+            self.dash_scaled_calculation(normDict)
+        except Exception as e:
+            logger.critical(e)
+            self.dashScaledWeight = "error"
+
+        # testing scaled subdomain count
+        try:
+            self.sub_domain_scaled_calculation(normDict)
+        except Exception as e:
+            logger.critical(e)
+            self.subDomainScaledWeight = "error"
+
+        # testing scaled age of the domain certificate
+        try:
+            if self.http == "https" and self.certificate is not None:
+                self.age_certificate_scaled_calculation(normDict)
+            else:
+                self.certificateAgeScaledWeight = 1
+        except Exception as e:
+            logger.critical(e)
+            self.certificateAgeScaledWeight = "error"
+
+        # testing scaled expiration date of domain
+        try:
+            self.expiration_domain_scaled_calculation(normDict)
+            if self.expirationScaledWeight == -2:
+                return -1
+        except Exception as e:
+            logger.critical(e)
+            self.expirationScaledWeight = "error"
+
+        # testing scaled request URL
+        try:
+            self.requested_url_scaled_calculation()
+        except Exception as e:
+            logger.critical(e)
+            self.requestedScaledWeight = "error"
+
+        # testing scaled anchors
+        try:
+            self.anchors_scaled_calculation()
+        except Exception as e:
+            logger.critical(e)
+            self.anchorsScaledWeight = "error"
+
+        # testing scaled tags links
+        try:
+            self.tags_links_scaled_calculation()
+        except Exception as e:
+            logger.critical(e)
+            self.tagScaledWeight = "error"
+
+        # testing scaled SFH
+        try:
+            self.sfh_scaled_calculation(normDict)
+        except Exception as e:
+            logger.critical(e)
+            self.SFHScaledWeight = "error"
+
+        # testing scaled popup
+        try:
+            self.popup_scaled_calculation(normDict)
+        except Exception as e:
+            logger.critical(e)
+            self.popupScaledWeight = "error"
+
+        # testing scaled domain age
+        try:
+            self.domain_age_scaled_calculation(normDict)
+            if self.domainAgeScaledWeight == -2:
+                return -1
+        except Exception as e:
+            logger.critical(e)
+            self.domainAgeScaledWeight = "error"
+
+            # testing pageRank
+            try:
+                self.page_rank_scaled_calculation(normDict)
+            except Exception as e:
+                logger.critical(e)
+                self.pageRankScaledWeight = "error"
+            # testing traffic
+            try:
+                self.traffic_scaled_calculation(normDict)
+            except Exception as e:
+                logger.critical(e)
+                self.trafficScaledWeight = "error"
+
+            # testing links pointing to
+            try:
+                self.links_pointing_to_scaled_calculation(normDict)
+            except Exception as e:
+                logger.critical(e)
+                self.linksScaledWeight = "error"
 
         # testing scaled subdomain lentgh mean
         try:
@@ -3350,79 +3110,37 @@ class URL:
             logger.critical(e)
             self.subDomainLengthScaledWeight = "error"
 
-        # testing scaled www
-        try:
-            self.www_scaled_calculation()
-        except Exception as e:
-            logger.critical(e)
-            self.wwwScaledWeight = "error"
-
-        # testing scaled valid tld
-        try:
-            self.valid_tld_scaled_calculation()
-        except Exception as e:
-            logger.critical(e)
-            self.validTldScaledWeight = "error"
-
-        # testing scaled single character as subdomain
-        try:
-            self.single_character_sub_domain_scaled_calculation()
-        except Exception as e:
-            logger.critical(e)
-            self.singleCharacterSubDomainScaledWeight = "error"
-
-        # testing scaled exclusive prefix repetition
-        try:
-            self.exclusive_prefix_repetition_scaled_calculation()
-        except Exception as e:
-            logger.critical(e)
-            self.exclusivePrefixRepetitionScaledWeight = "error"
-
-        # testing scaled tld as subdomain
-        try:
-            self.tld_sub_domain_scaled_calculation()
-        except Exception as e:
-            logger.critical(e)
-            self.tldSubDomainScaledWeight = "error"
-
         # testing scaled ratio of digit subdomain
         try:
-            self.ratio_digit_sub_domain_scaled_calculation(normDict)
+            self.ratio_digit_sub_domain_scaled_calculation()
         except Exception as e:
             logger.critical(e)
             self.ratioDigitSubDomainScaledWeight = "error"
 
         # testing scaled ratio of hexa subdomains
         try:
-            self.ratio_hexa_sub_domain_scaled_calculation(normDict)
+            self.ratio_hexa_sub_domain_scaled_calculation()
         except Exception as e:
             logger.critical(e)
             self.ratioHexaSubDomainScaledWeight = "error"
 
         # testing scaled ratio of underscore
         try:
-            self.underscore_scaled_calculation(normDict)
+            self.underscore_scaled_calculation()
         except Exception as e:
             logger.critical(e)
             self.underscoreScaledWeight = "error"
 
-        # testing scaled digit in domain
-        try:
-            self.contain_digit_scaled_calculation()
-        except Exception as e:
-            logger.critical(e)
-            self.containDigitScaledWeight = "error"
-
         # testing scaled vowel ratio
         try:
-            self.vowel_ratio_scaled_calculation(normDict)
+            self.vowel_ratio_scaled_calculation()
         except Exception as e:
             logger.critical(e)
             self.vowelRatioScaledWeight = "error"
 
         # testing scaled digit ratio
         try:
-            self.ratio_digit_scaled_calculation(normDict)
+            self.ratio_digit_scaled_calculation()
         except Exception as e:
             logger.critical(e)
             self.ratioDigitScaledWeight = "error"
@@ -3436,21 +3154,21 @@ class URL:
 
         # testing scaled ratio of repeated characters
         try:
-            self.ratio_repeated_character_scaled_calculation(normDict)
+            self.ratio_repeated_character_scaled_calculation()
         except Exception as e:
             logger.critical(e)
             self.ratioRepeatedCharacterScaledWeight = "error"
 
         # testing scaled ratio of consecutive consonants
         try:
-            self.ratio_consecutive_consonant_scaled_calculation(normDict)
+            self.ratio_consecutive_consonant_scaled_calculation()
         except Exception as e:
             logger.critical(e)
             self.ratioConsecutiveConsonantScaledWeight = "error"
 
         # testing scaled ratio of consecutive digits
         try:
-            self.ratio_consecutive_digit_scaled_calculation(normDict)
+            self.ratio_consecutive_digit_scaled_calculation()
         except Exception as e:
             logger.critical(e)
             self.ratioConsecutiveDigitScaledWeight = "error"
@@ -3471,6 +3189,11 @@ def extraction(inputFile, output, begin=1):
     failledURLS = []
     notReacheable = []
 
+    dBase = ORMmanage.NormalizationBase("DB/norm.db")
+    normDict = {}
+    for norm in dBase.session.query(dBase.Normalization).all():
+        normDict[norm.feature] = {"data": norm.data, "normalizer": norm.normalizer, "scaler": norm.scaler}
+
     # First try with all URLs
     count = 1
     begin = begin
@@ -3482,7 +3205,7 @@ def extraction(inputFile, output, begin=1):
             if count >= begin:
                 try:
                     # Extract features
-                    results = func_timeout(50, website.features_extraction)
+                    results = func_timeout(50, website.features_extraction, kwargs={'normDict': normDict})
                     logger.debug(results)
                     if results == -1:
                         notReacheable.append(results)
@@ -3513,7 +3236,7 @@ def extraction(inputFile, output, begin=1):
 
         # Extract features
         try:
-            results = func_timeout(90, website.features_extraction)
+            results = func_timeout(90, website.features_extraction, kwargs={'normDict': normDict})
             if results == -1:
                 notReacheable.append(results)
             else:

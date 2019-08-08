@@ -1,10 +1,11 @@
 """
-
+Main file
 -----------
 Generative Adversarial Networks (GAN) research applied to the phishing detection.
 University of Gloucestershire
 Author : Pierrick ROBIC--BUTEZ
 2019
+Copyright (c) 2019 Khuzd
 """
 
 # ---------------------
@@ -58,6 +59,7 @@ import logging
 from logging.handlers import RotatingFileHandler
 from func_timeout import func_timeout
 from pathos.pools import ThreadPool
+from functools import partial
 
 ## Default datasets
 UCI_PATH = 'data/UCI_dataset.csv'
@@ -80,6 +82,9 @@ stream_handler = logging.StreamHandler()
 stream_handler.setLevel(logging.WARNING)
 
 logger.addHandler(stream_handler)
+
+logger2 = logging.getLogger('chardet.charsetprober')
+logger2.setLevel(logging.INFO)
 
 
 class MyParser(argparse.ArgumentParser):
@@ -130,7 +135,8 @@ def graph(args):
     if type(args.division) == list:
         args.division = args.division[0]
     GanGraphGeneration.multi_graph(args.beginLR[0], args.endLR[0], args.stepLR[0], args.epochs[0], args.beginSample[0],
-                                   args.endSample[0], args.stepSample[0], args.pltFrequency[0], dataset,
+                                   args.endSample[0], args.stepSample[0], args.pltFrequency[0], dataset, args.clean[0],
+                                   args.phish[0],
                                    outPath=''.join(args.output), divide=args.division, dataType=args.type[0])
     return
 
@@ -146,8 +152,14 @@ def extraction(args):
     # ---------------------
     if args.URL is not None:
         website = UrlToDatabase.URL(args.URL[0])
+
+        dBase = ORMmanage.NormalizationBase("DB/norm.db")
+        normDict = {}
+        for norm in dBase.session.query(dBase.Normalization).all():
+            normDict[norm.feature] = {"data": norm.data, "normalizer": norm.normalizer, "scaler": norm.scaler}
+
         try:
-            results = func_timeout(50, website.features_extraction)
+            results = func_timeout(50, website.features_extraction, kwargs={'normDict': normDict})
         except Exception as e:
             results = " fail " + str(e)
 
@@ -171,8 +183,14 @@ def extraction(args):
     elif args.list is not None:
         for url in args.list:
             website = UrlToDatabase.URL(url)
+
+            dBase = ORMmanage.NormalizationBase("DB/norm.db")
+            normDict = {}
+            for norm in dBase.session.query(dBase.Normalization).all():
+                normDict[norm.feature] = {"data": norm.data, "normalizer": norm.normalizer, "scaler": norm.scaler}
+
             try:
-                results = func_timeout(50, website.features_extraction)
+                results = func_timeout(50, website.features_extraction, kwargs={'normDict': normDict})
             except Exception as e:
                 results = " fail " + str(e)
             if args.output == "console" or args.output[0] == "console":
@@ -210,8 +228,11 @@ def creation(args):
     else:
         dataset = args.dataset[0]
 
+    clean = list(importData.csv_to_list(args.clean[0]))
+    phish = list(importData.csv_to_list(args.phish[0]))
+
     # Train then save
-    gan.train(args.epochs[0], importData.csv_to_list(dataset)[1].values())
+    gan.train(args.epochs[0], importData.csv_to_list(dataset)[1].values(), phishData=phish, cleanData=clean)
     gan.save(args.name[0], args.location[0])
     return
 
@@ -411,7 +432,12 @@ def orm_extract(args):
 
     # ---------------------
     #  Add to the database
-    # ---------------------
+    # --------------------
+    dBase = ORMmanage.NormalizationBase("DB/norm.db")
+    normDict = {}
+    for norm in dBase.session.query(dBase.Normalization).all():
+        normDict[norm.feature] = {"data": norm.data, "normalizer": norm.normalizer, "scaler": norm.scaler}
+
     i = 1
     for url in URLs:
         logger.debug(str(i))
@@ -430,7 +456,8 @@ def orm_extract(args):
                 tmp.append(web)
         if args.extraction:
             # Extract features
-            ThreadPool().map(UrlToDatabase.URL.features_extraction, tmp)
+            fct = partial(UrlToDatabase.URL.features_extraction, normDict=normDict)
+            ThreadPool().map(fct, tmp)
             result2 += tmp
             for web in result2:
                 print(web)
@@ -471,6 +498,10 @@ if __name__ == "__main__":
                              help="Frequency of the plots on graphs")
     graphParser.add_argument('-d', "--dataset", required=True, nargs=1, type=str,
                              help="Dataset used to train the GAN. Can be UCI, clean or path")
+    graphParser.add_argument('-c', "--clean", required=True, nargs=1, type=str,
+                             help="Clean dataset used to test the GAN.")
+    graphParser.add_argument('-p', "--phish", required=True, nargs=1, type=str,
+                             help="Phishing dataset used to test the GAN.")
     graphParser.add_argument('-o', "--output", default="graphs", nargs=1, type=str,
                              help="Output path where graphs will be stored")
     graphParser.add_argument('-di', "--division", default=1, nargs=1, type=int,
@@ -509,6 +540,10 @@ if __name__ == "__main__":
     creationParser.add_argument('-n', "--name", required=True, nargs=1, type=str, help="Name of the save")
     creationParser.add_argument('-d', "--dataset", required=True, nargs=1, type=str,
                                 help="Dataset used to train the GAN. Can be UCI, clean or path")
+    creationParser.add_argument('-c', "--clean", required=True, nargs=1, type=str,
+                                help="Clean dataset used to test the GAN.")
+    creationParser.add_argument('-p', "--phish", required=True, nargs=1, type=str,
+                                help="Phishing dataset used to test the GAN.")
     creationParser.set_defaults(func=creation)
 
     # ---------------------

@@ -85,11 +85,10 @@ You can generate multiple graphs to determine the best parameters for the GAN on
 
 To do that:
 ```
-python main.py graph [-h] --beginLR BEGINLR --endLR ENDLR --stepLR STEPLR
-                     --beginSample BEGINSAMPLE --endSample ENDSAMPLE
-                     --stepSample STEPSAMPLE --epochs EPOCHS --pltFrequency
-                     PLTFREQUENCY -d DATASET [-o OUTPUT] [-di DIVISION] -t
-                     {phish,clean}
+python main.py graph [-h] -blr BEGINLR -elr ENDLR -slr STEPLR -bs BEGINSAMPLE
+                     -es ENDSAMPLE -ss STEPSAMPLE -e EPOCHS -plt PLTFREQUENCY
+                     -d DATASET -c CLEAN -p PHISH [-o OUTPUT] [-di DIVISION]
+                     -t {phish,clean}
 ```
 
 Example:
@@ -97,7 +96,8 @@ Example:
 python main.py graph --beginLR 0.005 --endLR 0.01 --stepLR 0.001
                      --beginSample 50 --endSample 100
                      --stepSample 10 --epochs 1500 --pltFrequency
-                     10 -d data/UCI_dataset.csv -o graphs/UCI -di 3 -t
+                     10 -d data/clean_train.csv -p data/phish_test.csv
+                     -c data/clean_test.csv -o graphs/clean -di 3 -t
                      phish
 ```
 
@@ -146,12 +146,13 @@ To do that:
 
 ```
 python main.py create [-h] -e EPOCHS -s SIZE -r LR -l LOCATION -n NAME -d
-                      DATASET
+                      DATASET -c CLEAN -p PHISH
 ```
 
 Example:
 ```
-python main.py create -e 1500 -s 75 -r 0.005 -l saves -n UCI_model -d data/UCI_dataset.csv
+python main.py create -e 1500 -s 75 -r 0.005 -l saves -n clean_model -d data/clean_train.csv -c data/clean_test.csv 
+                      -p data/phish_test.csv
 ```
 
 If you need any help for this functionality: 
