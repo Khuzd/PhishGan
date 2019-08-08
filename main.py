@@ -531,14 +531,15 @@ if __name__ == "__main__":
     graphParser.add_argument('-d', "--dataset", required=True, nargs=1, type=str,
                              help="Dataset used to train the GAN. Can be amazon, phishtank, total (for amazon + web "
                                   "browser history) or path")
-    graphParser.add_argument('-c', "--clean", default="total", required=True, nargs=1, type=str,
-                             help="Clean dataset used to test the GAN. Can be amazon, total or a path")
+    graphParser.add_argument('-c', "--clean", default="total", nargs=1, type=str,
+                             help="Clean dataset used to test the GAN. Can be amazon, total (for amazon + web "
+                                  "browser history) or a path. Default is total.")
     graphParser.add_argument('-p', "--phish", default="phishtank", nargs=1, type=str,
-                             help="Phishing dataset used to test the GAN. Can be phishtank or a path")
+                             help="Phishing dataset used to test the GAN. Can be phishtank or a path. Default is pishtank")
     graphParser.add_argument('-o', "--output", default="graphs", nargs=1, type=str,
                              help="Output path where graphs will be stored")
     graphParser.add_argument('-di', "--division", default=1, nargs=1, type=int,
-                             help="Into how many graphs the simulation is divided")
+                             help="Into how many graphs the simulation is divided. Default is 1.")
     graphParser.add_argument('-t', "--type", required=True, choices=["phish", "clean"], nargs=1, type=str,
                              help="Data type. Could be phish or clean")
     graphParser.set_defaults(func=graph)
@@ -572,11 +573,14 @@ if __name__ == "__main__":
     creationParser.add_argument("-l", "--location", required=True, nargs=1, type=str, help="Location for the save")
     creationParser.add_argument('-n', "--name", required=True, nargs=1, type=str, help="Name of the save")
     creationParser.add_argument('-d', "--dataset", required=True, nargs=1, type=str,
-                                help="Dataset used to train the GAN. Can be UCI, clean or path")
-    creationParser.add_argument('-c', "--clean", required=True, nargs=1, type=str,
-                                help="Clean dataset used to test the GAN.")
-    creationParser.add_argument('-p', "--phish", required=True, nargs=1, type=str,
-                                help="Phishing dataset used to test the GAN.")
+                                help="Dataset used to train the GAN. Can be amazon, phishtank, total (for amazon + web "
+                                     "browser history) or path")
+    creationParser.add_argument('-c', "--clean", default="total", nargs=1, type=str,
+                                help="Clean dataset used to test the GAN. Can be amazon, total (for amazon + web "
+                                     "browser history) or a path. Default is total")
+    creationParser.add_argument('-p', "--phish", default="phishtank", nargs=1, type=str,
+                                help="Phishing dataset used to test the GAN. Can be phishtank or a path. Default is "
+                                     "phishtank")
     creationParser.set_defaults(func=creation)
 
     # ---------------------
