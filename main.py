@@ -62,8 +62,12 @@ from pathos.pools import ThreadPool
 from functools import partial
 
 ## Default datasets
-UCI_PATH = 'data/UCI_dataset.csv'
-CLEAN_PATH = 'data/Amazon_top25000outtrain.csv'
+AMAZON_TRAIN = 'data/clean_train.csv'
+AMAZON_TEST = 'data/clean_test.csv'
+PHISHTANK_TRAIN = 'data/phish_train.csv'
+PHISHTANK_TEST = 'data/phish_test.csv'
+TOTAL_TRAIN = 'data/total_train.csv'
+TOTAL_TEST = 'data/total_test.csv'
 
 # ---------------------
 #  Define logger
@@ -124,19 +128,33 @@ def graph(args):
         logger.critical("Can't work because {}>{}".format(str(args.beginSample), str(args.endSample)))
 
     # Load dataset
-    if args.dataset[0] == "UCI":
-        dataset = UCI_PATH
-    elif args.dataset[0] == "clean":
-        dataset = CLEAN_PATH
+    if args.dataset[0] == "amazon":
+        dataset = AMAZON_TRAIN
+    elif args.dataset[0] == "phishtank":
+        dataset = PHISHTANK_TRAIN
+    elif args.dataset[0] == "total":
+        dataset = TOTAL_TRAIN
     else:
         dataset = args.dataset[0]
+
+    if args.clean == "total" or args.clean[0] == "total":
+        clean = TOTAL_TEST
+    elif args.clean == "amazon" or args.clean[0] == "amazon":
+        clean = AMAZON_TEST
+    else:
+        clean = args.clean[0]
+
+    if args.phish == "phishtank" or args.phish[0] == "phishtank":
+        phish = PHISHTANK_TEST
+    else:
+        phish = arg.phish[0]
 
     # Generate graph(s)
     if type(args.division) == list:
         args.division = args.division[0]
     GanGraphGeneration.multi_graph(args.beginLR[0], args.endLR[0], args.stepLR[0], args.epochs[0], args.beginSample[0],
-                                   args.endSample[0], args.stepSample[0], args.pltFrequency[0], dataset, args.clean[0],
-                                   args.phish[0],
+                                   args.endSample[0], args.stepSample[0], args.pltFrequency[0], dataset, clean,
+                                   phish,
                                    outPath=''.join(args.output), divide=args.division, dataType=args.type[0])
     return
 
@@ -221,15 +239,29 @@ def creation(args):
     gan = GAN(lr=args.lr[0], sample=args.size[0])
 
     # Load dataset
-    if args.dataset[0] == "UCI":
-        dataset = UCI_PATH
-    elif args.dataset[0] == "clean":
-        dataset = CLEAN_PATH
+    if args.dataset[0] == "amazon":
+        dataset = AMAZON_TRAIN
+    elif args.dataset[0] == "phishtank":
+        dataset = PHISHTANK_TRAIN
+    elif args.dataset[0] == "total":
+        dataset = TOTAL_TRAIN
     else:
         dataset = args.dataset[0]
 
-    clean = list(importData.csv_to_list(args.clean[0]))
-    phish = list(importData.csv_to_list(args.phish[0]))
+    if args.clean == "total" or args.clean[0] == "total":
+        clean = TOTAL_TEST
+    elif args.clean == "amazon" or args.clean[0] == "amazon":
+        clean = AMAZON_TEST
+    else:
+        clean = args.clean[0]
+
+    if args.phish == "phishtank" or args.phish[0] == "phishtank":
+        phish = PHISHTANK_TEST
+    else:
+        phish = arg.phish[0]
+
+    clean = list(importData.csv_to_list(clean)[1].values())
+    phish = list(importData.csv_to_list(phish)[1].values())
 
     # Train then save
     gan.train(args.epochs[0], importData.csv_to_list(dataset)[1].values(), phishData=phish, cleanData=clean)
@@ -497,11 +529,12 @@ if __name__ == "__main__":
     graphParser.add_argument('-plt', "--pltFrequency", required=True, nargs=1, type=int,
                              help="Frequency of the plots on graphs")
     graphParser.add_argument('-d', "--dataset", required=True, nargs=1, type=str,
-                             help="Dataset used to train the GAN. Can be UCI, clean or path")
-    graphParser.add_argument('-c', "--clean", required=True, nargs=1, type=str,
-                             help="Clean dataset used to test the GAN.")
-    graphParser.add_argument('-p', "--phish", required=True, nargs=1, type=str,
-                             help="Phishing dataset used to test the GAN.")
+                             help="Dataset used to train the GAN. Can be amazon, phishtank, total (for amazon + web "
+                                  "browser history) or path")
+    graphParser.add_argument('-c', "--clean", default="total", required=True, nargs=1, type=str,
+                             help="Clean dataset used to test the GAN. Can be amazon, total or a path")
+    graphParser.add_argument('-p', "--phish", default="phishtank", nargs=1, type=str,
+                             help="Phishing dataset used to test the GAN. Can be phishtank or a path")
     graphParser.add_argument('-o', "--output", default="graphs", nargs=1, type=str,
                              help="Output path where graphs will be stored")
     graphParser.add_argument('-di', "--division", default=1, nargs=1, type=int,
