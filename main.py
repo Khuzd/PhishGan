@@ -237,6 +237,7 @@ def creation(args):
     sess = tf.Session(graph=tf.get_default_graph(), config=session_conf)
     K.set_session(sess)
     gan = GAN(lr=args.lr[0], sample=args.size[0])
+    gan.dataType = args.type[0]
 
     # Load dataset
     if args.dataset[0] == "amazon":
@@ -581,6 +582,8 @@ if __name__ == "__main__":
     creationParser.add_argument('-p', "--phish", default="phishtank", nargs=1, type=str,
                                 help="Phishing dataset used to test the GAN. Can be phishtank or a path. Default is "
                                      "phishtank")
+    creationParser.add_argument('-t', "--type", required=True, choices=["phish", "clean"], nargs=1, type=str,
+                                help="Data type. Could be phish or clean")
     creationParser.set_defaults(func=creation)
 
     # ---------------------
