@@ -85,7 +85,7 @@ You can generate multiple graphs to determine the best parameters for the GAN on
 
 To do that:
 ```
-python main.py main.py graph [-h] -blr BEGINLR -elr ENDLR -slr STEPLR -bs BEGINSAMPLE
+python main.py graph [-h] -blr BEGINLR -elr ENDLR -slr STEPLR -bs BEGINSAMPLE
                      -es ENDSAMPLE -ss STEPSAMPLE -e EPOCHS -plt PLTFREQUENCY
                      -d DATASET [-c CLEAN] [-p PHISH] [-o OUTPUT]
                      [-di DIVISION] -t {phish,clean}
@@ -146,13 +146,13 @@ To do that:
 
 ```
 python main.py create [-h] -e EPOCHS -s SIZE -r LR -l LOCATION -n NAME -d
-                      DATASET [-c CLEAN] [-p PHISH]
+                      DATASET [-c CLEAN] [-p PHISH] -t {phish,clean}
 ```
 
 Example:
 ```
 python main.py create -e 1500 -s 75 -r 0.005 -l saves -n total_model -d data/clean_train.csv -c total 
-                      -p phishtank
+                      -p phishtank -t clean
 ```
 
 If you need any help for this functionality: 

@@ -136,7 +136,7 @@ class GAN:
 
         # Saving the model diagram
         if plot:
-            plot_model(model, to_file="generator.png", show_shapes=True, show_layer_names=True)
+            plot_model(model, to_file="generator.png", show_layer_names=True, rankdir="LR")
             return
 
         model.summary()
@@ -166,7 +166,7 @@ class GAN:
 
         # Saving the model diagram
         if plot:
-            plot_model(model, to_file="discriminator.png", show_shapes=True, show_layer_names=True)
+            plot_model(model, to_file="discriminator.png", rankdir="LR", show_layer_names=True)
             return
 
         model.summary()

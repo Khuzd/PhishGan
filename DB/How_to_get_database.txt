@@ -1,0 +1,4 @@
+How to get database?
+
+Due to the size of the databases (around 4GB), it's not possible to put it on Github. If you are interrested in this project and want to get the databases I created, just send me an email at: pierrick.robicbut(at)gmail.com
+
