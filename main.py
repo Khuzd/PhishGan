@@ -368,7 +368,7 @@ def history_train(args):
     gan.load(args.name[0], args.location[0])
 
     # Load database and extract features
-    Base = ORMmanage.WebsiteBase("DB/database.db")
+    Base = ORMmanage.WebsiteBase("DB/websites.db")
     features = []
     for website in Base.session.query(Base.History).all():
         url = pickle.loads(website.content)
