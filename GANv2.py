@@ -256,7 +256,7 @@ class GAN:
 
         del json_file, loaded_model_json
 
-    def class_report(self, cleanTestDataset, phishTestDataset, calculate=True):
+    def class_report(self, cleanTestDataset, phishTestDataset, calculate=True, determineThreshold = True):
         """
         Classification report for the GAN after training
         :param cleanTestDataset: list of list
@@ -275,9 +275,10 @@ class GAN:
             prediction.append(
                 self.discriminator.predict_on_batch(np.array(i).astype(np.float)[:].reshape(1, self.countData, 1)))
 
-        ## Calculate the best threshold
-        self.thresHold = float(((sum(prediction[:len(cleanTestDataset)]) / len(cleanTestDataset)) + (
-                sum(prediction[len(cleanTestDataset):]) / len(phishTestDataset))) / 2)
+        if determineThreshold:
+            ## Calculate the best threshold
+            self.thresHold = float(((sum(prediction[:len(cleanTestDataset)]) / len(cleanTestDataset)) + (
+                    sum(prediction[len(cleanTestDataset):]) / len(phishTestDataset))) / 2)
 
         if calculate:
             ## Generate the predict results
