@@ -209,6 +209,7 @@ class GAN:
             tmp["generator"] = None
             tmp["discriminator"] = None
             tmp["combined"] = None
+            tmp["optimizer"] = None
             print(tmp)
             json_file.write(json.dumps(tmp))
 
@@ -338,6 +339,7 @@ class GAN:
             report = classification_report(np.array(true), np.array(predict), output_dict=True)
             if report["accuracy"] > bestClass["accuracy"]:
                 bestClass = report
+                self.thresHold = threshold
 
         return bestClass
 
