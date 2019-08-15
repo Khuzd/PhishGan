@@ -291,6 +291,56 @@ class GAN:
             return classification_report(np.array(true), np.array(predict), output_dict=True)
         return
 
+    def best_threshold_calculate(self, cleanTestPath, phishTestPath, step, return_report=True):
+        """
+        Use to determine the best threshold for prediction
+        :param cleanTestPath: str
+        :param phishTestPath: str
+        :param step: float
+        :return:
+        """
+
+        phisTest = list(importData.csv_to_list(phishTestPath)[1].values())
+        cleanTest = list(importData.csv_to_list(cleanTestPath)[1].values())
+
+        if len(cleanTest) > len(phisTest):
+            cleanTest = cleanTest[:len(phisTest)]
+        else:
+            phisTest = phisTest[len(cleanTest)]
+
+        ## Construct the true results
+        true = ["clean"] * len(cleanTest) + ["phish"] * len(phisTest)
+        prediction = []
+
+        ## Make prediction
+        for i in cleanTest + phisTest:
+            prediction.append(
+                self.discriminator.predict_on_batch(np.array(i).astype(np.float)[:].reshape(1, self.countData, 1)))
+
+        averages = (
+            (sum(prediction[:len(cleanTest)]) / len(cleanTest)), (sum(prediction[len(cleanTest):]) / len(phisTest)))
+        mini = min(averages)
+        maxi = max(averages)
+
+        bestClass = {"accuracy": 0}
+
+        print("Total of iteration :{}".format(len(np.arange(mini, maxi, step))))
+        for threshold in np.arange(mini, maxi, step):
+            predict = []
+            for i in prediction:
+                if self.dataType == "phish" and i[0][0] > threshold:
+                    predict.append("phish")
+                elif self.dataType != "phish" and i[0][0] < threshold:
+                    predict.append("phish")
+                else:
+                    predict.append("clean")
+
+            report = classification_report(np.array(true), np.array(predict), output_dict=True)
+            if report["accuracy"] > bestClass["accuracy"]:
+                bestClass = report
+
+        return bestClass
+
     def train(self, epochs, data, plotFrequency=20, predict=False, phishData=None, cleanData=None):
         """
         Train the GAN
