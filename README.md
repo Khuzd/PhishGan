@@ -85,7 +85,7 @@ You can generate multiple graphs to determine the best parameters for the GAN on
 
 To do that:
 ```
-python main.py graph [-h] -blr BEGINLR -elr ENDLR -slr STEPLR -bs BEGINSAMPLE
+python phishgan.py graph [-h] -blr BEGINLR -elr ENDLR -slr STEPLR -bs BEGINSAMPLE
                      -es ENDSAMPLE -ss STEPSAMPLE -e EPOCHS -plt PLTFREQUENCY
                      -d DATASET [-c CLEAN] [-p PHISH] [-o OUTPUT]
                      [-di DIVISION] -t {phish,clean}
@@ -93,7 +93,7 @@ python main.py graph [-h] -blr BEGINLR -elr ENDLR -slr STEPLR -bs BEGINSAMPLE
 
 Example:
 ```
-python main.py graph --beginLR 0.005 --endLR 0.01 --stepLR 0.001
+python phishgan.py graph --beginLR 0.005 --endLR 0.01 --stepLR 0.001
                      --beginSample 50 --endSample 100
                      --stepSample 10 --epochs 1500 --pltFrequency
                      10 -d data/clean_train.csv -p phishtank
@@ -103,7 +103,7 @@ python main.py graph --beginLR 0.005 --endLR 0.01 --stepLR 0.001
 
 If you need any help for this functionality: 
 ```
-python main.py graph -h
+python phishgan.py graph -h
 ```
 
 After this step, you will obtain many graphs of accuracy and loss, and the classification depending on epochs for many 
@@ -124,17 +124,17 @@ step.
 To do that:
 
 ```
-python main.py reportGraph [-h] -p PATH
+python phishgan.py reportGraph [-h] -p PATH
 ```
 
 Example:
 ```
-python main.py reportGraph -p graphs/total
+python phishgan.py reportGraph -p graphs/total
 ```
 
 If you need any help for this functionality: 
 ```
-python main.py reportGraph -h
+python phishgan.py reportGraph -h
 ```
 
 After this step of graphs generation, you will be able to determine the best learning rate, number of epochs and sample size to obtain the best results on your computer.
@@ -145,19 +145,19 @@ You can generate a GAN model with specific parameters and save it.
 To do that:
 
 ```
-python main.py create [-h] -e EPOCHS -s SIZE -r LR -l LOCATION -n NAME -d
+python phishgan.py create [-h] -e EPOCHS -s SIZE -r LR -l LOCATION -n NAME -d
                       DATASET [-c CLEAN] [-p PHISH] -t {phish,clean}
 ```
 
 Example:
 ```
-python main.py create -e 1500 -s 75 -r 0.005 -l saves -n total_model -d data/clean_train.csv -c total 
+python phishgan.py create -e 1500 -s 75 -r 0.005 -l saves -n total_model -d data/clean_train.csv -c total 
                       -p phishtank -t clean
 ```
 
 If you need any help for this functionality: 
 ```
-python main.py create -h
+python phishgan.py create -h
 ```
 
 After this step, you will have a model saved on your computer which you will be able to reuse in the future.
@@ -170,20 +170,20 @@ You can find the detail of these features, please look at the Documentation fold
 To extract features from URL(s): 
 
 ```
-python main.py extract [-h] (-u URL | -f FILE | -l LIST [LIST ...]) [-b BEGIN]
+python phishgan.py extract [-h] (-u URL | -f FILE | -l LIST [LIST ...]) [-b BEGIN]
                        [-o OUTPUT]
 ```
 
 Examples:
 ```
-python main.py extract -u https://www.amazon.co.uk
-python main.py extract -f data/original/Phishtank.csv -o tmp/results.txt
-python main.py extract -l https://www.amazon.co.uk https://www.ebay.co.uk
+python phishgan.py extract -u https://www.amazon.co.uk
+python phishgan.py extract -f data/original/Phishtank.csv -o tmp/results.txt
+python phishgan.py extract -l https://www.amazon.co.uk https://www.ebay.co.uk
 ```
 
 If you need any help for this functionality: 
 ```
-python main.py extract -h
+python phishgan.py extract -h
 ```
 
 Now, you have features extracted from URL(s) which can be given to a GAN model to train it or to predict if the features extracted seem to be from a phishing website or not.
@@ -195,17 +195,17 @@ determine with the GAN model if these features seem to be from a phishing websit
 To do that: 
 
 ```
-python main.py predict [-h] -f FILE [-v] -l LOCATION -n NAME [-o OUTPUT]
+python phishgan.py predict [-h] -f FILE [-v] -l LOCATION -n NAME [-o OUTPUT]
 ```
 
 Example:
 ```
-python main.py predict -f data/Phishtank_outtest.csv -l saves -n total_model
+python phishgan.py predict -f data/Phishtank_outtest.csv -l saves -n total_model
 ```
 
 If you need any help for this functionality: 
 ```
-python main.py predict -h
+python phishgan.py predict -h
 ```
 
 ### History web browsers URL extraction
@@ -215,12 +215,12 @@ It supports Chrome, Firefox and Opera on Windows, MacOS and Linux.
 
 Example:
 ```
-python main.py historyExtract [-h] [-o OUTPUT] [-d DATE] -n NAME
+python phishgan.py historyExtract [-h] [-o OUTPUT] [-d DATE] -n NAME
 ```
 
 If you need any help for this functionality: 
 ```
-python main.py historyExtract -h
+python phishgan.py historyExtract -h
 ```
 
 ### History web browsers URL used to train a GAN
@@ -232,12 +232,12 @@ It will use the URL already stored into a sqlite3 database, which can be created
 
 Example:
 ```
-python main.py main.py historyTrain [-h] -l LOCATION [-d DATE] [-di DIVISION] -e EPOCHS [-o OUTPUT] -plt PLTFREQUENCY
+python phishgan.py phishgan.py historyTrain [-h] -l LOCATION [-d DATE] [-di DIVISION] -e EPOCHS [-o OUTPUT] -plt PLTFREQUENCY
 ```
 
 If you need any help for this functionality: 
 ```
-python main.py historyTrain -h
+python phishgan.py historyTrain -h
 ```
 
 ### Adding URL to a sqlite3 database
@@ -247,12 +247,12 @@ That permit you to reuse all data in the future without needing to extract it ag
 
 Example:
 ```
-python main.py ormextract [-h] -d DATABASE -p PATH -t TABLE [-e]
+python phishgan.py ormextract [-h] -d DATABASE -p PATH -t TABLE [-e]
 ```
 
 If you need any help for this functionality: 
 ```
-python main.py ormextract -h
+python phishgan.py ormextract -h
 ```
 
 ## Built With
