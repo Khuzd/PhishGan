@@ -77,7 +77,15 @@ For file which contain URLs with features, each line have to contain first the U
 
 ## Usage
 
-This program contains many functionalities.
+This program contains many functionalities. To get global help:
+```
+python phishgan.py -h
+```
+
+If you want to launch the program in debug mode
+```
+python phishgan.py --debug {graph,extract,create,predict,report_graph,history_extract,history_train,ormextract}
+```
 
 ### Generation of training and validation loss graphs, accuracy graphs and classification reports
 
