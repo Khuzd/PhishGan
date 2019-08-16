@@ -27,23 +27,17 @@ from func_timeout import func_timeout, FunctionTimedOut
 from myawis import CallAwis
 from publicsuffixlist import PublicSuffixList
 
-import ORMmanage
+import databaseManage
 import googleApi
 from libs.whois import whois
 from libs.whois.parser import PywhoisError
 
 # Import logger
-logger = logging.getLogger('main')
+logger = logging.getLogger('phishGan')
 
 # ---------------------
 #  Set constants
 # ---------------------
-
-columns = ["having_IP_Address", "URL_Length", "Shortining_Service", "having_At_Symbol", "double_slash_redirecting",
-           "Prefix_Suffix", "having_Sub_Domain", "SSLfinal_State", "Domain_registeration_length", "Favicon", "port",
-           "HTTPS_token", "Request_URL", "URL_of_Anchor", "Links_in_tags", "SFH", "Submitting_to_email",
-           "Abnormal_URL", "Redirect", "on_mouseover", "RightClick", "popUpWidnow", "Iframe", "age_of_domain",
-           "DNSRecord", "web_traffic", "Page_Rank", "Google_Index", "Links_pointing_to_page", "Statistical_report"]
 
 URL_SHORTENER = ["shrinkee.com", "goo.gl", "7.ly", "adf.ly", "admy.link", "al.ly", "bc.vc", "bit.do", "doiop.com",
                  "ity.im", "url.ie", "is.gd", "linkmoji.co", "sh.dz24.info", "lynk.my", "mcaf.ee", "yep.it", "ow.ly",
@@ -58,7 +52,7 @@ TRUSTED_ISSUERS = ["geotrust", "godaddy", "network solutions", "thawte", "comodo
                    "rapidssl", "digicert", "google", "let's encrypt", "comodo ca limited", "cloudflare", "microsoft"]
 
 
-class URL:
+class website:
     """
     URL Class to store all informations about a website
     """
@@ -3189,7 +3183,7 @@ def extraction(inputFile, output, begin=1):
     failledURLS = []
     notReacheable = []
 
-    dBase = ORMmanage.NormalizationBase("DB/norm.db")
+    dBase = databaseManage.NormalizationBase("DB/norm.db")
     normDict = {}
     for norm in dBase.session.query(dBase.Normalization).all():
         normDict[norm.feature] = {"data": norm.data, "normalizer": norm.normalizer, "scaler": norm.scaler}
@@ -3201,7 +3195,7 @@ def extraction(inputFile, output, begin=1):
         # Load URLs from csv file
         for row in csv.reader(csvinfile, delimiter=',', quotechar='|'):
             logger.info("first round: " + str(count))
-            website = URL(row[0])
+            website = website(row[0])
             if count >= begin:
                 try:
                     # Extract features
@@ -3232,7 +3226,7 @@ def extraction(inputFile, output, begin=1):
     for url in failledURLS:
         logger.info("second round" + str(count))
         count += 1
-        website = URL(url)
+        website = website(url)
 
         # Extract features
         try:

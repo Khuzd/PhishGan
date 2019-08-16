@@ -56,9 +56,7 @@ import logging
 import json
 
 # Import logger
-logger = logging.getLogger('main')
-
-# os.environ["PATH"] += os.pathsep + 'C:/Program Files (x86)/Graphviz2.38/bin'
+logger = logging.getLogger('phishGan')
 
 # Default datasets path
 PHIS_PATH_TEST = "data/phish_test.csv"

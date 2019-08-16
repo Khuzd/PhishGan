@@ -51,7 +51,7 @@ import importData
 import logging
 
 # Import logger
-logger = logging.getLogger('main')
+logger = logging.getLogger('phishGan')
 plt.set_loglevel("info")
 
 

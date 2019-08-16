@@ -19,10 +19,10 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-import UrlToDatabase
+import Website
 
 # Import logger
-logger = logging.getLogger('main')
+logger = logging.getLogger('phishGan')
 
 
 class WebsiteBase:
@@ -120,7 +120,7 @@ class WebsiteBase:
                     oldUrl = pickle.loads(result.content)
 
                     # Create new website with new methods
-                    tmp = UrlToDatabase.URL(result.url, True)
+                    tmp = Website.website(result.url, True)
 
                     # Load attributes from old to new website
                     tmp.http = oldUrl.http
@@ -227,7 +227,7 @@ class WebsiteBase:
                 normDict = {}
                 for norm in dBase.session.query(dBase.Normalization).all():
                     normDict[norm.feature] = {"data": norm.data, "normalizer": norm.normalizer, "scaler": norm.scaler}
-                fct = partial(UrlToDatabase.URL.re_extract_non_request_features, normDict=normDict)
+                fct = partial(Website.website.re_extract_non_request_features, normDict=normDict)
                 for webs in [self.session.query(self.__getattribute__(table.capitalize())).yield_per(1000)[x:x + 500]
                              for x in
                              range(0, self.session.query(self.__getattribute__(table.capitalize())).count(),

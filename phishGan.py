@@ -45,12 +45,12 @@ K.set_session(sess)
 
 import argparse
 import GanGraphGeneration
-import UrlToDatabase
+import Website
 import csv
 from GANv2 import GAN
 import importData
 import browser_history_extraction
-import ORMmanage
+import databaseManage
 import pickle
 import decimal
 from stem import Signal
@@ -169,9 +169,9 @@ def extraction(args):
     #  Case of features extraction for only one URL
     # ---------------------
     if args.URL is not None:
-        website = UrlToDatabase.URL(args.URL[0])
+        website = Website.website(args.URL[0])
 
-        dBase = ORMmanage.NormalizationBase("DB/norm.db")
+        dBase = databaseManage.NormalizationBase("DB/norm.db")
         normDict = {}
         for norm in dBase.session.query(dBase.Normalization).all():
             normDict[norm.feature] = {"data": norm.data, "normalizer": norm.normalizer, "scaler": norm.scaler}
@@ -193,16 +193,16 @@ def extraction(args):
     elif args.file is not None:
         if type(args.begin) is list:
             args.begin = args.begin[0]
-        UrlToDatabase.extraction(args.file[0], args.output[0], args.begin)
+        Website.extraction(args.file[0], args.output[0], args.begin)
 
     # ---------------------
     #  Case of features extraction for a list of URLs
     # ---------------------
     elif args.list is not None:
         for url in args.list:
-            website = UrlToDatabase.URL(url)
+            website = Website.website(url)
 
-            dBase = ORMmanage.NormalizationBase("DB/norm.db")
+            dBase = databaseManage.NormalizationBase("DB/norm.db")
             normDict = {}
             for norm in dBase.session.query(dBase.Normalization).all():
                 normDict[norm.feature] = {"data": norm.data, "normalizer": norm.normalizer, "scaler": norm.scaler}
@@ -368,7 +368,7 @@ def history_train(args):
     gan.load(args.name[0], args.location[0])
 
     # Load database and extract features
-    Base = ORMmanage.WebsiteBase("DB/websites.db")
+    Base = databaseManage.WebsiteBase("DB/websites.db")
     features = []
     for website in Base.session.query(Base.History).all():
         url = pickle.loads(website.content)
@@ -430,7 +430,7 @@ def orm_extract(args):
         """
 
     # Load database
-    Base = ORMmanage.WebsiteBase(args.database[0])
+    Base = databaseManage.WebsiteBase(args.database[0])
     Base.create_tables()
 
     if type(args.thread) is list:
@@ -466,7 +466,7 @@ def orm_extract(args):
     # ---------------------
     #  Add to the database
     # --------------------
-    dBase = ORMmanage.NormalizationBase("DB/norm.db")
+    dBase = databaseManage.NormalizationBase("DB/norm.db")
     normDict = {}
     for norm in dBase.session.query(dBase.Normalization).all():
         normDict[norm.feature] = {"data": norm.data, "normalizer": norm.normalizer, "scaler": norm.scaler}
@@ -478,7 +478,7 @@ def orm_extract(args):
         i += args.thread
 
         # Create URL object
-        result1 = ThreadPool().map(UrlToDatabase.URL, url)
+        result1 = ThreadPool().map(Website.website, url)
         result2 = []
         tmp = []
         for web in result1:
@@ -489,7 +489,7 @@ def orm_extract(args):
                 tmp.append(web)
         if args.extraction:
             # Extract features
-            fct = partial(UrlToDatabase.URL.features_extraction, normDict=normDict)
+            fct = partial(Website.website.features_extraction, normDict=normDict)
             ThreadPool().map(fct, tmp)
             result2 += tmp
             for web in result2:
