@@ -74,7 +74,7 @@ TOTAL_TEST = 'data/total_test.csv'
 # ---------------------
 
 logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 formatter = logging.Formatter('%(asctime)s :: %(levelname)s :: %(message)s')
 file_handler = RotatingFileHandler('log/phishGan.log', 'a', 1000000, 1)
@@ -266,7 +266,7 @@ def creation(args):
 
     # Train then save
     gan.train(args.epochs[0], importData.csv_to_list(dataset)[1].values(), phishData=phish, cleanData=clean)
-    gan.best_threshold_calculate(clean,phish,return_report=False)
+    gan.best_threshold_calculate(clean, phish, 0.0001, return_report=False)
     gan.save(args.name[0], args.location[0])
     return
 
@@ -515,6 +515,7 @@ if __name__ == "__main__":
     # ---------------------
     parser = MyParser(description="Gan interaction program")
     subparsers = parser.add_subparsers(help='commands')
+    parser.add_argument("--debug", action='store_true', help="Debug mode")
 
     # ---------------------
     #  Graph parser
@@ -665,7 +666,11 @@ if __name__ == "__main__":
     #  Parse
     # ---------------------
     arg = parser.parse_args()
-    # logger.debug(arg)
+    logger.debug(arg)
+
+    if arg.debug:
+        logger.setLevel(logging.DEBUG)
+
     try:
         arg.func(arg)
     except AttributeError:
