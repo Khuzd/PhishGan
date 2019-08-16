@@ -173,7 +173,7 @@ class website:
             self.amazonAlexa = CallAwis(open("api_keys/awis_access_id.txt").read(),
                                         open("api_keys/awis_secret_access_key.txt").read()).urlinfo(self.domain)
 
-        ## Weights
+        # Weights
         self.ipWeight = "error"
         self.lengthWeight = "error"
         self.shorteningWeight = "error"
@@ -221,7 +221,7 @@ class website:
         self.ratioConsecutiveConsonantWeight = "error"
         self.ratioConsecutiveDigitWeight = "error"
 
-        ## ScaledWeights
+        # ScaledWeights
         self.lengthScaledWeight = "error"
         self.dashScaledWeight = "error"
         self.subDomainScaledWeight = "error"
@@ -1524,7 +1524,6 @@ class website:
             elif str(form.get("action")) == "about:blank":
                 boolean = True
                 count += 1
-
 
             elif self.domain not in str(form.get("action")) and ("http" in str(form.get("action")) or "www" in str(
                     form.get("action"))):
@@ -3195,11 +3194,11 @@ def extraction(inputFile, output, begin=1):
         # Load URLs from csv file
         for row in csv.reader(csvinfile, delimiter=',', quotechar='|'):
             logger.info("first round: " + str(count))
-            website = website(row[0])
+            web = web(row[0])
             if count >= begin:
                 try:
                     # Extract features
-                    results = func_timeout(50, website.features_extraction, kwargs={'normDict': normDict})
+                    results = func_timeout(50, web.features_extraction, kwargs={'normDict': normDict})
                     logger.debug(results)
                     if results == -1:
                         notReacheable.append(results)
@@ -3226,11 +3225,11 @@ def extraction(inputFile, output, begin=1):
     for url in failledURLS:
         logger.info("second round" + str(count))
         count += 1
-        website = website(url)
+        web = website(url)
 
         # Extract features
         try:
-            results = func_timeout(90, website.features_extraction, kwargs={'normDict': normDict})
+            results = func_timeout(90, web.features_extraction, kwargs={'normDict': normDict})
             if results == -1:
                 notReacheable.append(results)
             else:

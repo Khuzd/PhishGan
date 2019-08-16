@@ -34,12 +34,12 @@ import tensorflow as tf
 tf.compat.v1.set_random_seed(seed_value)
 
 # 5. Configure a new global `tensorflow` session
-from keras import backend as K
+from keras import backend as k
 
 session_conf = tf.compat.v1.ConfigProto(intra_op_parallelism_threads=1, inter_op_parallelism_threads=1,
                                         device_count={"CPU": 1})
 sess = tf.compat.v1.Session(graph=tf.compat.v1.get_default_graph(), config=session_conf)
-K.set_session(sess)
+k.set_session(sess)
 
 import matplotlib.pyplot as plt
 import decimal
@@ -139,7 +139,7 @@ def multi_graph(begin_lr, end_lr, step_lr, epochs, begin_sampleSize, end_SampleS
             session_conf = tf.compat.v1.ConfigProto(intra_op_parallelism_threads=1, inter_op_parallelism_threads=1,
                                                     device_count={"CPU": 1})
             sess = tf.compat.v1.Session(graph=tf.compat.v1.get_default_graph(), config=session_conf)
-            K.set_session(sess)
+            k.set_session(sess)
 
             logger.info("sample : %f ; lr : %f" % (sample, lr))
 
@@ -148,9 +148,11 @@ def multi_graph(begin_lr, end_lr, step_lr, epochs, begin_sampleSize, end_SampleS
             gan.dataType = dataType
 
             # Train
-            X, accuracy, Dloss, Gloss, vacc, vDloss, vGloss, bestReport, \
-            bestEpoch = gan.train(epochs=epochs, plotFrequency=plotFrequency,
-                                  data=data, predict=True, phishData=phish, cleanData=clean)
+            X, accuracy, Dloss, Gloss, vacc, vDloss, vGloss, bestReport, bestEpoch = gan.train(epochs=epochs,
+                                                                                               plotFrequency=plotFrequency,
+                                                                                               data=data, predict=True,
+                                                                                               phishData=phish,
+                                                                                               cleanData=clean)
 
             # ---------------------
             #  Plot graph(s)
@@ -183,7 +185,7 @@ def multi_graph(begin_lr, end_lr, step_lr, epochs, begin_sampleSize, end_SampleS
                 reportFile.write(str(bestReport))
 
             del gan, sess, session_conf, X, accuracy, Dloss, Gloss, vacc, vDloss, vGloss, bestReport, bestEpoch
-            K.clear_session()
+            k.clear_session()
 
     return
 

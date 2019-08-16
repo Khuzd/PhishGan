@@ -61,7 +61,7 @@ from func_timeout import func_timeout
 from pathos.pools import ThreadPool
 from functools import partial
 
-## Default datasets
+# Default datasets
 AMAZON_TRAIN = 'data/clean_train.csv'
 AMAZON_TEST = 'data/clean_test.csv'
 PHISHTANK_TRAIN = 'data/phish_train.csv'
