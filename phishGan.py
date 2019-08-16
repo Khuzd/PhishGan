@@ -266,6 +266,7 @@ def creation(args):
 
     # Train then save
     gan.train(args.epochs[0], importData.csv_to_list(dataset)[1].values(), phishData=phish, cleanData=clean)
+    gan.best_threshold_calculate(clean,phish,return_report=False)
     gan.save(args.name[0], args.location[0])
     return
 
