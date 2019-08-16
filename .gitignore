@@ -16,10 +16,6 @@ libs/whois/__pycache__/
 
 *.db*
 
-api_keys/*
-
-!api_keys/.gitkeep
-
 tmp/
 
 datasets/
