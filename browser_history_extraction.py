@@ -14,7 +14,7 @@ import platform
 import sqlite3
 
 # Import logger
-logger = logging.getLogger('main')
+logger = logging.getLogger('phishGan')
 
 
 def chrome_extraction(date):

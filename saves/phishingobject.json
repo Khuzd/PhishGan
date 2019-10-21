@@ -1,0 +1,1 @@
+{"channels": 1, "countData": 46, "hiddenLayers": 65, "data_shape": [46, 1], "thresHold": 0.6953185796737671, "sampleSize": 100, "dataType": "phish", "lr": 0.004, "discriminator": null, "generator": null, "combined": null, "optimizer": null}

@@ -18,7 +18,7 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
 # Import logger
-logger = logging.getLogger('main')
+logger = logging.getLogger('phishGan')
 
 # api obtained on this URL : https://developers.google.com/api-client-library/python/guide/aaa_apikeys
 # cse create on this URL : http://www.google.com/cse/
