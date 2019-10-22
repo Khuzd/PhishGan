@@ -292,33 +292,63 @@ def prediction(args):
             # Write results in the right place
             if args.verbose is True:
                 if args.output == "console" or args.output[0] == "console":
-                    if results[0] < gan.uniqThreshold:
-                        print(str(url) + " : " + str(results[0][0]) + " -> phishing")
+                    if not arg.suspicious:
+                        if results[0] < gan.uniqThreshold:
+                            print(str(url) + " : " + str(results[0][0]) + " -> phishing")
+                        else:
+                            print(str(url) + " : " + str(results[0][0]) + " -> safe")
                     else:
-                        print(str(url) + " : " + str(results[0][0]) + " -> safe")
-
+                        if results[0] < gan.firstRangedThreshold:
+                            print(str(url) + " : " + str(results[0][0]) + " -> phishing")
+                        elif results[0] > gan.secondRangedThreshold:
+                            print(str(url) + " : " + str(results[0][0]) + " -> safe")
+                        else:
+                            print(str(url) + " : " + str(results[0][0]) + " -> suspicious")
                 else:
                     with open(args.output[0], 'a', newline='') as outcsvfile:
                         writer = csv.writer(outcsvfile, delimiter=' ', quotechar='"')
-                        if results[0] < gan.uniqThreshold:
-                            writer.writerow([str(url) + " : {} -> phishing".format(results[0][0])])
+                        if not arg.suspicious:
+                            if results[0] < gan.uniqThreshold:
+                                writer.writerow([str(url) + " : {} -> phishing".format(results[0][0])])
+                            else:
+                                writer.writerow([str(url) + " : {} -> safe".format(results[0][0])])
                         else:
-                            writer.writerow([str(url) + " : {} -> safe".format(results[0][0])])
+                            if results[0] < gan.firstRangedThreshold:
+                                writer.writerow([str(url) + " : {} -> phishing".format(results[0][0])])
+                            elif results[0] > gan.secondRangedThreshold:
+                                writer.writerow([str(url) + " : {} -> safe".format(results[0][0])])
+                            else:
+                                writer.writerow([str(url) + " : {} -> suspicious".format(results[0][0])])
 
             else:
                 if args.output == "console" or args.output[0] == "console":
-                    if results[0] < gan.uniqThreshold:
-                        print(str(url) + " -> phishing")
+                    if not arg.suspicious:
+                        if results[0] < gan.uniqThreshold:
+                            print(str(url) + " -> phishing")
+                        else:
+                            print(str(url) + " -> safe")
                     else:
-                        print(str(url) + " -> safe")
-
+                        if results[0] < gan.firstRangedThreshold:
+                            print(str(url) + " : " + " -> phishing")
+                        elif results[0] > gan.secondRangedThreshold:
+                            print(str(url) + " : " + " -> safe")
+                        else:
+                            print(str(url) + " : " + " -> suspicious")
                 else:
                     with open(args.output[0], 'a', newline='') as outcsvfile:
                         writer = csv.writer(outcsvfile, delimiter=' ', quotechar='"')
-                        if results[0] < gan.uniqThreshold:
-                            writer.writerow([str(url) + " -> phishing"])
+                        if not arg.suspicious:
+                            if results[0] < gan.uniqThreshold:
+                                writer.writerow([str(url) + " -> phishing"])
+                            else:
+                                writer.writerow([str(url) + " -> safe"])
                         else:
-                            writer.writerow([str(url) + " -> safe"])
+                            if results[0] < gan.firstRangedThreshold:
+                                writer.writerow([str(url) + " -> phishing"])
+                            elif results[0] > gan.secondRangedThreshold:
+                                writer.writerow([str(url) + " -> safe"])
+                            else:
+                                writer.writerow([str(url) + " -> suspicious"])
     return
 
 
@@ -600,6 +630,8 @@ if __name__ == "__main__":
     predictParser.add_argument("-o", "--output", default="console", type=str, nargs=1,
                                help="Option to chose the type of ouptput : console or file. If file, the value have "
                                     "to be the path to a existing file")
+    predictParser.add_argument("--suspicious", action="store_true",
+                               help="Option to classify into 3 classes : Phishing, Suspicious or Clean")
     predictParser.set_defaults(func=prediction)
 
     # ---------------------
