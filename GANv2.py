@@ -80,7 +80,7 @@ class GAN:
         self.countData = 46
         self.hiddenLayers = 65
         self.data_shape = (self.countData, self.channels)
-        self.uniqThreshold = None
+        self.thresHold = None
         self.firstRangedThreshold = None
         self.secondRangedThreshold = None
         self.sampleSize = sample
@@ -296,15 +296,15 @@ class GAN:
 
         if determineThreshold:
             # Calculate the best threshold
-            self.uniqThreshold = float(((sum(prediction[:len(cleanTestDataset)]) / len(cleanTestDataset)) + (
+            self.thresHold = float(((sum(prediction[:len(cleanTestDataset)]) / len(cleanTestDataset)) + (
                     sum(prediction[len(cleanTestDataset):]) / len(phishTestDataset))) / 2)
 
         if calculate:
             # Generate the predict results
             for i in prediction:
-                if self.dataType == "phish" and i[0][0] > self.uniqThreshold:
+                if self.dataType == "phish" and i[0][0] > self.thresHold:
                     predict.append("phish")
-                elif self.dataType != "phish" and i[0][0] < self.uniqThreshold:
+                elif self.dataType != "phish" and i[0][0] < self.thresHold:
                     predict.append("phish")
                 else:
                     predict.append("clean")
@@ -363,7 +363,7 @@ class GAN:
                 report = classification_report(np.array(true), np.array(predict), output_dict=True)
                 if report["accuracy"] > bestClass["accuracy"]:
                     bestClass = report
-                    self.uniqThreshold = threshold
+                    self.thresHold = threshold
 
         else:
             middle = ((maxi - mini) / 2) + mini
