@@ -331,8 +331,6 @@ class GAN:
         else:
             phisTest = phisTest[len(cleanTest)]
 
-        # Construct the true results
-        true = ["clean"] * len(cleanTest) + ["phish"] * len(phisTest)
         prediction = []
 
         # ---------------------
@@ -346,10 +344,11 @@ class GAN:
             (sum(prediction[:len(cleanTest)]) / len(cleanTest)), (sum(prediction[len(cleanTest):]) / len(phisTest)))
         mini = min(averages)
         maxi = max(averages)
-
         bestClass = {"accuracy": 0}
 
         if uniq:
+            # Construct the true results
+            true = ["clean"] * len(cleanTest) + ["phish"] * len(phisTest)
             logger.info("Total of iteration :{}".format(len(np.arange(mini, maxi, step))))
             for threshold in np.arange(mini, maxi, step):
                 predict = []
@@ -368,30 +367,49 @@ class GAN:
 
         else:
             middle = ((maxi - mini) / 2) + mini
-            print("Total of iteration :{}".format(len(np.arange(mini, middle, step))**2))
+            print("Total of iteration :{}".format(len(np.arange(mini, middle, step)) ** 2))
             j = 0
+            bscore = 0
 
             for first in np.arange(mini, middle, step):
                 for second in np.arange(middle, maxi, step):
-                    if j%100 == 0:
+                    # Construct the true results
+                    true = ["clean"] * len(cleanTest) + ["phish"] * len(phisTest)
+                    if j % 100 == 0:
                         print(j)
-                    j+=1
+                    j += 1
                     predict = []
                     for i in prediction:
-                        if self.dataType == "phish" and i[0][0] > first:
+                        if self.dataType == "phish" and i[0][0] > second:
                             predict.append("phish")
-                        elif self.dataType != "phish" and i[0][0] < second:
+                        elif self.dataType != "phish" and i[0][0] < first:
                             predict.append("phish")
                         elif first <= i[0][0] <= second:
                             predict.append("suspicious")
                         else:
                             predict.append("clean")
-                    report = classification_report(np.array(true), np.array(predict), output_dict=True)
-                    if report["accuracy"] > bestClass["accuracy"]:
-                        bestClass = report
+                    score = 0
+                    cleanToRemove = 0
+                    phishToRemove = 0
+                    for i in range(len(predict)):
+                        if predict[i] == "suspicious":
+                            score += 0.75
+                            if true[i] == "clean":
+                                cleanToRemove += 1
+                            else:
+                                phishToRemove += 1
+                        elif predict[i] == true[i]:
+                            score += 1
+                    suspicious = predict.count("suspicious")
+                    true = ["clean"] * (len(cleanTest) - cleanToRemove) + ["phish"] * (len(phisTest) - phishToRemove)
+                    predict = [i for i in predict if i != "suspicious"]
+
+                    if score > bscore:
+                        bestClass = classification_report(np.array(true), np.array(predict), output_dict=True)
+                        bestClass["suspicious"] = suspicious
                         self.firstRangedThreshold = first
                         self.secondRangedThreshold = second
-
+                        bscore = score
         if return_report:
             return bestClass
 
