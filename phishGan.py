@@ -299,9 +299,9 @@ def prediction(args):
                             else:
                                 print(str(url) + " : " + str(results[0][0]) + " -> safe")
                         else:
-                            if results[0] > gan.firstRangedThreshold:
+                            if results[0] > gan.firstSuspiciousThreshold:
                                 print(str(url) + " : " + str(results[0][0]) + " -> phishing")
-                            elif results[0] < gan.secondRangedThreshold:
+                            elif results[0] < gan.secondSuspiciousThreshold:
                                 print(str(url) + " : " + str(results[0][0]) + " -> safe")
                             else:
                                 print(str(url) + " : " + str(results[0][0]) + " -> suspicious")
@@ -314,9 +314,9 @@ def prediction(args):
                                 else:
                                     writer.writerow([str(url) + " : {} -> safe".format(results[0][0])])
                             else:
-                                if results[0] > gan.firstRangedThreshold:
+                                if results[0] > gan.firstSuspiciousThreshold:
                                     writer.writerow([str(url) + " : {} -> phishing".format(results[0][0])])
-                                elif results[0] < gan.secondRangedThreshold:
+                                elif results[0] < gan.secondSuspiciousThreshold:
                                     writer.writerow([str(url) + " : {} -> safe".format(results[0][0])])
                                 else:
                                     writer.writerow([str(url) + " : {} -> suspicious".format(results[0][0])])
@@ -329,9 +329,9 @@ def prediction(args):
                             else:
                                 print(str(url) + " -> safe")
                         else:
-                            if results[0] > gan.firstRangedThreshold:
+                            if results[0] > gan.firstSuspiciousThreshold:
                                 print(str(url) + " : " + " -> phishing")
-                            elif results[0] < gan.secondRangedThreshold:
+                            elif results[0] < gan.secondSuspiciousThreshold:
                                 print(str(url) + " : " + " -> safe")
                             else:
                                 print(str(url) + " : " + " -> suspicious")
@@ -344,9 +344,9 @@ def prediction(args):
                                 else:
                                     writer.writerow([str(url) + " -> safe"])
                             else:
-                                if results[0] > gan.firstRangedThreshold:
+                                if results[0] > gan.firstSuspiciousThreshold:
                                     writer.writerow([str(url) + " -> phishing"])
-                                elif results[0] < gan.secondRangedThreshold:
+                                elif results[0] < gan.secondSuspiciousThreshold:
                                     writer.writerow([str(url) + " -> safe"])
                                 else:
                                     writer.writerow([str(url) + " -> suspicious"])
@@ -361,9 +361,9 @@ def prediction(args):
                             else:
                                 print(str(url) + " : " + str(results[0][0]) + " -> safe")
                         else:
-                            if results[0] < gan.firstRangedThreshold:
+                            if results[0] < gan.firstSuspiciousThreshold:
                                 print(str(url) + " : " + str(results[0][0]) + " -> phishing")
-                            elif results[0] > gan.secondRangedThreshold:
+                            elif results[0] > gan.secondSuspiciousThreshold:
                                 print(str(url) + " : " + str(results[0][0]) + " -> safe")
                             else:
                                 print(str(url) + " : " + str(results[0][0]) + " -> suspicious")
@@ -376,9 +376,9 @@ def prediction(args):
                                 else:
                                     writer.writerow([str(url) + " : {} -> safe".format(results[0][0])])
                             else:
-                                if results[0] < gan.firstRangedThreshold:
+                                if results[0] < gan.firstSuspiciousThreshold:
                                     writer.writerow([str(url) + " : {} -> phishing".format(results[0][0])])
-                                elif results[0] > gan.secondRangedThreshold:
+                                elif results[0] > gan.secondSuspiciousThreshold:
                                     writer.writerow([str(url) + " : {} -> safe".format(results[0][0])])
                                 else:
                                     writer.writerow([str(url) + " : {} -> suspicious".format(results[0][0])])
@@ -391,9 +391,9 @@ def prediction(args):
                             else:
                                 print(str(url) + " -> safe")
                         else:
-                            if results[0] < gan.firstRangedThreshold:
+                            if results[0] < gan.firstSuspiciousThreshold:
                                 print(str(url) + " : " + " -> phishing")
-                            elif results[0] > gan.secondRangedThreshold:
+                            elif results[0] > gan.secondSuspiciousThreshold:
                                 print(str(url) + " : " + " -> safe")
                             else:
                                 print(str(url) + " : " + " -> suspicious")
@@ -406,9 +406,9 @@ def prediction(args):
                                 else:
                                     writer.writerow([str(url) + " -> safe"])
                             else:
-                                if results[0] < gan.firstRangedThreshold:
+                                if results[0] < gan.firstSuspiciousThreshold:
                                     writer.writerow([str(url) + " -> phishing"])
-                                elif results[0] > gan.secondRangedThreshold:
+                                elif results[0] > gan.secondSuspiciousThreshold:
                                     writer.writerow([str(url) + " -> safe"])
                                 else:
                                     writer.writerow([str(url) + " -> suspicious"])

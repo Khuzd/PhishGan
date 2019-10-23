@@ -81,8 +81,8 @@ class GAN:
         self.hiddenLayers = 65
         self.data_shape = (self.countData, self.channels)
         self.uniqThresHold = None
-        self.firstRangedThreshold = None
-        self.secondRangedThreshold = None
+        self.firstSuspiciousThreshold = None
+        self.secondSuspiciousThreshold = None
         self.sampleSize = sample
         self.dataType = "phish"
         self.lr = lr
@@ -401,8 +401,8 @@ class GAN:
                 if score > bscore:
                     bestClass = classification_report(np.array(true), np.array(predict), output_dict=True)
                     bestClass["suspicious"] = suspicious
-                    self.firstRangedThreshold = first
-                    self.secondRangedThreshold = second
+                    self.firstSuspiciousThreshold = first
+                    self.secondSuspiciousThreshold = second
                     bscore = score
         if return_report:
             return bestClass
