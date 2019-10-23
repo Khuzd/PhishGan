@@ -294,7 +294,7 @@ def prediction(args):
                 if args.verbose is True:
                     if args.output == "console" or args.output[0] == "console":
                         if not arg.suspicious:
-                            if results[0] > gan.thresHold:
+                            if results[0] > gan.uniqThresHold:
                                 print(str(url) + " : " + str(results[0][0]) + " -> phishing")
                             else:
                                 print(str(url) + " : " + str(results[0][0]) + " -> safe")
@@ -309,7 +309,7 @@ def prediction(args):
                         with open(args.output[0], 'a', newline='') as outcsvfile:
                             writer = csv.writer(outcsvfile, delimiter=' ', quotechar='"')
                             if not arg.suspicious:
-                                if results[0] > gan.thresHold:
+                                if results[0] > gan.uniqThresHold:
                                     writer.writerow([str(url) + " : {} -> phishing".format(results[0][0])])
                                 else:
                                     writer.writerow([str(url) + " : {} -> safe".format(results[0][0])])
@@ -324,7 +324,7 @@ def prediction(args):
                 else:
                     if args.output == "console" or args.output[0] == "console":
                         if not arg.suspicious:
-                            if results[0] > gan.thresHold:
+                            if results[0] > gan.uniqThresHold:
                                 print(str(url) + " -> phishing")
                             else:
                                 print(str(url) + " -> safe")
@@ -339,7 +339,7 @@ def prediction(args):
                         with open(args.output[0], 'a', newline='') as outcsvfile:
                             writer = csv.writer(outcsvfile, delimiter=' ', quotechar='"')
                             if not arg.suspicious:
-                                if results[0] > gan.thresHold:
+                                if results[0] > gan.uniqThresHold:
                                     writer.writerow([str(url) + " -> phishing"])
                                 else:
                                     writer.writerow([str(url) + " -> safe"])
@@ -356,7 +356,7 @@ def prediction(args):
                 if args.verbose is True:
                     if args.output == "console" or args.output[0] == "console":
                         if not arg.suspicious:
-                            if results[0] < gan.thresHold:
+                            if results[0] < gan.uniqThresHold:
                                 print(str(url) + " : " + str(results[0][0]) + " -> phishing")
                             else:
                                 print(str(url) + " : " + str(results[0][0]) + " -> safe")
@@ -371,7 +371,7 @@ def prediction(args):
                         with open(args.output[0], 'a', newline='') as outcsvfile:
                             writer = csv.writer(outcsvfile, delimiter=' ', quotechar='"')
                             if not arg.suspicious:
-                                if results[0] < gan.thresHold:
+                                if results[0] < gan.uniqThresHold:
                                     writer.writerow([str(url) + " : {} -> phishing".format(results[0][0])])
                                 else:
                                     writer.writerow([str(url) + " : {} -> safe".format(results[0][0])])
@@ -386,7 +386,7 @@ def prediction(args):
                 else:
                     if args.output == "console" or args.output[0] == "console":
                         if not arg.suspicious:
-                            if results[0] < gan.thresHold:
+                            if results[0] < gan.uniqThresHold:
                                 print(str(url) + " -> phishing")
                             else:
                                 print(str(url) + " -> safe")
@@ -401,7 +401,7 @@ def prediction(args):
                         with open(args.output[0], 'a', newline='') as outcsvfile:
                             writer = csv.writer(outcsvfile, delimiter=' ', quotechar='"')
                             if not arg.suspicious:
-                                if results[0] < gan.thresHold:
+                                if results[0] < gan.uniqThresHold:
                                     writer.writerow([str(url) + " -> phishing"])
                                 else:
                                     writer.writerow([str(url) + " -> safe"])
